@@ -1,0 +1,57 @@
+# Romanian artists seed list (Apr 17, 2026)
+# One artist name per line. Lines starting with # are ignored.
+# Notes in parentheses from the chat were removed.
+
+Veritasaga
+Raku
+Cedry2k
+Nimeni Altu’
+Gani
+K-Gula
+Sisu Tudor
+Max K
+DJ Al*bu
+Tecko Starr
+
+Berechet
+Bvcovia
+Albert NBN
+Rareș Mariș
+Sez
+IDK
+Yung Lxrd
+M.G.L.
+
+Lora
+Jojo
+Nicoleta Nucă
+Dya
+Adda
+Oana Radu
+Raluka
+DJ Layla
+Elena Ionescu
+Amna
+
+Implant Pentru Refuz
+The Kryptonite Sparks
+Alternosfera Acoustic
+Byron Live
+Coma Light
+FiRMA
+Urma Acoustic
+Eyedrops
+Grimus
+The Mono Jacks
+
+Alexandru Jula
+Marina Voica
+Aura Urziceanu
+Mihaela Mihai
+Stela Enache
+
+Matze
+Mihai Popoviciu
+Priku
+Raresh
+Barac

@@ -1,0 +1,191 @@
+.appShell {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(255, 214, 153, 0.28),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at top right,
+      rgba(125, 211, 252, 0.14),
+      transparent 26%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255, 253, 248, 0.98) 0%,
+      rgba(249, 250, 251, 1) 44%,
+      rgba(243, 246, 250, 1) 100%
+    );
+}
+
+:root[data-theme="dark"] .appShell {
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(245, 158, 11, 0.16),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at top right,
+      rgba(59, 130, 246, 0.18),
+      transparent 28%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(8, 12, 19, 0.98) 0%,
+      rgba(11, 16, 25, 1) 48%,
+      rgba(10, 14, 22, 1) 100%
+    );
+}
+
+.appShell__ambient {
+  position: fixed;
+  inset: auto;
+  width: 34rem;
+  height: 34rem;
+  border-radius: 9999px;
+  filter: blur(90px);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.appShell__ambient--one {
+  top: -10rem;
+  left: -12rem;
+  background: rgba(249, 168, 37, 0.22);
+}
+
+.appShell__ambient--two {
+  right: -10rem;
+  top: 18rem;
+  background: rgba(59, 130, 246, 0.18);
+}
+
+:root[data-theme="dark"] .appShell__ambient--one {
+  background: rgba(251, 191, 36, 0.16);
+}
+
+:root[data-theme="dark"] .appShell__ambient--two {
+  background: rgba(96, 165, 250, 0.14);
+}
+
+.appShell__page {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.appShell__header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(18px);
+}
+
+.appShell__main {
+  flex: 1;
+  width: min(100%, 1440px);
+  margin: 0 auto;
+  padding: clamp(20px, 2.4vw, 36px) clamp(16px, 2vw, 28px)
+    clamp(28px, 3vw, 48px);
+}
+
+.appShell__main > * {
+  min-width: 0;
+}
+
+@media (max-width: 1024px) {
+  .appShell__ambient--one {
+    width: 28rem;
+    height: 28rem;
+  }
+
+  .appShell__ambient--two {
+    width: 28rem;
+    height: 28rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .appShell__ambient {
+    width: 22rem;
+    height: 22rem;
+    filter: blur(70px);
+  }
+
+  .appShell__ambient--one {
+    width: 22rem;
+    height: 22rem;
+  }
+
+  .appShell__ambient--two {
+    width: 22rem;
+    height: 22rem;
+  }
+
+  .appShell__main {
+    padding-inline: 14px;
+    padding-top: 16px;
+  }
+}
+
+@media (max-width: 600px) {
+  .appShell__ambient {
+    width: 18rem;
+    height: 18rem;
+    filter: blur(60px);
+  }
+
+  .appShell__ambient--one {
+    width: 18rem;
+    height: 18rem;
+    top: -8rem;
+    left: -10rem;
+  }
+
+  .appShell__ambient--two {
+    width: 18rem;
+    height: 18rem;
+    right: -8rem;
+    top: 15rem;
+  }
+
+  .appShell__main {
+    padding: clamp(14px, 1.5vw, 20px) clamp(12px, 1.5vw, 16px)
+      clamp(16px, 2vw, 24px);
+  }
+}
+
+@media (max-width: 480px) {
+  .appShell__ambient {
+    width: 16rem;
+    height: 16rem;
+    filter: blur(50px);
+    opacity: 0.4;
+  }
+
+  .appShell__ambient--one {
+    width: 16rem;
+    height: 16rem;
+    top: -6rem;
+    left: -8rem;
+  }
+
+  .appShell__ambient--two {
+    width: 16rem;
+    height: 16rem;
+    right: -6rem;
+    top: 12rem;
+  }
+
+  .appShell__main {
+    padding: clamp(12px, 1vw, 16px) clamp(10px, 1vw, 12px)
+      clamp(12px, 1.5vw, 16px);
+  }
+}

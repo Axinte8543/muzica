@@ -1,0 +1,64 @@
+# Extra Romanian artists list (one per line)
+# Headings are comments so import_music ignores them.
+
+# Rap / Trap
+Ian
+Oscar
+Killa Fonic
+RAVA
+Petre Ștefan
+Amuly
+Marko Glass
+Aerozen
+
+# Pop / Dance
+Theo Rose
+Mario Fresh
+Edward Sanda
+ADDA
+Sore
+Raluka
+Mira
+Elena Gheorghe
+Andreea Bălan
+Andreea Antonescu
+
+# Indie / Alternative
+byron
+Robin and the Backstabbers
+Toulouse Lautrec
+The Mono Jacks
+E-an-na
+Coma
+Implant pentru Refuz
+Firma
+Travka
+Zmei Trei
+
+# Rock / Metal
+Trooper
+Dirty Shirt
+Bucovina
+Negură Bunget
+Taine
+Goodbye to Gravity
+Altar
+Celelalte Cuvinte
+
+# Folk / Acoustic
+Mircea Vintilă
+Nicu Alifantis
+Ducu Bertzi
+Emeric Imre
+
+# Electronic / DJ
+Manuel Riva
+Vanotek
+Mahmut Orhan
+DJ Sava
+
+# Alte nume cunoscute
+Connect-R
+CRBL
+What’s UP
+Liviu Teodorescu

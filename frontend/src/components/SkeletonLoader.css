@@ -1,0 +1,117 @@
+/* Skeleton Loader Animation */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.skeleton-card,
+.skeleton-review,
+.skeleton-comment,
+.skeleton-message {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.skeleton-text {
+  height: 16px;
+  background: linear-gradient(
+    90deg,
+    var(--muted-bg),
+    rgba(255, 255, 255, 0.2),
+    var(--muted-bg)
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+  border-radius: 8px;
+  width: 100%;
+}
+
+.skeleton-text-title {
+  height: 18px;
+  width: 60%;
+  margin-bottom: 8px;
+}
+
+.skeleton-text-subtitle {
+  height: 14px;
+  width: 40%;
+}
+
+.skeleton-text-body {
+  height: 16px;
+  margin-bottom: 8px;
+  width: 100%;
+}
+
+.skeleton-image {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: linear-gradient(
+    90deg,
+    var(--muted-bg),
+    rgba(255, 255, 255, 0.2),
+    var(--muted-bg)
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.skeleton-avatar {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  border-radius: 50%;
+  background: linear-gradient(
+    90deg,
+    var(--muted-bg),
+    rgba(255, 255, 255, 0.2),
+    var(--muted-bg)
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.skeleton-avatar-small {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  background: linear-gradient(
+    90deg,
+    var(--muted-bg),
+    rgba(255, 255, 255, 0.2),
+    var(--muted-bg)
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.skeleton-review {
+  padding: 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background-color: var(--surface-color);
+}
+
+.skeleton-comment {
+  padding: 12px 0;
+}
+
+.skeleton-message {
+  width: 100%;
+  padding: 8px 0;
+}

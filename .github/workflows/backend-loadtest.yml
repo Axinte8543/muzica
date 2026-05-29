@@ -1,0 +1,81 @@
+name: Backend Load Test Baseline
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-loadtest.yml"
+
+jobs:
+  loadtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Seed deterministic E2E dataset
+        working-directory: backend
+        run: |
+          python manage.py migrate --noinput
+          python manage.py seed_e2e_flow --reset
+
+      - name: Start Django server
+        working-directory: backend
+        run: |
+          python manage.py runserver --noreload 127.0.0.1:8000 > ../loadtest-server.log 2>&1 &
+
+      - name: Wait for healthcheck
+        run: |
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:8000/health/ >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Backend did not become healthy in time"
+          cat loadtest-server.log
+          exit 1
+
+      - name: Run Locust baseline
+        working-directory: backend
+        env:
+          LOADTEST_HOST: http://127.0.0.1:8000
+          LOADTEST_USERNAME: e2e_alice
+          LOADTEST_PASSWORD: E2E_Test_123!
+        run: |
+          locust \
+            -f loadtests/locustfile.py \
+            --headless \
+            --users 8 \
+            --spawn-rate 2 \
+            --run-time 45s \
+            --stop-timeout 10 \
+            --csv loadtests/results/ci_baseline \
+            --csv-full-history \
+            --host http://127.0.0.1:8000
+
+      - name: Upload load test artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-loadtest-results
+          path: |
+            backend/loadtests/results/
+            backend/loadtest-server.log

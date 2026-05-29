@@ -1,0 +1,381 @@
+
+                            UNIVERSITATEA DIN BUCUREȘTI
+
+FACULTATEA DE MATEMATICĂ ȘI INFORMATICĂ
+[1] Aggarwal, Charu C. Recommender Systems: The Textbook. Cham: Springer, 2016.
+
+[2] Ricci, Francesco; Rokach, Lior; Shapira, Bracha. Recommender Systems Handbook. 3rd ed. New York: Springer, 2022.
+
+[3] Django Software Foundation. Django Documentation. Disponibil la: https://docs.djangoproject.com/.
+
+[4] Django REST Framework. Django REST Framework Documentation. Disponibil la: https://www.django-rest-framework.org/.
+
+[5] React. React Documentation. Disponibil la: https://react.dev/.
+
+[6] Vite. Vite Documentation. Disponibil la: https://vite.dev/.
+
+[7] React Router. React Router Documentation. Disponibil la: https://reactrouter.com/.
+
+[8] Python Software Foundation. Python Documentation. Disponibil la: https://docs.python.org/3/.
+
+[9] MDN Web Docs. HTML: HyperText Markup Language. Disponibil la: https://developer.mozilla.org/en-US/docs/Web/HTML.
+
+[10] MDN Web Docs. CSS: Cascading Style Sheets. Disponibil la: https://developer.mozilla.org/en-US/docs/Web/CSS.
+
+[11] MDN Web Docs. JavaScript. Disponibil la: https://developer.mozilla.org/en-US/docs/Web/JavaScript.
+
+[12] PostgreSQL Global Development Group. PostgreSQL Documentation. Disponibil la: https://www.postgresql.org/docs/.
+
+[13] MusicBrainz. MusicBrainz API Documentation. Disponibil la: https://musicbrainz.org/doc/MusicBrainz_API.
+
+[14] Last.fm. Last.fm API Documentation. Disponibil la: https://www.last.fm/api.
+
+[15] Spotify for Developers. Web API Documentation. Disponibil la: https://developer.spotify.com/documentation/web-api.
+
+[16] Discogs. Discogs Developers API Documentation. Disponibil la: https://www.discogs.com/developers/.
+
+[17] Letterboxd. Letterboxd: Social film discovery and logging platform. Disponibil la: https://letterboxd.com/.
+
+[18] Album of the Year. Album of the Year: Music reviews, charts, and lists. Disponibil la: https://www.albumoftheyear.org/.
+
+
+
+
+
+
+Rezumat
+
+Acest proiect propune dezvoltarea unei platforme web dedicate exclusiv muzicii 
+românești, care permite utilizatorilor să descopere, evalueze și discute albume, artiști 
+și melodii din discografia națională. Platforma funcționează ca un echivalent al 
+Letterboxd pentru film, dar adaptat domeniului muzical, oferind funcționalități 
+avansate de notare, comentare, creare de liste și interacțiune socială. 
+
+Utilizatorii pot acorda note, scrie recenzii, urmări artiști, crea liste personalizate și 
+interacționa cu alți utilizatori care au interese muzicale similare. Conținutul este 
+organizat pe ani, decenii, genuri muzicale și popularitate, iar datele despre artiști și 
+albume sunt validate printr-un sistem de moderare administrativă.
+
+
+Abstract
+
+This project proposes the development of a web platform dedicated exclusively to Romanian music, allowing users to discover, evaluate, and discuss albums, artists, and songs from the national discography. The platform functions as an equivalent of Letterboxd for film, but adapted to the music domain, offering advanced features for rating, commenting, list creation, and social interaction.
+Users can assign ratings, write reviews, follow artists, create personalized lists, and interact with other users who share similar musical interests. The content is organized by years, decades, musical genres, and popularity, while data about artists and albums is validated through an administrative moderation system.
+
+Cuprins
+
+
+
+
+Introducere
+
+1.1 Tema
+
+Această lucrare de licență se încadrează în domeniul aplicațiilor web și al ingineriei software, cu accent pe dezvoltarea unei platforme dedicate evaluării, catalogării și socializării în jurul muzicii românești. Tema propune o soluție digitală care permite utilizatorilor să descopere artiști, albume și melodii, să le evalueze și să interacționeze cu alți utilizatori într-un spațiu unitar, orientat spre comunitate.
+
+1.2 Motivația
+
+Alegerea temei este motivată de fragmentarea experienței muzicale în aplicațiile existente, unde ascultarea, exprimarea opiniilor și interacțiunea socială sunt adesea separate. Lucrarea urmărește să răspundă acestei probleme printr-o platformă care combină catalogarea conținutului muzical cu mecanisme de evaluare, liste personale, recomandări și funcții sociale. În acest fel, utilizatorul nu rămâne doar un consumator pasiv, ci devine parte activă dintr-o comunitate cu interese similare.
+
+1.3 Contribuția personală
+
+Contribuția proprie a acestei lucrări constă în proiectarea și implementarea unei aplicații web complete, dezvoltate pe arhitectură client-server, cu backend în Django și frontend în React. Soluția include autentificare, gestionarea profilului, evaluări, recenzii, liste personale, mesagerie, notificări, mecanisme de moderare și funcții de recomandare, toate integrate într-o interfață coerentă și ușor de utilizat. Pe lângă implementare, au fost urmărite și aspecte de organizare a datelor, extindere ulterioară și adaptare la cerințele reale ale unei platforme sociale.
+
+Un element suplimentar al contribuției personale este integrarea și operaționalizarea componentelor avansate, prin combinarea recomandărilor bazate pe interacțiuni cu mecanisme de cache și precomputare, precum și prin definirea unui flux de evaluare a rezultatelor. Această abordare a permis nu doar dezvoltarea funcțională a aplicației, ci și validarea practică a calității recomandărilor și identificarea direcțiilor de îmbunătățire, ceea ce oferă proiectului un caracter aplicativ și o bază solidă pentru extinderi viitoare.
+
+1.4 Structura lucrării
+
+Lucrarea este structurată în șase capitole. Capitolul 1 prezintă tema, motivația, contribuția și organizarea generală a lucrării. Capitolul 2 oferă contextul teoretic prin analiza platformelor similare, a sistemelor de recomandare, a tehnologiilor utilizate și a API-urilor integrate. Capitolul 3 descrie cerințele aplicației, arhitectura sistemului și modelul bazei de date. Capitolul 4 detaliază implementarea backend-ului și frontend-ului, împreună cu funcționalitățile principale și sociale. Capitolul 5 tratează elementele avansate, precum recomandările, compatibilitatea între utilizatori, statisticile, dashboard-ul și notificările. Capitolul 6 sintetizează testarea, rezultatele obținute și concluziile finale ale proiectului.
+
+Prin această structură, lucrarea urmărește un parcurs logic și coerent, care permite înțelegerea completă a problemei, a soluției propuse și a rezultatelor obținute.
+
+
+Preliminarii
+
+Scriu secțiunea despre platforme similare astfel încât să compare soluțiile relevante și să evidențieze ce lipsește în ele față de aplicația propusă.
+
+ 2.1 Platforme similare
+
+Analiza platformelor similare este importantă pentru înțelegerea contextului în care se încadrează aplicația propusă și pentru evidențierea elementelor care o diferențiază. În prezent, există numeroase soluții digitale dedicate muzicii, însă fiecare acoperă doar parțial nevoile utilizatorilor: unele se concentrează pe ascultare, altele pe catalogare, iar altele pe componenta comunitară sau statistică.
+
+O primă categorie este reprezentată de platformele de streaming, precum Spotify sau Apple Music. Acestea oferă acces rapid la un volum foarte mare de conținut muzical, playlisturi personalizate și sisteme avansate de recomandare bazate pe comportamentul utilizatorului. Avantajul principal al acestor platforme constă în experiența de consum fluentă și în integrarea conținutului audio într-o interfață modernă și accesibilă. Totuși, componenta socială este relativ limitată, iar posibilitățile de exprimare a opiniei utilizatorului sunt reduse, de regulă, la like-uri, salvări sau distribuiri. În general, aceste platforme nu oferă un cadru complet pentru review-uri detaliate, relații de prietenie sau discuții centrate pe gusturi muzicale.
+
+O altă platformă relevantă este Last.fm, cunoscută pentru funcția de tracking al activității de ascultare și pentru statisticile oferite utilizatorului. Aceasta permite urmărirea artiștilor, albumelor și pieselor ascultate, generând o imagine clară asupra preferințelor muzicale. Last.fm este utilă mai ales pentru analiza comportamentului de ascultare și pentru descoperirea de conținut nou pe baza istoricului personal. Cu toate acestea, platforma este mai puțin orientată spre interacțiune socială modernă și nu oferă, în mod nativ, un ecosistem complet pentru review-uri, mesagerie între utilizatori sau organizarea conținutului în liste personale complexe.
+
+Platforme precum RateYourMusic se apropie mai mult de zona de evaluare și comunitate. Acestea permit utilizatorilor să acorde ratinguri, să scrie recenzii, să creeze liste și să participe la discuții despre albume și artiști. Din acest punct de vedere, ele reprezintă un model relevant pentru funcționalitățile de feedback și exprimare a opiniei muzicale. Totuși, ele nu sunt construite ca platforme integrate de tip social network și nu oferă aceeași combinație între recomandare, urmăritorii de activitate, notificări și interacțiune directă între utilizatori.
+
+Discogs constituie un alt exemplu important, fiind orientat mai ales spre catalogarea detaliată a lansărilor muzicale. Platforma este extrem de utilă pentru gestionarea metadatelor, identificarea edițiilor și structurarea informațiilor despre albume și artiști. În același timp, partea comunitară există, dar este secundară față de componenta de catalog. Pentru un utilizator obișnuit, Discogs este valoroasă mai ales ca bază de date muzicală, nu ca spațiu de interacțiune socială sau de consum personalizat al muzicii.
+
+Analizând aceste platforme împreună, se observă că fiecare rezolvă bine o anumită parte a experienței muzicale, dar niciuna nu reunește complet într-un singur sistem urmărirea activității de ascultare, recomandarea, evaluarea, organizarea personală și interacțiunea socială. Această limitare justifică dezvoltarea unei aplicații proprii care să combine avantajele fiecăreia dintre soluțiile existente într-o experiență unitară. Prin urmare, platformele similare au fost folosite ca reper pentru stabilirea cerințelor aplicației și pentru definirea direcțiilor de proiectare care au stat la baza soluției propuse.
+
+ 2.2 Sisteme de recomandare
+
+Sistemele de recomandare reprezintă o categorie importantă de tehnici informatice utilizate pentru filtrarea și prioritizarea conținutului relevant pentru un utilizator, pe baza preferințelor sale anterioare, a comportamentului de utilizare sau a caracteristicilor conținutului. În contextul platformelor digitale moderne, volumul foarte mare de informație face dificilă identificarea manuală a elementelor de interes, iar sistemele de recomandare devin astfel un instrument esențial pentru personalizarea experienței.
+
+În domeniul muzical, aceste sisteme sunt folosite pentru a sugera albume, artiști, piese sau playlisturi care pot corespunde gusturilor unui utilizator. Relevanța recomandărilor este determinată de date precum istoricul de ascultare, ratingurile acordate, albumele apreciate, listele create, interacțiunile sociale sau asemănările dintre utilizatori. Cu cât aceste date sunt mai bogate și mai bine structurate, cu atât recomandările pot fi mai precise.
+
+Din punct de vedere metodologic, sistemele de recomandare pot fi împărțite în mai multe categorii principale. Prima categorie este reprezentată de sistemele bazate pe conținut, care propun elemente similare cu cele cu care utilizatorul a interacționat deja. De exemplu, dacă un utilizator a apreciat un anumit album, sistemul poate recomanda alte albume cu gen, stil sau artiști asemănători. Avantajul acestei abordări este faptul că utilizează caracteristicile explicite ale conținutului, însă ea poate deveni limitată atunci când informația descriptivă este insuficientă.
+
+A doua categorie este reprezentată de sistemele bazate pe filtrare colaborativă, care se bazează pe comportamentul colectiv al utilizatorilor. Ideea centrală este că utilizatori cu preferințe similare în trecut vor avea, probabil, preferințe apropiate și în viitor. Acest tip de recomandare este eficient în descoperirea de conținut nou și poate depăși limitele simplei similitudini dintre itemi. Totuși, filtrarea colaborativă întâmpină dificultăți în situații de pornire la rece, atunci când un utilizator nou sau un element nou nu are suficiente date istorice pentru a produce recomandări fiabile.
+
+O a treia abordare, frecvent utilizată în aplicațiile moderne, este cea hibridă, care combină avantajele mai multor metode de recomandare. Sistemele hibride pot integra informații despre conținut, comportamentul utilizatorilor și relațiile sociale, obținând rezultate mai stabile și mai relevante. În contextul unei aplicații muzicale, această strategie este deosebit de utilă, deoarece permite combinarea preferințelor explicite, a activității recente și a interacțiunilor dintre utilizatori.
+
+Un alt aspect important îl reprezintă tipurile de feedback folosite de sistem. Feedback-ul poate fi explicit, atunci când utilizatorul oferă direct un rating, un like sau un review, sau implicit, atunci când sistemul deduce preferințele din acțiuni precum ascultarea repetată, salvarea unui album ori adăugarea într-o listă. Fiecare tip de feedback are avantaje și limite: feedback-ul explicit este mai clar și mai ușor de interpretat, dar necesită un efort suplimentar din partea utilizatorului, în timp ce feedback-ul implicit este mai discret, dar poate fi mai ambiguu.
+
+În aplicațiile muzicale, sistemele de recomandare au rolul de a crește gradul de descoperire a conținutului și de a menține interesul utilizatorului pe termen lung. Recomandările bune reduc timpul necesar găsirii unui album sau a unui artist nou și pot transforma experiența de utilizare într-una mai personală și mai atractivă. Totodată, aceste sisteme contribuie la formarea unei identități muzicale digitale, în care preferințele utilizatorului sunt reflectate prin interacțiunile sale cu platforma.
+
+În cadrul lucrării de față, sistemele de recomandare au o relevanță deosebită, deoarece aplicația nu se limitează la catalogarea conținutului muzical, ci urmărește și crearea unei experiențe sociale și personalizate. Recomandările pot fi folosite pentru a sugera artiști asemănători, pentru a evidenția conținut apreciat de utilizatori cu gusturi apropiate sau pentru a sprijini descoperirea de albume noi în funcție de activitatea anterioară. Astfel, ele completează funcționalitățile de evaluare, listare și interacțiune socială, oferind un suport important pentru experiența generală a utilizatorului.
+
+ 2.3 Tehnologii utilizate
+
+Pentru realizarea aplicației au fost utilizate tehnologii moderne de dezvoltare web, alese astfel încât să asigure separarea clară între interfața utilizator, logica de business și accesul la date. Arhitectura soluției este de tip client-server, ceea ce permite dezvoltarea independentă a componentelor frontend și backend și facilitează extinderea ulterioară a sistemului.
+
+Pe partea de backend a fost utilizat limbajul **Python**, împreună cu framework-ul **Django**. Django oferă o structură solidă pentru dezvoltarea aplicațiilor web, incluzând mecanisme pentru rutare, gestionarea modelelor de date, autentificare și administrarea conținutului. Pentru expunerea funcționalităților sub formă de servicii web a fost folosit **Django REST Framework**, care simplifică implementarea unei **API REST** și permite comunicarea eficientă cu partea de frontend. Acest lucru este important într-o aplicație în care datele despre utilizatori, albume, review-uri, liste și notificări trebuie transmise într-un format ușor de prelucrat.
+
+Persistența datelor este realizată într-o **bază de date relațională**, accesată prin intermediul ORM-ului oferit de Django. Această abordare reduce dependența de interogări SQL scrise manual și oferă un mod mai sigur și mai ușor de întreținut pentru definirea modelelor, relațiilor și migrațiilor. Utilizarea unei baze relaționale este potrivită pentru aplicația de față, deoarece datele au o structură bine definită, cu relații clare între utilizatori, albume, recenzii și interacțiuni sociale.
+
+Pe partea de frontend a fost utilizat **JavaScript** împreună cu biblioteca **React**, care permite construirea unei interfețe reactive, modularizate și ușor de întreținut. React este adecvat pentru aplicațiile care necesită actualizări dinamice ale conținutului și o experiență fluidă de utilizare. Pentru dezvoltarea și rularea eficientă a aplicației frontend a fost folosit **Vite**, un instrument modern de build care oferă timp scurt de pornire și reîncărcare rapidă în timpul dezvoltării.
+
+Navigarea între pagini este gestionată prin **React Router**, ceea ce permite implementarea unei aplicații de tip single-page application cu tranziții rapide și o structură clară a rutelor. Pentru gestionarea cererilor către server și a datelor cache-uite poate fi folosit și un mecanism de tip query management, util în special pentru paginile care afișează conținut actualizat frecvent.
+
+Din punct de vedere al interfeței, aplicația utilizează **HTML** și **CSS** pentru structurare și stilizare, cu accent pe design responsive și claritate vizuală. Alegerea CSS-ului clasic sau a unor foi de stil organizate pe componente oferă control direct asupra aspectului vizual și permite adaptarea interfeței la diferite dimensiuni de ecran.
+
+Un element important al aplicației îl reprezintă integrarea cu **API-uri externe** din zona muzicală. Acestea permit obținerea și actualizarea datelor despre artiști, albume și piese, completând baza de date internă cu informații relevante din surse specializate. Folosirea unor servicii externe contribuie la creșterea calității conținutului și la reducerea efortului necesar pentru menținerea manuală a catalogului muzical.
+
+În procesul de dezvoltare au mai fost utilizate și tehnologii de suport, precum **JSON** pentru schimbul de date între client și server, respectiv instrumente de versionare a codului, în special **Git**, pentru urmărirea modificărilor și colaborare. Aceste tehnologii sunt esențiale într-un proiect software modern, deoarece contribuie la organizarea codului, la testare și la menținerea unei baze solide pentru dezvoltări viitoare.
+
+În ansamblu, combinația dintre Django, Django REST Framework, React și Vite oferă un echilibru bun între stabilitate, productivitate și flexibilitate, fiind potrivită pentru implementarea unei platforme muzicale sociale cu funcționalități extinse și interacțiune dinamică.
+
+ 2.4 API-uri
+
+API-urile reprezintă componenta de comunicare a aplicației și permit schimbul standardizat de date între frontend, backend și serviciile externe. În cadrul acestei lucrări, backend-ul expune o API REST prin care sunt gestionate utilizatorii, catalogul muzical, evaluările, listele, notificările și recomandările, toate transmise în format JSON. În plus, aplicația integrează servicii externe precum MusicBrainz, Last.fm și Spotify pentru metadate și conținut suplimentar, iar utilizarea cache-ului contribuie la reducerea apelurilor repetate și la creșterea fiabilității.
+
+Analiza și proiectarea aplicației
+
+3.1 Cerințe funcționale
+
+Aplicația a fost proiectată ca o platformă muzicală socială, astfel încât cerințele funcționale să acopere atât gestionarea conținutului, cât și interacțiunea dintre utilizatori. Sistemul trebuie să permită autentificarea și administrarea profilului, navigarea prin catalogul de artiști, albume și piese, căutarea și filtrarea conținutului după criterii relevante și vizualizarea detaliilor pentru fiecare element muzical. În plus, utilizatorii trebuie să poată acorda like-uri, ratinguri și review-uri, să creeze liste personale și să urmărească artiști sau alți utilizatori. La acestea se adaugă mesageria internă, activitatea recentă, notificările, recomandările, statisticile, compatibilitatea și moderarea conținutului. Integrarea cu API-uri externe completează catalogul intern cu informații actualizate și susține calitatea datelor afișate.
+
+Dincolo de aceste funcții de bază, aplicația trebuie să susțină și fluxuri clare de utilizare. Utilizatorul trebuie să poată ajunge rapid de la o pagină de listă la o pagină de detaliu, să vadă relațiile dintre artiști, albume și piese și să interacționeze cu conținutul fără pași inutili. Funcțiile sociale trebuie să fie direct legate de conținutul muzical, astfel încât o recenzie, o notificare sau o recomandare să poată deveni punct de pornire pentru alte acțiuni în platformă. În acest fel, cerințele funcționale nu descriu doar operații izolate, ci un parcurs coerent prin aplicație.
+
+Acest mod de formulare a cerințelor ajută și la delimitarea funcțiilor de bază față de cele avansate. Catalogarea, evaluarea și organizarea conținutului formează nivelul esențial al aplicației, în timp ce recomandările, compatibilitatea și statisticile adaugă valoare prin personalizare și analiză. Separarea este importantă din punct de vedere metodologic, deoarece permite definirea clară a priorităților de implementare și a modului în care fiecare funcție contribuie la experiența generală a utilizatorului.
+
+3.2 Cerințe nefuncționale
+
+Pe lângă funcții, aplicația trebuie să îndeplinească și cerințe de calitate care fac utilizarea ei coerentă și stabilă. Performanța este susținută prin cache și prin precomputarea unor rezultate costisitoare, iar scalabilitatea este asigurată prin separarea frontend-ului de backend și de baza de date. Securitatea se bazează pe autentificare și autorizare, iar fiabilitatea presupune tratarea controlată a erorilor și a datelor invalide. Interfața trebuie să rămână clară și ușor de folosit pe browsere și dispozitive diferite, iar codul să fie organizat modular pentru a facilita mentenanța. În plus, modelul de date trebuie să păstreze integritatea informațiilor, iar aplicația să poată comunica eficient cu servicii externe. Aceste cerințe descriu nivelul de maturitate tehnică urmărit în proiect.
+
+Din perspectivă practică, aceste cerințe influențează direct modul de implementare. De exemplu, o pagină care afișează multe rezultate trebuie să rămână lizibilă și rapidă, iar o eroare de la un serviciu extern nu trebuie să blocheze întreaga experiență a utilizatorului. Totodată, aplicația trebuie să poată fi extinsă fără rescriere majoră, ceea ce impune separarea clară a responsabilităților între module și folosirea unor componente reutilizabile. Astfel, cerințele nefuncționale nu sunt doar observații generale, ci constrângeri care ghidează designul tehnic al soluției. Ele oferă și un criteriu de evaluare pentru soluția finală. Dacă sistemul răspunde rapid, păstrează datele consistente și oferă o interfață clară, atunci arhitectura aleasă este potrivită pentru scopul lucrării. În plus, aceste cerințe fac posibilă discutarea limitărilor într-un mod academic, deoarece arată ce a fost realizat și ce ar putea fi îmbunătățit într-o versiune viitoare.
+
+3.3 Arhitectura sistemului
+
+Arhitectura aleasă este de tip client-server și separă clar responsabilitățile dintre componente. Frontend-ul are rolul de a afișa datele și de a răspunde acțiunilor utilizatorului, backend-ul gestionează regulile de business, validarea cererilor și expunerea datelor prin API, iar baza de date stochează informațiile persistente despre utilizatori, conținut muzical și interacțiuni. Comunicarea dintre frontend și backend se face printr-o API REST, cu mesaje în format JSON, ceea ce simplifică integrarea și testarea. De asemenea, aplicația folosește servicii externe pentru completarea catalogului muzical, astfel încât sistemul combină date locale cu informații obținute din surse specializate. Din punct de vedere logic, aplicația poate fi privită pe patru niveluri: prezentare, aplicare, date și integrare externă. Această structură reduce cuplarea dintre componente și permite extinderea ulterioară fără rescrierea întregului sistem.
+
+În practică, această arhitectură oferă un avantaj important: fiecare strat poate evolua separat atâta timp cât contractul dintre ele rămâne stabil. Frontend-ul poate fi modificat vizual fără schimbări majore în baza de date, iar backend-ul poate introduce reguli suplimentare sau endpoint-uri noi fără a afecta structura generală a interfeței. În același timp, integrarea externă este izolată suficient de bine încât problemele temporare ale unei surse de date să poată fi tratate fără impact direct asupra funcționalităților de bază. Această organizare este potrivită pentru o aplicație care combină interacțiune socială, recomandare și catalogare. Separarea pe niveluri ajută și la înțelegerea fluxului de date. Utilizatorul interacționează cu interfața, interfața apelează serviciile backend, backend-ul validează și procesează datele, iar baza de date sau serviciile externe furnizează informația necesară.
+
+3.4 Modelul bazei de date
+
+Modelul bazei de date este relațional, deoarece datele aplicației au structură clară și relații explicite între entități. Entitățile centrale sunt utilizatorii, artiștii, albumele și piesele, la care se adaugă review-urile, ratingurile, like-urile, listele personale, mesajele, notificările, cererile de prietenie și înregistrările de activitate. Modelul urmărește relații naturale: un album aparține unui artist, piesele sunt asociate albumelor, iar utilizatorii pot crea mai multe evaluări, pot salva conținut în liste, pot urmări mai mulți artiști și pot comunica prin mesaje sau notificări. Relațiile many-to-many și tabelele intermediare sunt utile pentru liste și alte asocieri multiple, iar separarea profilului de datele de autentificare contribuie la organizarea corectă a identității utilizatorului. Alegerea modelului relațional este justificată de nevoia de normalizare, integritate referențială și interogări eficiente asupra datelor. În acest mod, baza de date susține atât funcțiile de catalogare și evaluare, cât și componenta socială și mecanismele avansate ale platformei.
+
+Un astfel de model este potrivit și pentru că permite păstrarea consecventă a datelor generate în timp de utilizatori. Review-urile, like-urile și notificările pot fi asociate direct cu acțiuni concrete, iar listele personale sau relațiile de prietenie pot fi actualizate fără redundanță inutilă. În plus, folosirea cheilor străine ajută la menținerea coerenței între entități, de exemplu atunci când un album este legat de un artist sau o piesă este asociată unui album. Din acest motiv, modelul relațional nu este ales doar din inerție tehnologică, ci pentru că răspunde bine cerințelor de consistență, trasabilitate și extindere ale aplicației. Prin acest model, proiectul obține și o bază bună pentru rapoarte și interogări viitoare. Datele pot fi agregate pentru statistici, pot fi urmărite pentru activitatea recentă și pot fi folosite în mecanisme de moderare sau recomandare fără a introduce structuri artificiale.
+
+Implementarea aplicației
+4.1 Backend
+
+Backend-ul reprezintă nucleul logic al aplicației, fiind responsabil de accesul la date, validarea cererilor și aplicarea regulilor de business. Pentru această lucrare a fost folosit Django împreună cu Django REST Framework, o combinație care oferă o structură clară pentru modele, serializare și endpoint-uri API. Comunicarea cu frontend-ul se face prin răspunsuri JSON, astfel încât interfața rămâne separată de procesarea internă, iar fiecare componentă poate fi dezvoltată independent.
+
+Organizarea backend-ului este pe module tematice, corespunzătoare domeniilor principale ale aplicației: utilizatori, conținut muzical, interacțiuni sociale și funcții avansate. Această împărțire reduce complexitatea codului și face mai ușoară extinderea ulterioară. Modelele de date descriu entitățile centrale, precum artiștii, albumele, piesele, review-urile, listele și notificările, iar ORM-ul Django asigură o interacțiune sigură cu baza de date. Serializatoarele prelucrează datele în ambele sensuri, iar view-urile decid ce operații sunt permise și ce răspuns trebuie întors.
+
+Pe lângă operațiile de bază, backend-ul gestionează autentificarea, autorizarea și validarea datelor introduse de utilizatori. Astfel, sistemul poate preveni datele incomplete sau inconsistente și poate restricționa accesul la resursele sensibile. În aceeași zonă sunt integrate și apelurile către servicii externe, folosite pentru completarea catalogului intern cu informații despre artiști și albume. În concluzie, backend-ul oferă fundația tehnică necesară pentru stabilitatea aplicației și pentru dezvoltarea unor funcționalități mai complexe în jurul datelor muzicale.
+
+Această organizare are și un avantaj practic: fiecare flux important poate fi urmărit și testat separat. De exemplu, o cerere pentru salvarea unui review trece prin verificarea datelor, controlul permisiunilor și actualizarea modelului asociat, fără a afecta restul aplicației. În mod similar, funcțiile care depind de date externe pot fi închise într-un strat de integrare dedicat, astfel încât eventualele erori temporare ale unui serviciu să nu compromită funcționalitățile de bază.
+
+4.2 Frontend
+
+Frontend-ul este partea vizibilă a aplicației și are rolul de a transforma datele oferite de backend într-o experiență clară și ușor de utilizat. Aplicația a fost construită ca single-page application, astfel încât navigarea între secțiuni să fie rapidă și fără reîncărcări inutile. Pentru interfață a fost utilizat React, ales pentru modelul său bazat pe componente reutilizabile și pentru modul în care gestionează starea și actualizarea conținutului.
+
+Structura frontend-ului este modulară: paginile, componentele reutilizabile și logica de acces la date sunt separate, pentru a păstra codul organizat și ușor de întreținut. React Router definește rutele principale ale aplicației, cum ar fi profilul, catalogul muzical, paginile de detaliu, listele, mesajele și notificările. Datele sunt preluate prin API-ul backend-ului și afișate în format JSON procesat local, iar în zonele cu multe actualizări sunt folosite mecanisme de cache și refresh controlat.
+
+Un element important îl reprezintă gestionarea stării aplicației. Frontend-ul trebuie să păstreze informații precum utilizatorul autentificat, conținutul formularelor, mesajele de eroare și selecțiile temporare din interfață. Pentru aceasta sunt folosite contexte și hook-uri, care permit accesul coerent la datele globale. Interfața este gândită și responsive, astfel încât aplicația să poată fi folosită atât pe desktop, cât și pe dispozitive mobile. În ansamblu, frontend-ul oferă stratul de prezentare care face sistemul accesibil, rapid și coerent vizual.
+
+4.3 Funcționalități principale
+
+Funcționalitățile principale definesc utilizarea de bază a platformei și acoperă explorarea, evaluarea și organizarea conținutului muzical. În primul rând, aplicația oferă autentificare și gestionarea profilului, astfel încât fiecare utilizator să poată avea un spațiu propriu și o experiență personalizată. Profilul devine punctul de pornire pentru celelalte acțiuni, de la navigarea în catalog până la consultarea activității sau a notificărilor.
+
+Catalogul muzical permite explorarea artiștilor, albumelor și pieselor într-o structură clară. Utilizatorul poate căuta și filtra conținutul după criterii relevante și poate trece rapid de la o pagină de listă la una de detaliu. Această organizare este importantă pentru că ajută la descoperirea conținutului și la înțelegerea relațiilor dintre entități. În plus, datele suplimentare preluate din surse externe ajută la completarea informațiilor afișate.
+
+Un alt grup important îl formează funcțiile de evaluare. Utilizatorii pot acorda like-uri, ratinguri și review-uri, iar aceste acțiuni contribuie la conturarea istoricului personal și la definirea preferințelor. De asemenea, conținutul poate fi salvat în liste personale, ceea ce oferă un mod simplu de organizare și revenire ulterioară la albumele sau piesele dorite. Din punct de vedere funcțional, aceste operații susțin atât feedback-ul individual, cât și mecanismele de recomandare ale platformei.
+
+Aplicația include și afișarea detaliilor pentru fiecare artist sau album, astfel încât utilizatorul să aibă acces rapid la informații precum copertă, descriere, dată de lansare și metadate asociate. În ansamblu, funcționalitățile principale formează partea operațională esențială a platformei și arată cum conținutul muzical poate fi explorat, evaluat și organizat într-un mod coerent.
+
+4.4 Funcționalități sociale
+
+Funcționalitățile sociale transformă aplicația dintr-un catalog muzical într-un spațiu de interacțiune între utilizatori. Platforma permite urmărirea altor persoane și construirea unor relații de tip prietenie, astfel încât utilizatorii să poată descoperi mai ușor activitatea celor cu gusturi similare. Această dimensiune socială este importantă pentru că adaugă context opiniilor și evaluărilor, iar preferințele muzicale devin mai vizibile în comunitate.
+
+Mesageria internă oferă un canal direct de comunicare între utilizatori. Prin ea pot fi purtate discuții despre albume, artiști sau recomandări fără a părăsi platforma. În același timp, secțiunea de activitate recentă arată ce acțiuni au fost efectuate în cont sau de către prieteni, ceea ce crește transparența și încurajează interacțiunea. Notificările completează acest flux prin informarea utilizatorului despre mesaje, cereri de prietenie, comentarii sau alte evenimente relevante.
+
+Aceste funcționalități sociale sunt legate direct de conținutul muzical, nu doar de profilurile utilizatorilor. Review-urile pot genera comentarii, listele pot fi urmărite de alți membri, iar activitatea publică poate influența descoperirea de conținut nou. Din punct de vedere tehnic, backend-ul gestionează relațiile, mesajele și notificările, iar frontend-ul le prezintă într-o formă clară și rapidă. În concluzie, componenta socială adaugă valoare prin comunicare, vizibilitate și participare activă, consolidând ideea de comunitate în jurul muzicii.
+
+În plus, aceste mecanisme permit și o formă de moderare și de control al interacțiunii. Dacă un utilizator primește notificări clare, vede activitatea relevantă și poate răspunde rapid la mesaje sau comentarii, experiența devine mai coerentă și mai ușor de urmărit. Din acest motiv, funcțiile sociale nu sunt tratate ca elemente auxiliare, ci ca parte integrată a arhitecturii aplicației, alături de catalog, evaluare și recomandare.
+
+Funcționalități avansate
+
+Capitolul de față prezintă componentele care adaugă valoare suplimentară platformei, dincolo de funcționalitățile de bază. Aceste funcționalități sunt construite pe baza datelor colectate din interacțiunile utilizatorilor și permit o experiență mai personalizată, mai profundă și mai relevantă. Ele includ sisteme de recomandare, mecanisme de compatibilitate între utilizatori, module de statistici și analiză, precum și instrumente avansate de moderare și notificări.
+
+Rolul acestor funcționalități este nu doar de a completa platforma, ci de a transforma datele brute în informații valoroase, care să îmbunătățească descoperirea conținutului, să crească gradul de implicare al utilizatorilor și să susțină construirea unei comunități mai conectate și mai coerente. Prin combinarea datelor explicite (ratinguri, like-uri, liste) cu date implicite (activitate de ascultare, timp petrecut pe platformă), aplicația poate oferi recomandări mai bune și o înțelegere mai profundă a preferințelor fiecărui utilizator.
+
+ 5.1 Sistem de recomandare
+
+Sistemul de recomandare oferă fiecărui utilizator conținut personalizat și relevant, crescând descoperirea și implicarea. Scopul principal este să reducă abundența de informații și să prezinte doar albumele și artiștii care vor interesa utilizatorul.
+
+Sistemul implementat este de tip **hibrid**, combinând trei abordări complementare. Recomandarea **bazată pe conținut** utilizează caracteristicile muzicale (gen, stil, epocă) pentru a sugera elemente asemănătoare cu cele apreciate. Dacă utilizatorul a apreciat rock din anii '70, sistemul va sugera albume similare. Implementarea folosește similitudine cosinus. Limitarea acestei metode este descrierea incompletă a conținutului muzical și imposibilitatea de a descoperi preferințe neobvii.
+
+**Filtrarea colaborativă** presupune că utilizatori cu preferințe similare în trecut vor avea preferințe apropiate în viitor. Se construiește o matrice utilizator-element și pe baza ei se identifică utilizatori similari. Avantajul este descoperirea preferințelor non-evidente; dezavantajul este problema "porniri la rece" pentru utilizatori noi.
+
+**Recomandarea socială** utilizează rețelele de prietenie și urmărire. Această abordare introduce încredere, dar poate duce la "filtrarea bulei" dacă nu este echilibrată.
+
+Pentru fiecare element, sistemul calculează un **scor de relevanță** combinat din: similaritate de conținut, scor colaborativ, scor social, actualitate și diversitate. Ponderile se ajustează pe baza performanței și feedback-ului.
+
+Sistemul operează pe mai multe niveluri: pagina principală cu recomandări, pagini de album/artist cu sugestii similare, profil cu secțiunea "Pentru tine". Calitatea se măsoară prin rate de precisie, recall și diversitate. O provocare importantă este adaptarea la preferințele care se schimbă în timp, folosind factor de decay. Recomandările sunt precalculate în perioade scăzute și stocate în cache.
+
+În concluzie, sistemul hibrid transformă catalogul voluminos într-o selecție personalizată și contribuie semnificativ la implicare.
+ 5.2 Compatibilitate și similaritate între utilizatori
+
+Compatibilitatea muzicală completează sistemul de recomandare prin identificarea utilizatorilor cu gusturi apropiate. Această funcționalitate susține latura socială a platformei și permite descoperirea de persoane cu interese comune, fără a transforma compatibilitatea într-un verdict absolut despre relația dintre doi utilizatori.
+
+Calculul se bazează pe vectorii de preferințe și pe câteva metrici uzuale. **Similaritatea cosinus** surprinde apropierea dintre direcțiile de preferință, **distanța Euclidiană** măsoară distanța dintre profile, iar **coeficientul Pearson** verifică evoluția comună a evaluărilor. În practică, scorul final combină genurile preferate, artiștii comuni, distribuția ratingurilor, albumele apreciate și evoluția preferințelor în timp.
+
+Rezultatul este un scor de compatibilitate pe o scală de la 0 la 100, calculat periodic și memorat în cache. Valorile ridicate pot fi folosite pentru secțiunea de utilizatori similari, pentru sugestii de grupuri sau ca factor de ponderare în recomandări. Totuși, scorul trebuie interpretat cu prudență: el indică asemănări muzicale, nu compatibilitate personală completă.
+
+Din perspectiva implementării, calculele pentru toate perechile de utilizatori ar fi costisitoare, de aceea ele sunt realizate asincron sau în batch. Utilizatorii pot controla vizibilitatea rezultatelor, iar platforma poate folosi aceste informații și pentru a observa tendințe de comunitate și subgrupuri muzicale.
+
+În concluzie, compatibilitatea adaugă o dimensiune socială utilă, deoarece leagă profilurile muzicale între ele și creează context pentru interacțiuni mai relevante.
+
+ 5.3 Module de statistici și analiză
+
+Modulele de statistici transformă activitatea utilizatorului în informații ușor de înțeles. Ele răspund la întrebări simple, dar importante: ce artiști preferă utilizatorul, ce genuri domină colecția, cum se schimbă gusturile în timp și cât de activ este acesta în comunitate.
+
+Cele mai importante vizualizări sunt topurile de artiști, albume și piese, distribuția pe genuri și analiza temporală. Acestea pot fi afișate pe perioade diferite, astfel încât utilizatorul să observe atât preferințele curente, cât și tendințele pe termen lung. În plus, statisticile de implicare pot include review-uri scrise, comentarii, liste create, mesaje trimise sau numărul de prieteni activi.
+
+Pentru a fi ușor de interpretat, datele sunt prezentate prin grafice circulare, bare, linii sau hărți de căldură. Platforma poate adăuga și rapoarte periodice, trimise lunar, care sintetizează activitatea și oferă utilizatorului o vedere rapidă asupra propriei evoluții muzicale. O altă funcție utilă este comparația între prieteni, prin care utilizatorul vede unde are preferințe comune și unde diferă de alți membri ai comunității.
+
+Din punct de vedere tehnic, aceste calcule sunt făcute pe interogări agregate și, când este posibil, sunt preprocesate și cache-uite pentru a evita încărcarea serverului. Accesul la statistici poate fi restricționat prin setări de confidențialitate, iar modulele pot susține și mecanisme de gamificare prin insigne sau obiective.
+
+În concluzie, statistica nu este doar o funcție de raportare, ci o modalitate de a transforma istoricul de utilizare într-o experiență mai personală și mai clară.
+
+ 5.4 Dashboard și notificări avansate
+
+Dashboard-ul aduce la un loc informațiile importante ale platformei: recomandări, activitate socială, notificări și statistici rapide. El reduce nevoia de navigare manuală și oferă utilizatorului o imagine de ansamblu imediată asupra a ceea ce contează în acel moment.
+
+Personalizarea este esențială. Fiecare utilizator poate avea un alt mix de widget-uri, de la recomandări și activitatea prietenilor până la artiști trending sau rezumate statistice. Dashboard-ul trebuie să fie ușor de scanat, coerent vizual și adaptat la ecrane diferite.
+
+Sistemul de notificări include cinci categorii principale: sociale, de conținut, de recomandare, administrative și de gamificare. Ele pot fi livrate prin mecanisme in-app, email, SMS sau push, în funcție de preferințele utilizatorului și de prioritatea evenimentului. Pentru a evita supraîncărcarea, notificările sunt agregate, filtrate și prioritizate.
+
+Din punct de vedere tehnic, notificările sunt generate la evenimente clare: follow, comentariu, mesaj, actualizare de conținut sau finalizarea calculelor de recomandare. Pentru alertele urgente se folosesc mecanisme în timp real, precum WebSocket-urile, iar pentru restul se pot folosi joburi asincrone și rezumate periodice. Dashboard-ul se actualizează dinamic, iar cache-ul ajută la reducerea timpilor de răspuns.
+
+În concluzie, dashboard-ul și notificările avansate funcționează împreună ca un centru de comandă al platformei, menținând utilizatorul informat, conectat și activ fără a încărca inutil interfața.
+
+Capitolul 6
+
+Testare și rezultate
+
+6.1 Metodologia de testare
+
+Testarea aplicației a urmărit verificarea corectitudinii funcționalităților principale, a stabilității generale și a modului în care interfața răspunde în scenarii reale de utilizare. Deoarece platforma combină catalogarea muzicală cu interacțiunea socială și cu funcționalități avansate de recomandare, procesul de testare a trebuit să acopere mai multe niveluri: logica de backend, comunicarea prin API, comportamentul frontend-ului și integrarea dintre componente.
+
+Metodologia aleasă a combinat testarea manuală cu verificări automate la nivel de componente. Testarea manuală a fost utilă pentru fluxurile de utilizare vizibile pentru utilizator, cum ar fi autentificarea, navigarea prin catalog, evaluarea albumelor, crearea listelor, trimiterea mesajelor și consultarea notificărilor. Prin aceste scenarii a fost urmărită atât funcționarea fiecărei pagini, cât și coerența dintre acțiunile efectuate și rezultatul afișat în interfață.
+
+Pentru partea de backend au fost urmărite în special validarea datelor, corectitudinea răspunsurilor API și respectarea permisiunilor. Au fost verificate cazuri tipice, precum crearea unei recenzii, adăugarea unui album într-o listă, urmărirea unui artist sau generarea unei notificări. În fiecare situație s-a observat dacă datele sunt salvate corect, dacă relațiile dintre entități rămân coerente și dacă sistemul tratează corespunzător valorile invalide sau lipsă.
+
+Un alt obiectiv important a fost testarea componentelor sociale și a funcțiilor care depind de interacțiunile dintre utilizatori. Aici au fost verificate relațiile de prietenie, mesajele, activitatea recentă, compatibilitatea și mecanismele de notificare. Aceste funcții sunt mai sensibile decât operațiile simple de citire, deoarece implică mai multe entități și reguli de business, iar eventualele erori pot afecta rapid experiența utilizatorului.
+
+În cazul frontend-ului, testarea a vizat în principal afișarea corectă a datelor, navigarea între rute, comportamentul formularelor și reacția interfeței la diferite dimensiuni de ecran. Au fost analizate și situațiile în care datele întârzie să apară, pentru a observa dacă utilizatorul primește un feedback vizual clar prin stări de încărcare, mesaje de eroare sau notificări temporare.
+
+Pentru funcționalitățile avansate, precum recomandările și statisticile, metodologia a urmărit în special consistența logică a rezultatelor. Nu a fost suficient ca sistemul să returneze un răspuns valid tehnic; a fost important ca acesta să fie și plauzibil din punct de vedere al preferințelor muzicale. De exemplu, recomandările au trebuit să reflecte conținut apropiat de istoricul utilizatorului, iar statisticile să exprime corect datele colectate în profil.
+
+În plus, au fost urmărite și aspecte de performanță, în special pentru paginile care afișează liste mari sau date agregate. A fost important ca aplicația să rămână fluentă în utilizare, chiar și atunci când volumul de informații crește. Acest lucru a permis identificarea funcțiilor care au nevoie de cache, precomputare sau optimizare suplimentară.
+
+În concluzie, metodologia de testare a avut ca scop confirmarea faptului că aplicația este funcțională, coerentă și suficient de stabilă pentru utilizare reală. Prin combinarea testării manuale cu verificări la nivel de backend și frontend, au putut fi identificate atât punctele forte ale sistemului, cât și zonele în care sunt necesare optimizări viitoare.
+
+6.2 Rezultate obținute
+
+Rezultatele testării au arătat că funcțiile esențiale ale aplicației se comportă coerent în scenarii obișnuite de utilizare. Autentificarea, navigarea prin catalog, evaluarea conținutului, gestionarea listelor și consultarea profilului au funcționat conform așteptărilor, fără blocaje majore în fluxul principal de utilizare.
+
+O parte importantă a evaluării a vizat componentele sociale. Testele pentru prietenie, mesagerie, activitate recentă și notificări au confirmat că interacțiunile dintre utilizatori sunt reflectate corect în interfață și în structura de date. În același timp, mecanismele de validare au respins corect valorile incomplete sau incorecte, ceea ce contribuie la stabilitatea generală a platformei.
+
+Funcționalitățile avansate au produs rezultate consistente cu datele disponibile. Recomandările au rămas aliniate cu preferințele exprimate, compatibilitatea a oferit un indicator util pentru utilizatorii cu gusturi similare, iar statisticile au sintetizat într-un mod clar activitatea acumulată în platformă. Dashboard-ul a centralizat aceste informații și le-a prezentat într-o formă ușor de urmărit.
+
+Au fost identificate și câteva limitări. În cazul volumelor mari de date, unele operații devin mai costisitoare și pot necesita optimizări suplimentare, în special prin cache, prelucrare asincronă sau precalcularea anumitor valori. De asemenea, calitatea recomandărilor și a compatibilității depinde de cantitatea de date disponibile pentru fiecare utilizator.
+
+Per ansamblu, rezultatele confirmă că aplicația își atinge obiectivele principale și oferă o experiență coerentă, funcțională și relevantă pentru scenariul propus. Testarea a demonstrat că arhitectura aleasă este potrivită pentru extindere ulterioară și pentru dezvoltarea unor funcționalități suplimentare.
+
+Evaluare offline și operaționalizare: pentru a valida calitatea recomandărilor am introdus un flux de evaluare offline (strategie leave‑one‑out) și mecanisme de precomputare și caching. Am adăugat un modul item‑based (cosine) care calculează vecinii item‑item și un management command pentru precomputarea recomandărilor per utilizator; rezultatele pot fi stocate în cache Redis și actualizate printr‑un worker Celery. Un script de evaluare calculează metrici simple (Precision@K) pentru compararea recomandărilor item‑based cu un baseline de popularitate. Comenzile utile pentru reproducere sunt:
+
+```
+python backend/manage.py precompute_recommendations --limit 12
+python backend/manage.py evaluate_recommender --k 10
+```
+
+Aceste adăugiri au permis atât optimizarea timpilor de răspuns (prin cache), cât și obținerea unor măsurători cuantificate asupra performanței recomandărilor, furnizând o bază pentru experimente viitoare și pentru îmbunătățiri metodologice.
+
+6.3 Limitări și direcții de îmbunătățire
+
+Deși aplicația oferă un set coerent de funcționalități, evaluarea a evidențiat și câteva limite care trebuie luate în considerare. Prima limitare ține de volumul de date: pe măsură ce catalogul și comunitatea cresc, anumite operații pot deveni mai lente dacă nu sunt optimizate prin cache, indexare sau procesare asincronă.
+
+O a doua limitare este legată de calitatea funcțiilor care depind de istoric, în special recomandările, compatibilitatea și statisticile. Aceste mecanisme devin mai precise atunci când există suficiente interacțiuni în contul utilizatorului, ceea ce înseamnă că experiența unui cont nou este inevitabil mai săracă decât a unuia activ.
+
+În plus, unele funcționalități avansate pot fi rafinate din punct de vedere al interfeței și al prezentării informațiilor. De exemplu, dashboard-ul poate fi extins cu widget-uri suplimentare, iar notificările pot primi reguli mai fine de prioritizare, pentru a reduce zgomotul informațional și a crește relevanța mesajelor afișate.
+
+Din perspectivă tehnică, o direcție firească de dezvoltare este introducerea unor mecanisme mai avansate de analiză și învățare din comportamentul utilizatorilor. Acest lucru ar putea îmbunătăți recomandările, ar putea susține comparații mai precise între utilizatori și ar putea adăuga niveluri suplimentare de personalizare.
+
+În concluzie, limitările identificate nu afectează obiectivele principale ale aplicației, dar indică zone clare în care sistemul poate fi extins și optimizat. Aceste direcții de dezvoltare confirmă faptul că platforma are potențialul de a evolua într-o soluție mai complexă și mai adaptată nevoilor unei comunități muzicale în creștere.
+
+Capitolul 7
+
+Concluzii
+
+Lucrarea de față a urmărit proiectarea și implementarea unei aplicații web dedicate evaluării, catalogării și socializării în jurul muzicii românești. Obiectivul principal a fost realizarea unei platforme care să combine într-un singur sistem organizarea conținutului muzical, interacțiunea socială și instrumentele de personalizare, astfel încât experiența utilizatorului să fie coerentă și relevantă.
+
+Pe parcursul dezvoltării au fost abordate mai multe direcții importante. Arhitectura client-server a permis separarea clară între frontend și backend, modelul relațional al bazei de date a susținut integritatea informațiilor, iar integrarea cu API-uri externe a completat catalogul muzical cu date utile și actualizate. În plus, funcționalitățile sociale, sistemul de recomandare, compatibilitatea între utilizatori, statisticile și dashboard-ul au transformat aplicația dintr-un simplu catalog într-o platformă comunitară.
+
+Rezultatele obținute confirmă faptul că soluția propusă răspunde cerințelor inițiale și oferă o experiență funcțională, stabilă și extensibilă. Testarea a evidențiat că funcțiile de bază și cele avansate se comportă coerent, iar limitările identificate țin mai ales de scalare și de rafinarea unor mecanisme care depind de volum mare de date și de utilizare constantă.
+
+Contribuția principală a lucrării constă în integrarea unor mecanisme tehnice și sociale într-o singură aplicație orientată spre comunitate. Prin această abordare, platforma demonstrează că muzica poate fi gestionată nu doar ca obiect de consum, ci și ca punct de plecare pentru interacțiune, descoperire și construire de identitate digitală.
+
+În perspectivă, aplicația poate fi extinsă prin recomandări mai avansate, analiză mai fină a comportamentului utilizatorilor, funcționalități mobile și mecanisme suplimentare de moderare și gamificare. Astfel, soluția realizată poate constitui baza pentru o platformă mai amplă, adaptată unei comunități muzicale active și în continuă creștere.
+
+Capitolul 8
+
+Bibliografie
+
+[1] Aggarwal, Charu C. Recommender Systems: The Textbook. Cham: Springer, 2016.
+
+[2] Ricci, Francesco; Rokach, Lior; Shapira, Bracha. Recommender Systems Handbook. 3rd ed. New York: Springer, 2022.
+
+[3] Django Software Foundation. Django Documentation. Disponibil la: https://docs.djangoproject.com/.
+
+[4] Django REST Framework. Django REST Framework Documentation. Disponibil la: https://www.django-rest-framework.org/.
+
+[5] React. React Documentation. Disponibil la: https://react.dev/.
+
+[6] Vite. Vite Documentation. Disponibil la: https://vite.dev/.
+
+[7] React Router. React Router Documentation. Disponibil la: https://reactrouter.com/.
+
+[8] Python Software Foundation. Python Documentation. Disponibil la: https://docs.python.org/3/.
+
+[9] MDN Web Docs. HTML: HyperText Markup Language. Disponibil la: https://developer.mozilla.org/en-US/docs/Web/HTML.
+
+[10] MDN Web Docs. CSS: Cascading Style Sheets. Disponibil la: https://developer.mozilla.org/en-US/docs/Web/CSS.
+
+[11] MDN Web Docs. JavaScript. Disponibil la: https://developer.mozilla.org/en-US/docs/Web/JavaScript.
+
+[12] PostgreSQL Global Development Group. PostgreSQL Documentation. Disponibil la: https://www.postgresql.org/docs/.
+
+[13] MusicBrainz. MusicBrainz API Documentation. Disponibil la: https://musicbrainz.org/doc/MusicBrainz_API.
+
+[14] Last.fm. Last.fm API Documentation. Disponibil la: https://www.last.fm/api.
+
+[15] Spotify for Developers. Web API Documentation. Disponibil la: https://developer.spotify.com/documentation/web-api.
+
+[16] Discogs. Discogs Developers API Documentation. Disponibil la: https://www.discogs.com/developers/.
+
