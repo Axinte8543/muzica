@@ -14,7 +14,8 @@ RUN apt-get update \
 COPY requirements.txt ./requirements.txt
 RUN pip install --upgrade pip setuptools wheel \
     && pip install -r requirements.txt
-    && pip install "celery>=5.2.7"
+    && pip install "celery>=5.2.7" \
+    && pip install "prometheus-client>=0.16.0"
 
 # Copy project
 COPY . /app
