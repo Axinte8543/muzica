@@ -29,7 +29,12 @@ export default function ReviewCommentReactions({ commentId, baseUrl }) {
   }, [accessToken, baseUrl, commentId]);
 
   useEffect(() => {
-    void loadReactions();
+    // Defer the initial load to the next tick to avoid calling setState
+    // synchronously inside the effect body which can cause cascading renders.
+    const id = setTimeout(() => {
+      void loadReactions();
+    }, 0);
+    return () => clearTimeout(id);
   }, [loadReactions]);
 
   async function handleReactionClick(emoji) {

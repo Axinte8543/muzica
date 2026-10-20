@@ -44,12 +44,18 @@ export async function removeAlbumWantToListen({
   };
 }
 
-export async function getMyWantToListen({ baseUrl, accessToken, page = 1 }) {
+export async function getMyWantToListen({
+  baseUrl,
+  accessToken,
+  page = 1,
+  pageSize = 10,
+}) {
   void baseUrl;
   void accessToken;
   const response = await apiClient.get(`/api/profile/want-to-listen`, {
     params: {
       page,
+      page_size: pageSize,
     },
   });
 

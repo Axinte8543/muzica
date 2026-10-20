@@ -14,7 +14,7 @@ from .models import AlbumLike, AlbumListen, AlbumRating, AlbumReview, FavoriteAl
 
 User = get_user_model()
 
-SIMILARITY_CACHE_VERSION = 3
+SIMILARITY_CACHE_VERSION = 4
 SIMILAR_USERS_CACHE_TTL = 60 * 60 * 6
 COMPATIBILITY_CACHE_TTL = 60 * 60 * 12
 MAX_CACHED_SIMILAR_USERS = 50
@@ -236,17 +236,35 @@ def _compatibility_components(user_a: User, user_b: User, *, profile_a: dict | N
 
 def _candidate_user_ids(user: User, profile: dict) -> set[int]:
     shared_album_ids = set(int(album_id) for album_id in profile['all_album_ids'])
-    if not shared_album_ids:
+    shared_artist_ids = set(int(artist_id) for artist_id in profile['artist_weights'].keys())
+    shared_genre_ids = set(int(genre_id) for genre_id in profile['genre_weights'].keys())
+    if not shared_album_ids and not shared_artist_ids and not shared_genre_ids:
         return set()
+
     candidate_ids: set[int] = set()
     for model in (AlbumRating, AlbumLike, FavoriteAlbum, AlbumListen, AlbumReview):
-        candidate_ids.update(
-            int(user_id)
-            for user_id in model.objects.filter(album_id__in=shared_album_ids)
-            .exclude(user=user)
-            .values_list('user_id', flat=True)
-            .distinct()
-        )
+        qs = model.objects.exclude(user=user)
+        signal_q = None
+        if shared_album_ids:
+            signal_q = {'album_id__in': shared_album_ids}
+            candidate_ids.update(
+                int(user_id)
+                for user_id in qs.filter(**signal_q).values_list('user_id', flat=True).distinct()
+            )
+        if shared_artist_ids:
+            candidate_ids.update(
+                int(user_id)
+                for user_id in qs.filter(album__artist_id__in=shared_artist_ids)
+                .values_list('user_id', flat=True)
+                .distinct()
+            )
+        if shared_genre_ids:
+            candidate_ids.update(
+                int(user_id)
+                for user_id in qs.filter(album__genres__id__in=shared_genre_ids)
+                .values_list('user_id', flat=True)
+                .distinct()
+            )
     candidate_ids.discard(int(user.id))
     return candidate_ids
 
@@ -294,11 +312,11 @@ def common_taste_details(
     max_albums: int = 2,
     min_like_rating: int = 4,
 ) -> dict:
-    """Return common taste details between two users.
-
-    Details are based on albums both users "liked" (rating >= min_like_rating).
-    We only consider approved albums and approved artists.
-    """
+\
+\
+\
+\
+       
     from music.models import Album, Artist, Genre
 
     qs_a = AlbumRating.objects.filter(
@@ -436,7 +454,7 @@ def compute_and_cache_similar_users(user_id: int, *, limit: int = MAX_CACHED_SIM
 
 
 def compatibility_payload(user_a: User, user_b: User) -> dict:
-    """Payload for the compatibility endpoint."""
+                                                 
     cache_key = _pair_cache_key(user_a.id, user_b.id)
     cached = cache.get(cache_key)
     if isinstance(cached, dict) and 'similarity' in cached:

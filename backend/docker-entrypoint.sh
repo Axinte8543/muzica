@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -e
 
-# Wait for Redis to become available (uses python redis client installed in image)
 if [ -n "$REDIS_URL" ]; then
   echo "Waiting for Redis at $REDIS_URL..."
   python - <<PY

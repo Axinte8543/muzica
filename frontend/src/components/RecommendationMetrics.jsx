@@ -10,8 +10,6 @@
  * Can be used in a tooltip, modal, or detail view
  */
 
-import { ui } from "../ui/ui.js";
-
 function formatScore(value) {
   if (value === null || value === undefined) return "—";
   const num = Number(value);
@@ -202,7 +200,7 @@ export default function RecommendationMetrics({
         }}
       >
         Scorurile se bazează pe activitatea ta (ratinguri, review-uri,
-        ascultări), artiștii pe care i urmărești, genurile tale preferate, și
+        ascultări), artiștii pe care îi urmărești, genurile tale preferate, și
         gusturile utilizatorilor similari cu tine.
       </div>
     </div>

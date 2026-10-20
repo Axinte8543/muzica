@@ -19,12 +19,12 @@ def _normalize_name(value: str) -> str:
 
 
 def _norm_key(value: str) -> str:
-	# Keep only alnum to make matching resilient to punctuation/diacritics.
+                                                                        
 	return re.sub(r"[^a-z0-9]+", "", _normalize_name(value).lower())
 
 
 def _strip_parenthetical_notes(value: str) -> str:
-	# E.g. "Cedry2k (dacă nu e deja)" -> "Cedry2k"
+                                               
 	v = str(value or "")
 	v = re.sub(r"\s*\([^)]*\)\s*", " ", v)
 	return _normalize_name(v)
@@ -86,7 +86,7 @@ def _resolve_musicbrainz(*, mb: MusicBrainzClient, name: str, romanian_only: boo
 	if not qname:
 		return Resolved(name=name)
 
-	# Prefer Romania when requested.
+                                 
 	query = f'artist:"{qname}"'
 	if romanian_only:
 		query = f'{query} AND area:Romania'
@@ -114,7 +114,7 @@ def _resolve_musicbrainz(*, mb: MusicBrainzClient, name: str, romanian_only: boo
 	if not mbid:
 		return Resolved(name=name)
 
-	# Fetch full artist with URL relations (for Spotify link) and aliases.
+                                                                       
 	full = mb.request(f"/artist/{mbid}", params={"inc": "url-rels+aliases"})
 	relations = full.get("relations") or []
 	spotify_url = ""
@@ -144,7 +144,7 @@ def _resolve_musicbrainz(*, mb: MusicBrainzClient, name: str, romanian_only: boo
 			if not an:
 				continue
 			aliases_list.append(an)
-	# De-dup + remove main name.
+                             
 	seen = set()
 	clean_aliases: list[str] = []
 	for a in aliases_list:
@@ -157,11 +157,11 @@ def _resolve_musicbrainz(*, mb: MusicBrainzClient, name: str, romanian_only: boo
 		clean_aliases.append(a)
 
 	return Resolved(
-		name=_normalize_name(full.get("name") or qname) or name,
-		musicbrainz_id=mbid,
-		spotify_id=spotify_id,
-		spotify_url=spotify_url,
-		aliases=clean_aliases,
+	 name=_normalize_name(full.get("name") or qname) or name,
+	 musicbrainz_id=mbid,
+	 spotify_id=spotify_id,
+	 spotify_url=spotify_url,
+	 aliases=clean_aliases,
 	)
 
 
@@ -195,11 +195,11 @@ def _resolve_spotify(*, sp: SpotifyClient, name: str, limit: int, market: str) -
 		pop_int = None
 
 	return Resolved(
-		name=artist_name,
-		spotify_id=artist_id,
-		spotify_url=artist_url,
-		image_url=artist_img,
-		popularity=pop_int,
+	 name=artist_name,
+	 spotify_id=artist_id,
+	 spotify_url=artist_url,
+	 image_url=artist_img,
+	 popularity=pop_int,
 	)
 
 
@@ -217,85 +217,85 @@ def _resolve_spotify_by_id(*, sp: SpotifyClient, spotify_id: str) -> Resolved:
 	except Exception:
 		pop_int = None
 	return Resolved(
-		name=artist_name,
-		spotify_id=id,
-		spotify_url=artist_url,
-		image_url=artist_img,
-		popularity=pop_int,
+	 name=artist_name,
+	 spotify_id=id,
+	 spotify_url=artist_url,
+	 image_url=artist_img,
+	 popularity=pop_int,
 	)
 
 
 class Command(BaseCommand):
 	help = (
-		"Resolve and attach MusicBrainz + Spotify external IDs to Artist rows (create missing artists optionally). "
-		"This command is idempotent and safe to re-run."
+	 "Resolve and attach MusicBrainz + Spotify external IDs to Artist rows (create missing artists optionally). "
+	 "This command is idempotent and safe to re-run."
 	)
 
 	def add_arguments(self, parser):
 		parser.add_argument(
-			"--artists",
-			type=str,
-			default="",
-			help="Comma-separated list of artist names (notes in parentheses are stripped)",
+		 "--artists",
+		 type=str,
+		 default="",
+		 help="Comma-separated list of artist names (notes in parentheses are stripped)",
 		)
 		parser.add_argument(
-			"--artists-file",
-			type=str,
-			default="",
-			help="Path to a UTF-8 text file with one artist name per line",
+		 "--artists-file",
+		 type=str,
+		 default="",
+		 help="Path to a UTF-8 text file with one artist name per line",
 		)
 		parser.add_argument(
-			"--preset",
-			type=str,
-			default="",
-			help="Use a built-in preset list (e.g. romanian-2026-04-17)",
+		 "--preset",
+		 type=str,
+		 default="",
+		 help="Use a built-in preset list (e.g. romanian-2026-04-17)",
 		)
 		parser.add_argument(
-			"--create-missing",
-			action="store_true",
-			help="Create Artist rows when they do not exist",
+		 "--create-missing",
+		 action="store_true",
+		 help="Create Artist rows when they do not exist",
 		)
 		parser.add_argument(
-			"--approved",
-			action="store_true",
-			help="Mark affected artists as approved",
+		 "--approved",
+		 action="store_true",
+		 help="Mark affected artists as approved",
 		)
 		parser.add_argument(
-			"--romanian",
-			action="store_true",
-			help="Mark affected artists as Romanian (is_romanian=true)",
+		 "--romanian",
+		 action="store_true",
+		 help="Mark affected artists as Romanian (is_romanian=true)",
 		)
 		parser.add_argument(
-			"--romanian-only-mb",
-			action="store_true",
-			help="Prefer MusicBrainz matches with area:Romania",
+		 "--romanian-only-mb",
+		 action="store_true",
+		 help="Prefer MusicBrainz matches with area:Romania",
 		)
 		parser.add_argument(
-			"--market",
-			type=str,
-			default="RO",
-			help="Spotify market (default RO)",
+		 "--market",
+		 type=str,
+		 default="RO",
+		 help="Spotify market (default RO)",
 		)
 		parser.add_argument(
-			"--spotify-limit",
-			type=int,
-			default=5,
-			help="Spotify search candidate limit (default 5)",
+		 "--spotify-limit",
+		 type=int,
+		 default=5,
+		 help="Spotify search candidate limit (default 5)",
 		)
 		parser.add_argument(
-			"--no-spotify",
-			action="store_true",
-			help="Skip Spotify lookups (still attaches Spotify URL if present in MusicBrainz url-rels)",
+		 "--no-spotify",
+		 action="store_true",
+		 help="Skip Spotify lookups (still attaches Spotify URL if present in MusicBrainz url-rels)",
 		)
 		parser.add_argument(
-			"--overwrite",
-			action="store_true",
-			help="Overwrite existing external IDs/URLs (default: only fill blanks)",
+		 "--overwrite",
+		 action="store_true",
+		 help="Overwrite existing external IDs/URLs (default: only fill blanks)",
 		)
 		parser.add_argument(
-			"--dry-run",
-			action="store_true",
-			help="Show what would change without writing to DB",
+		 "--dry-run",
+		 action="store_true",
+		 help="Show what would change without writing to DB",
 		)
 
 	def handle(self, *args, **options):
@@ -338,7 +338,7 @@ class Command(BaseCommand):
 					continue
 				names.append(_strip_parenthetical_notes(line))
 
-		# De-dup preserving order.
+                            
 		seen: set[str] = set()
 		clean_names: list[str] = []
 		for n in names:
@@ -389,7 +389,7 @@ class Command(BaseCommand):
 				except SpotifyAPIError as e:
 					self.stdout.write(self.style.WARNING(f"Spotify error for {name}: {e}"))
 
-			# Merge best-known fields.
+                             
 			final_name = mb_res.name or sp_res.name or name
 			musicbrainz_id = mb_res.musicbrainz_id
 			spotify_id = sp_res.spotify_id or mb_res.spotify_id
@@ -398,7 +398,7 @@ class Command(BaseCommand):
 			popularity = sp_res.popularity
 			aliases = mb_res.aliases or []
 
-			# Find an existing artist row.
+                                 
 			artist = None
 			if musicbrainz_id:
 				artist = Artist.objects.filter(musicbrainz_id=musicbrainz_id).first()
@@ -419,30 +419,30 @@ class Command(BaseCommand):
 					continue
 				with transaction.atomic():
 					artist = Artist(
-						name=final_name,
-						slug=_unique_slug_for_artist(final_name),
-						musicbrainz_id=musicbrainz_id or None,
-						spotify_id=spotify_id or None,
-						spotify_url=spotify_url,
-						image_url=image_url,
-						popularity=popularity,
-						aliases=", ".join(aliases),
-						is_romanian=romanian,
-						is_approved=approved,
+					 name=final_name,
+					 slug=_unique_slug_for_artist(final_name),
+					 musicbrainz_id=musicbrainz_id or None,
+					 spotify_id=spotify_id or None,
+					 spotify_url=spotify_url,
+					 image_url=image_url,
+					 popularity=popularity,
+					 aliases=", ".join(aliases),
+					 is_romanian=True,
+					 is_approved=approved,
 					)
 					artist.save()
 				created += 1
 				continue
 
-			# Update existing artist.
+                            
 			dirty: list[str] = []
-			# Prefer stylized/correct name only when it's basically the same artist.
+                                                                           
 			if final_name and _norm_key(final_name) == _norm_key(artist.name) and artist.name != final_name:
 				artist.name = final_name
 				dirty.append("name")
 
 			if musicbrainz_id and (overwrite or not artist.musicbrainz_id):
-				# Avoid accidental collisions.
+                                  
 				conflict = Artist.objects.filter(musicbrainz_id=musicbrainz_id).exclude(pk=artist.pk).only("id", "name").first()
 				if conflict is None:
 					artist.musicbrainz_id = musicbrainz_id
@@ -470,7 +470,7 @@ class Command(BaseCommand):
 				artist.aliases = ", ".join(aliases)
 				dirty.append("aliases")
 
-			if romanian and not artist.is_romanian:
+			if not artist.is_romanian:
 				artist.is_romanian = True
 				dirty.append("is_romanian")
 

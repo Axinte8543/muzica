@@ -42,9 +42,11 @@ export default function FollowedArtistsPage() {
     },
   });
 
-  const artists = Array.isArray(followedArtistsQuery.data)
-    ? followedArtistsQuery.data
-    : [];
+  const artists = useMemo(
+    () =>
+      Array.isArray(followedArtistsQuery.data) ? followedArtistsQuery.data : [],
+    [followedArtistsQuery.data],
+  );
   const totalPages = useMemo(() => {
     return Math.max(1, Math.ceil(artists.length / itemsPerPage));
   }, [artists.length, itemsPerPage]);
@@ -60,7 +62,11 @@ export default function FollowedArtistsPage() {
     : null;
 
   useEffect(() => {
-    setPage((prev) => Math.min(prev, totalPages));
+    // Defer setPage to avoid calling setState synchronously within effect
+    const t = setTimeout(() => {
+      setPage((prev) => Math.min(prev, totalPages));
+    }, 0);
+    return () => clearTimeout(t);
   }, [totalPages]);
 
   async function handleUnfollow(artistId) {

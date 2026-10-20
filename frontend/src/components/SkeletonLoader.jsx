@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import "./SkeletonLoader.css";
 
 /**
@@ -8,6 +9,28 @@ export default function SkeletonLoader({
   count = 1,
   height = 100,
 }) {
+  // Compute message widths after mount to avoid calling impure Math.random() during render
+  const [messageWidths, setMessageWidths] = useState(() => {
+    if (variant !== "message") return null;
+    // initial fallback widths to avoid layout jank on first paint
+    return Array.from({ length: count }).map(() => "60%");
+  });
+
+  useEffect(() => {
+    let timer = null;
+    if (variant !== "message") {
+      // Defer to avoid synchronous setState inside effect
+      timer = setTimeout(() => setMessageWidths(null), 0);
+      return () => clearTimeout(timer);
+    }
+    timer = setTimeout(() => {
+      const widths = Array.from({ length: count }).map(
+        () => `${40 + Math.random() * 40}%`,
+      );
+      setMessageWidths(widths);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [variant, count]);
   if (variant === "card") {
     return (
       <div className="skeleton-container">
@@ -62,6 +85,7 @@ export default function SkeletonLoader({
   }
 
   if (variant === "message") {
+    // Use the top-level `messageWidths` computed with `useMemo`
     return (
       <div className="skeleton-container">
         {Array.from({ length: count }).map((_, idx) => (
@@ -75,7 +99,7 @@ export default function SkeletonLoader({
             <div
               className="skeleton-text"
               style={{
-                width: `${40 + Math.random() * 40}%`,
+                width: messageWidths ? messageWidths[idx] : "60%",
                 maxWidth: "200px",
                 height: "24px",
               }}

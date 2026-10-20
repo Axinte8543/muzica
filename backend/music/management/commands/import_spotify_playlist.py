@@ -28,7 +28,7 @@ def _pick_image_url(images: list[dict[str, Any]] | None) -> str:
     images = images or []
     if not images:
         return ""
-    # Spotify returns images usually sorted largest->smallest.
+                                                              
     return str(images[0].get("url") or "").strip()
 
 
@@ -49,7 +49,7 @@ def _parse_release_date(raw: str | None, precision: str | None) -> date:
         if precision == "year":
             return date(int(raw), 1, 1)
 
-        # Fallback: best-effort parsing.
+                                        
         parts = raw.split("-")
         if len(parts) == 3:
             return date(int(parts[0]), int(parts[1]), int(parts[2]))
@@ -324,7 +324,7 @@ class Command(BaseCommand):
                     if genres:
                         song_obj.genres.set(genres)
 
-                    # Featured artists for the track (artists beyond the primary artist).
+                                                                                         
                     if featured_artist_ids:
                         for featured_id in featured_artist_ids:
                             if featured_id in artist_cache:

@@ -23,6 +23,14 @@ function formatDuration(seconds) {
   return `${minutes}:${String(remainingSeconds).padStart(2, "0")}`;
 }
 
+function releaseLabelForSong(song) {
+  const type = String(song?.album_release_type || "").toLowerCase();
+  if (type === "single") return "Single";
+  if (type === "ep") return "EP";
+  if (type === "compilation") return "Compilație";
+  return "Release";
+}
+
 function renderWithMentions(text) {
   const src = String(text ?? "");
   const parts = src.split(/(\s+)/);
@@ -87,10 +95,10 @@ export default function SongPage({ slug }) {
       "";
     const parsed = Number(raw);
     if (Number.isFinite(parsed) && parsed > 0) {
-      setHighlightedCommentId(parsed);
+      queueMicrotask(() => setHighlightedCommentId(parsed));
       return;
     }
-    setHighlightedCommentId(null);
+    queueMicrotask(() => setHighlightedCommentId(null));
   }, [searchParams]);
 
   function statusLabel(raw) {
@@ -169,8 +177,10 @@ export default function SongPage({ slug }) {
     if (!song?.id) return;
 
     let isCancelled = false;
-    setIsLoadingLike(true);
-    setLikeError(null);
+    queueMicrotask(() => {
+      setIsLoadingLike(true);
+      setLikeError(null);
+    });
 
     getSongLikeStatus({
       baseUrl,
@@ -203,8 +213,10 @@ export default function SongPage({ slug }) {
     if (!song?.id) return;
 
     let isCancelled = false;
-    setIsLoadingComments(true);
-    setCommentsError(null);
+    queueMicrotask(() => {
+      setIsLoadingComments(true);
+      setCommentsError(null);
+    });
 
     apiClient
       .get(`/api/songs/${song.id}/comments/`)
@@ -628,7 +640,7 @@ export default function SongPage({ slug }) {
               </p>
 
               <p style={{ margin: "6px 0" }}>
-                <strong>Album:</strong>{" "}
+                <strong>{releaseLabelForSong(song)}:</strong>{" "}
                 {song.album_slug ? (
                   <Link to={`/albums/${song.album_slug}`}>
                     {song.album_title}

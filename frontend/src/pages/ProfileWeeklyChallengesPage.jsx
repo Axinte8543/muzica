@@ -106,9 +106,9 @@ export default function ProfileWeeklyChallengesPage() {
 
           {!isLoading && !error && challenges.length ? (
             <div style={{ display: "grid", gap: "10px" }}>
-              {challenges.map((c) => (
+              {challenges.map((c, idx) => (
                 <div
-                  key={String(c.key || c.title || Math.random())}
+                  key={String(c.key || c.title || idx)}
                   style={{
                     padding: "10px",
                     border: `1px solid ${ui.colors.border}`,

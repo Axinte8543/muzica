@@ -19,6 +19,24 @@ export async function rateAlbum({ baseUrl, albumId, rating, accessToken }) {
   return response.data;
 }
 
+export async function getMyArtistRating({ baseUrl, artistId, accessToken }) {
+  void baseUrl;
+  void accessToken;
+  const response = await apiClient.get(`/api/artists/${artistId}/rate`);
+
+  return response.data?.rating ?? null;
+}
+
+export async function rateArtist({ baseUrl, artistId, rating, accessToken }) {
+  void baseUrl;
+  void accessToken;
+  const response = await apiClient.post(`/api/artists/${artistId}/rate`, {
+    rating,
+  });
+
+  return response.data;
+}
+
 export async function getMySongRating({ baseUrl, songId, accessToken }) {
   void baseUrl;
   void accessToken;

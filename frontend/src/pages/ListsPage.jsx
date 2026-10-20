@@ -32,6 +32,18 @@ export default function ListsPage() {
 
   const [publicNew, setPublicNew] = useState([]);
   const [publicLiked, setPublicLiked] = useState([]);
+  const [publicNewPage, setPublicNewPage] = useState(1);
+  const [publicLikedPage, setPublicLikedPage] = useState(1);
+  const [publicNewInfo, setPublicNewInfo] = useState({
+    count: 0,
+    next: null,
+    previous: null,
+  });
+  const [publicLikedInfo, setPublicLikedInfo] = useState({
+    count: 0,
+    next: null,
+    previous: null,
+  });
   const [isLoadingPublic, setIsLoadingPublic] = useState(false);
   const [publicError, setPublicError] = useState(null);
   const [publicTagValue, setPublicTagValue] = useState("");
@@ -70,6 +82,10 @@ export default function ListsPage() {
 
   const [lastRemoved, setLastRemoved] = useState(null);
   const [isUndoingRemove, setIsUndoingRemove] = useState(false);
+  const publicPageSize = 10;
+  const listContentPageSize = 10;
+  const [listContentPage, setListContentPage] = useState(1);
+  const [activeSection, setActiveSection] = useState("mine");
 
   const visibleLists = useMemo(() => {
     const query = String(myListFilter || "")
@@ -95,28 +111,69 @@ export default function ListsPage() {
     );
   }, [lists, selectedListId]);
 
+  const selectedListAlbums = useMemo(() => {
+    return Array.isArray(selectedList?.albums) ? selectedList.albums : [];
+  }, [selectedList?.albums]);
+
+  const listContentTotalPages = useMemo(() => {
+    return Math.max(
+      1,
+      Math.ceil(selectedListAlbums.length / listContentPageSize),
+    );
+  }, [selectedListAlbums.length]);
+
+  const safeListContentPage = Math.min(listContentPage, listContentTotalPages);
+
+  const pagedSelectedListAlbums = useMemo(() => {
+    const start = (safeListContentPage - 1) * listContentPageSize;
+    return selectedListAlbums.slice(start, start + listContentPageSize);
+  }, [safeListContentPage, selectedListAlbums]);
+
   useEffect(() => {
-    setRenameValue(selectedList?.name ? String(selectedList.name) : "");
+    const t = setTimeout(() => {
+      setRenameValue(selectedList?.name ? String(selectedList.name) : "");
+    }, 0);
+    return () => clearTimeout(t);
   }, [selectedList?.id, selectedList?.name]);
 
   useEffect(() => {
-    setDescriptionValue(
-      selectedList?.description ? String(selectedList.description) : "",
-    );
+    const t = setTimeout(() => {
+      setDescriptionValue(
+        selectedList?.description ? String(selectedList.description) : "",
+      );
+    }, 0);
+    return () => clearTimeout(t);
   }, [selectedList?.id, selectedList?.description]);
 
   useEffect(() => {
-    const tags = Array.isArray(selectedList?.tags) ? selectedList.tags : [];
-    setTagsValue(tags.join(", "));
+    const t = setTimeout(() => {
+      const tags = Array.isArray(selectedList?.tags) ? selectedList.tags : [];
+      setTagsValue(tags.join(", "));
+    }, 0);
+    return () => clearTimeout(t);
   }, [selectedList?.id, selectedList?.tags]);
 
   useEffect(() => {
-    // reset local note edits when switching lists
-    setNoteEdits({});
-    setSavingNoteItemId(null);
-    setDraggingItemId(null);
-    setStatusMessage(null);
+    // reset local note edits when switching lists (deferred to avoid sync setState in effect)
+    const t = setTimeout(() => {
+      setNoteEdits({});
+      setSavingNoteItemId(null);
+      setDraggingItemId(null);
+      setStatusMessage(null);
+      setListContentPage(1);
+    }, 0);
+    return () => clearTimeout(t);
   }, [selectedList?.id]);
+
+  useEffect(() => {
+    if (listContentPage <= listContentTotalPages) return;
+    setListContentPage(listContentTotalPages);
+  }, [listContentPage, listContentTotalPages]);
+
+  useEffect(() => {
+    if (isAuthenticated) return;
+    setActiveSection("public");
+  }, [isAuthenticated]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -179,22 +236,34 @@ export default function ListsPage() {
           getPublicLists({
             baseUrl,
             sort: "new",
-            limit: 20,
+            page: publicNewPage,
+            pageSize: publicPageSize,
             tag: publicTag || undefined,
             accessToken: isAuthVerified ? accessToken : undefined,
           }),
           getPublicLists({
             baseUrl,
             sort: "liked",
-            limit: 20,
+            page: publicLikedPage,
+            pageSize: publicPageSize,
             tag: publicTag || undefined,
             accessToken: isAuthVerified ? accessToken : undefined,
           }),
         ]);
 
         if (isCancelled) return;
-        setPublicNew(Array.isArray(newest) ? newest : []);
-        setPublicLiked(Array.isArray(liked) ? liked : []);
+        setPublicNew(Array.isArray(newest?.results) ? newest.results : []);
+        setPublicLiked(Array.isArray(liked?.results) ? liked.results : []);
+        setPublicNewInfo({
+          count: Number(newest?.count) || 0,
+          next: newest?.next ?? null,
+          previous: newest?.previous ?? null,
+        });
+        setPublicLikedInfo({
+          count: Number(liked?.count) || 0,
+          next: liked?.next ?? null,
+          previous: liked?.previous ?? null,
+        });
       } catch (err) {
         if (err?.response?.status === 401) {
           logout();
@@ -204,6 +273,8 @@ export default function ListsPage() {
         if (!isCancelled) {
           setPublicNew([]);
           setPublicLiked([]);
+          setPublicNewInfo({ count: 0, next: null, previous: null });
+          setPublicLikedInfo({ count: 0, next: null, previous: null });
           setPublicError("Nu am putut încărca listele publice.");
         }
       } finally {
@@ -216,7 +287,15 @@ export default function ListsPage() {
     return () => {
       isCancelled = true;
     };
-  }, [baseUrl, isAuthVerified, accessToken, logout, publicTag]);
+  }, [
+    baseUrl,
+    isAuthVerified,
+    accessToken,
+    logout,
+    publicTag,
+    publicNewPage,
+    publicLikedPage,
+  ]);
 
   const selectedRole = String(selectedList?.my_role || "").toLowerCase();
   const isOwner = selectedRole === "owner";
@@ -912,8 +991,69 @@ export default function ListsPage() {
         <p style={{ marginTop: "14px" }}>Se încarcă...</p>
       ) : null}
 
-      {isAuthenticated && selectedList ? (
-        <div style={{ ...ui.card, marginTop: "12px" }}>
+      <div
+        role="tablist"
+        aria-label="Secțiuni liste"
+        style={{
+          display: "flex",
+          gap: "8px",
+          flexWrap: "wrap",
+          marginTop: "14px",
+        }}
+      >
+        {isAuthenticated ? (
+          <>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeSection === "mine"}
+              onClick={() => setActiveSection("mine")}
+              style={{
+                ...ui.buttonSmall,
+                background:
+                  activeSection === "mine"
+                    ? "rgba(245, 158, 11, 0.18)"
+                    : "var(--button-bg)",
+              }}
+            >
+              Listele mele
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeSection === "content"}
+              onClick={() => setActiveSection("content")}
+              style={{
+                ...ui.buttonSmall,
+                background:
+                  activeSection === "content"
+                    ? "rgba(245, 158, 11, 0.18)"
+                    : "var(--button-bg)",
+              }}
+            >
+              Conținut listă
+            </button>
+          </>
+        ) : null}
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeSection === "public"}
+          onClick={() => setActiveSection("public")}
+          style={{
+            ...ui.buttonSmall,
+            background:
+              activeSection === "public"
+                ? "rgba(245, 158, 11, 0.18)"
+                : "var(--button-bg)",
+          }}
+        >
+          Liste publice
+        </button>
+      </div>
+
+      {isAuthenticated && selectedList && activeSection === "content" ? (
+        <div style={{ ...ui.card, marginTop: "16px" }}>
           <h3 style={{ marginTop: 0 }}>Lista selectată</h3>
 
           <p style={{ marginTop: "6px", opacity: 0.8 }}>
@@ -1067,7 +1207,8 @@ export default function ListsPage() {
         </div>
       ) : null}
 
-      <section style={{ ...ui.card, marginTop: "16px" }}>
+      {activeSection === "public" ? (
+      <section id="public-lists" style={{ ...ui.card, marginTop: "16px" }}>
         <h3 style={{ marginTop: 0, marginBottom: "10px" }}>
           Explorează liste publice
         </h3>
@@ -1081,7 +1222,11 @@ export default function ListsPage() {
           <button
             type="button"
             style={ui.button}
-            onClick={() => setPublicTag(String(publicTagValue || "").trim())}
+            onClick={() => {
+              setPublicNewPage(1);
+              setPublicLikedPage(1);
+              setPublicTag(String(publicTagValue || "").trim());
+            }}
           >
             Aplică
           </button>
@@ -1090,6 +1235,8 @@ export default function ListsPage() {
             style={ui.button}
             onClick={() => {
               setPublicTagValue("");
+              setPublicNewPage(1);
+              setPublicLikedPage(1);
               setPublicTag("");
             }}
           >
@@ -1116,66 +1263,101 @@ export default function ListsPage() {
             <div style={{ ...ui.card, padding: "12px" }}>
               <h4 style={{ margin: "0 0 8px" }}>Cele mai noi liste</h4>
               {Array.isArray(publicNew) && publicNew.length ? (
-                <ul
-                  style={{
-                    listStyle: "none",
-                    padding: 0,
-                    margin: 0,
-                    display: "grid",
-                    gap: "8px",
-                  }}
-                >
-                  {publicNew.map((l) => (
-                    <li
-                      key={`new-${l.id}`}
-                      style={{ ...ui.card, padding: "10px 12px" }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          gap: "10px",
-                          alignItems: "center",
-                        }}
+                <>
+                  <ul
+                    style={{
+                      listStyle: "none",
+                      padding: 0,
+                      margin: 0,
+                      display: "grid",
+                      gap: "8px",
+                    }}
+                  >
+                    {publicNew.map((l) => (
+                      <li
+                        key={`new-${l.id}`}
+                        style={{ ...ui.card, padding: "10px 12px" }}
                       >
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ fontWeight: 700 }}>
-                            <Link to={`/lists/public/${l.id}`}>{l.name}</Link>
-                          </div>
-                          <div style={{ opacity: 0.85, marginTop: "2px" }}>
-                            {l.user_username} · {l.albums_count ?? 0} albume ·
-                            ❤️ {l.likes_count ?? 0}
-                          </div>
-                          {Array.isArray(l.tags) && l.tags.length ? (
-                            <div
-                              style={{
-                                opacity: 0.78,
-                                marginTop: "4px",
-                                fontSize: "0.9em",
-                              }}
-                            >
-                              Taguri: {l.tags.join(", ")}
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            gap: "10px",
+                            alignItems: "center",
+                          }}
+                        >
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontWeight: 700 }}>
+                              <Link to={`/lists/public/${l.id}`}>{l.name}</Link>
                             </div>
+                            <div style={{ opacity: 0.85, marginTop: "2px" }}>
+                              {l.user_username} · {l.albums_count ?? 0} albume ·
+                              ❤️ {l.likes_count ?? 0}
+                            </div>
+                            {Array.isArray(l.tags) && l.tags.length ? (
+                              <div
+                                style={{
+                                  opacity: 0.78,
+                                  marginTop: "4px",
+                                  fontSize: "0.9em",
+                                }}
+                              >
+                                Taguri: {l.tags.join(", ")}
+                              </div>
+                            ) : null}
+                          </div>
+                          {isAuthenticated ? (
+                            <button
+                              type="button"
+                              style={ui.buttonSmall}
+                              disabled={likePendingIds.has(String(l.id))}
+                              onClick={() => toggleLike(l)}
+                            >
+                              {likePendingIds.has(String(l.id))
+                                ? "..."
+                                : l.is_liked
+                                  ? "Unlike"
+                                  : "Like"}
+                            </button>
                           ) : null}
                         </div>
-                        {isAuthenticated ? (
-                          <button
-                            type="button"
-                            style={ui.buttonSmall}
-                            disabled={likePendingIds.has(String(l.id))}
-                            onClick={() => toggleLike(l)}
-                          >
-                            {likePendingIds.has(String(l.id))
-                              ? "..."
-                              : l.is_liked
-                                ? "Unlike"
-                                : "Like"}
-                          </button>
-                        ) : null}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                      </li>
+                    ))}
+                  </ul>
+                  {publicNewInfo.count > publicPageSize ? (
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: "10px",
+                        marginTop: "12px",
+                      }}
+                    >
+                      <button
+                        type="button"
+                        style={ui.buttonSmall}
+                        disabled={!publicNewInfo.previous}
+                        onClick={() =>
+                          setPublicNewPage((page) => Math.max(1, page - 1))
+                        }
+                      >
+                        Prev
+                      </button>
+                      <span style={{ opacity: 0.85 }}>
+                        Pagina {publicNewPage} · {publicNewInfo.count} total
+                      </span>
+                      <button
+                        type="button"
+                        style={ui.buttonSmall}
+                        disabled={!publicNewInfo.next}
+                        onClick={() => setPublicNewPage((page) => page + 1)}
+                      >
+                        Next
+                      </button>
+                    </div>
+                  ) : null}
+                </>
               ) : (
                 <p style={{ margin: 0, opacity: 0.85 }}>
                   Nu există încă liste publice.
@@ -1186,55 +1368,90 @@ export default function ListsPage() {
             <div style={{ ...ui.card, padding: "12px" }}>
               <h4 style={{ margin: "0 0 8px" }}>Cele mai liked liste</h4>
               {Array.isArray(publicLiked) && publicLiked.length ? (
-                <ul
-                  style={{
-                    listStyle: "none",
-                    padding: 0,
-                    margin: 0,
-                    display: "grid",
-                    gap: "8px",
-                  }}
-                >
-                  {publicLiked.map((l) => (
-                    <li
-                      key={`liked-${l.id}`}
-                      style={{ ...ui.card, padding: "10px 12px" }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          gap: "10px",
-                          alignItems: "center",
-                        }}
+                <>
+                  <ul
+                    style={{
+                      listStyle: "none",
+                      padding: 0,
+                      margin: 0,
+                      display: "grid",
+                      gap: "8px",
+                    }}
+                  >
+                    {publicLiked.map((l) => (
+                      <li
+                        key={`liked-${l.id}`}
+                        style={{ ...ui.card, padding: "10px 12px" }}
                       >
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ fontWeight: 700 }}>
-                            <Link to={`/lists/public/${l.id}`}>{l.name}</Link>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            gap: "10px",
+                            alignItems: "center",
+                          }}
+                        >
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontWeight: 700 }}>
+                              <Link to={`/lists/public/${l.id}`}>{l.name}</Link>
+                            </div>
+                            <div style={{ opacity: 0.85, marginTop: "2px" }}>
+                              {l.user_username} · {l.albums_count ?? 0} albume ·
+                              ❤️ {l.likes_count ?? 0}
+                            </div>
                           </div>
-                          <div style={{ opacity: 0.85, marginTop: "2px" }}>
-                            {l.user_username} · {l.albums_count ?? 0} albume ·
-                            ❤️ {l.likes_count ?? 0}
-                          </div>
+                          {isAuthenticated ? (
+                            <button
+                              type="button"
+                              style={ui.buttonSmall}
+                              disabled={likePendingIds.has(String(l.id))}
+                              onClick={() => toggleLike(l)}
+                            >
+                              {likePendingIds.has(String(l.id))
+                                ? "..."
+                                : l.is_liked
+                                  ? "Unlike"
+                                  : "Like"}
+                            </button>
+                          ) : null}
                         </div>
-                        {isAuthenticated ? (
-                          <button
-                            type="button"
-                            style={ui.buttonSmall}
-                            disabled={likePendingIds.has(String(l.id))}
-                            onClick={() => toggleLike(l)}
-                          >
-                            {likePendingIds.has(String(l.id))
-                              ? "..."
-                              : l.is_liked
-                                ? "Unlike"
-                                : "Like"}
-                          </button>
-                        ) : null}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                      </li>
+                    ))}
+                  </ul>
+                  {publicLikedInfo.count > publicPageSize ? (
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: "10px",
+                        marginTop: "12px",
+                      }}
+                    >
+                      <button
+                        type="button"
+                        style={ui.buttonSmall}
+                        disabled={!publicLikedInfo.previous}
+                        onClick={() =>
+                          setPublicLikedPage((page) => Math.max(1, page - 1))
+                        }
+                      >
+                        Prev
+                      </button>
+                      <span style={{ opacity: 0.85 }}>
+                        Pagina {publicLikedPage} · {publicLikedInfo.count} total
+                      </span>
+                      <button
+                        type="button"
+                        style={ui.buttonSmall}
+                        disabled={!publicLikedInfo.next}
+                        onClick={() => setPublicLikedPage((page) => page + 1)}
+                      >
+                        Next
+                      </button>
+                    </div>
+                  ) : null}
+                </>
               ) : (
                 <p style={{ margin: 0, opacity: 0.85 }}>
                   Nu există încă liste publice.
@@ -1244,6 +1461,7 @@ export default function ListsPage() {
           </div>
         ) : null}
       </section>
+      ) : null}
 
       {!isAuthenticated ? (
         <div style={{ marginTop: "18px", opacity: 0.9 }}>
@@ -1256,12 +1474,12 @@ export default function ListsPage() {
         </div>
       ) : null}
 
-      {isAuthenticated ? (
+      {isAuthenticated && activeSection !== "public" ? (
         <>
           <form
             onSubmit={handleCreateList}
             style={{
-              display: "flex",
+              display: activeSection === "mine" ? "flex" : "none",
               gap: "8px",
               alignItems: "center",
               flexWrap: "wrap",
@@ -1294,7 +1512,15 @@ export default function ListsPage() {
                 flexWrap: "wrap",
               }}
             >
-              <div style={{ ...ui.card, minWidth: "260px", flex: "0 0 280px" }}>
+              <div
+                id="my-lists"
+                style={{
+                  ...ui.card,
+                  display: activeSection === "mine" ? "block" : "none",
+                  minWidth: "280px",
+                  flex: "1 1 540px",
+                }}
+              >
                 <h3 style={{ marginTop: 0 }}>Listele mele ({myListsCount})</h3>
                 {Array.isArray(lists) && lists.length ? (
                   <>
@@ -1318,7 +1544,10 @@ export default function ListsPage() {
                           <li key={l.id} style={{ marginBottom: "8px" }}>
                             <button
                               type="button"
-                              onClick={() => setSelectedListId(l.id)}
+                              onClick={() => {
+                                setSelectedListId(l.id);
+                                setActiveSection("content");
+                              }}
                               style={{
                                 ...ui.buttonSmall,
                                 width: "100%",
@@ -1349,7 +1578,14 @@ export default function ListsPage() {
                 )}
               </div>
 
-              <div style={{ ...ui.card, flex: "1 1 540px", minWidth: "320px" }}>
+              <div
+                style={{
+                  ...ui.card,
+                  display: activeSection === "content" ? "block" : "none",
+                  flex: "1 1 760px",
+                  minWidth: "320px",
+                }}
+              >
                 <h3 style={{ marginTop: 0 }}>Conținut</h3>
 
                 {!selectedList ? <p>Selectează o listă.</p> : null}
@@ -1432,119 +1668,170 @@ export default function ListsPage() {
                       </span>
                     </form>
 
-                    {Array.isArray(selectedList.albums) &&
-                    selectedList.albums.length ? (
+                    {selectedListAlbums.length ? (
                       <ul style={{ paddingLeft: "18px" }}>
-                        {selectedList.albums.map((item, idx) => (
-                          <li key={item.id} style={{ marginBottom: "10px" }}>
-                            <div
-                              draggable={canEditList}
-                              onDragStart={() => setDraggingItemId(item.id)}
-                              onDragEnd={() => setDraggingItemId(null)}
-                              onDragOver={(e) => {
-                                if (!canEditList) return;
-                                e.preventDefault();
-                              }}
-                              onDrop={() => {
-                                if (!draggingItemId) return;
-                                const fromId = draggingItemId;
-                                const toId = item.id;
-                                setDraggingItemId(null);
-                                reorderByDrag(fromId, toId);
-                              }}
-                              style={{
-                                ...(draggingItemId === item.id
-                                  ? { opacity: 0.6 }
-                                  : null),
-                              }}
-                            >
-                              <strong>
-                                <Link to={`/albums/${item.album_slug}`}>
-                                  {item.album_title}
-                                </Link>
-                              </strong>
-                              <span style={{ opacity: 0.9 }}>
-                                {" "}
-                                —{" "}
-                                <Link to={`/artists/${item.artist_slug}`}>
-                                  {item.artist_name}
-                                </Link>
-                              </span>
-                            </div>
-                            <div style={{ opacity: 0.85, fontSize: "0.9em" }}>
-                              Added: {item.added_at}
-                            </div>
+                        {pagedSelectedListAlbums.map((item) => {
+                          const idx = selectedListAlbums.findIndex(
+                            (candidate) => candidate.id === item.id,
+                          );
 
-                            <div style={{ marginTop: "8px" }}>
-                              <textarea
-                                rows={2}
-                                placeholder="Nota mea (privată)"
-                                value={
-                                  noteEdits[String(item.id)] ??
-                                  item.my_note ??
-                                  ""
-                                }
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  setNoteEdits((prev) => ({
-                                    ...prev,
-                                    [String(item.id)]: val,
-                                  }));
+                          return (
+                            <li key={item.id} style={{ marginBottom: "10px" }}>
+                              <div
+                                draggable={canEditList}
+                                onDragStart={() => setDraggingItemId(item.id)}
+                                onDragEnd={() => setDraggingItemId(null)}
+                                onDragOver={(e) => {
+                                  if (!canEditList) return;
+                                  e.preventDefault();
                                 }}
-                                onBlur={() => saveNote(item.id)}
-                                disabled={!canEditList}
+                                onDrop={() => {
+                                  if (!draggingItemId) return;
+                                  const fromId = draggingItemId;
+                                  const toId = item.id;
+                                  setDraggingItemId(null);
+                                  reorderByDrag(fromId, toId);
+                                }}
                                 style={{
-                                  width: "100%",
-                                  ...ui.input,
+                                  ...(draggingItemId === item.id
+                                    ? { opacity: 0.6 }
+                                    : null),
                                 }}
-                              />
-                              {savingNoteItemId === item.id ? (
-                                <div
-                                  style={{ opacity: 0.85, fontSize: "0.9em" }}
-                                >
-                                  Se salvează nota...
-                                </div>
-                              ) : null}
-                            </div>
+                              >
+                                <strong>
+                                  <Link to={`/albums/${item.album_slug}`}>
+                                    {item.album_title}
+                                  </Link>
+                                </strong>
+                                <span style={{ opacity: 0.9 }}>
+                                  {" "}
+                                  —{" "}
+                                  <Link to={`/artists/${item.artist_slug}`}>
+                                    {item.artist_name}
+                                  </Link>
+                                </span>
+                              </div>
+                              <div
+                                style={{ opacity: 0.85, fontSize: "0.9em" }}
+                              >
+                                Added: {item.added_at}
+                              </div>
 
-                            <div style={{ marginTop: "6px" }}>
-                              <button
-                                type="button"
-                                style={ui.buttonSmall}
-                                disabled={
-                                  !canEditList || isReordering || idx === 0
-                                }
-                                onClick={() => handleMoveAlbum(item.id, -1)}
-                              >
-                                ↑
-                              </button>{" "}
-                              <button
-                                type="button"
-                                style={ui.buttonSmall}
-                                disabled={
-                                  !canEditList ||
-                                  isReordering ||
-                                  idx === selectedList.albums.length - 1
-                                }
-                                onClick={() => handleMoveAlbum(item.id, 1)}
-                              >
-                                ↓
-                              </button>{" "}
-                              <button
-                                type="button"
-                                style={ui.button}
-                                onClick={() => handleRemoveAlbum(item)}
-                                disabled={!canEditList}
-                              >
-                                Remove
-                              </button>
-                            </div>
-                          </li>
-                        ))}
+                              <div style={{ marginTop: "8px" }}>
+                                <textarea
+                                  rows={2}
+                                  placeholder="Nota mea (privată)"
+                                  value={
+                                    noteEdits[String(item.id)] ??
+                                    item.my_note ??
+                                    ""
+                                  }
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setNoteEdits((prev) => ({
+                                      ...prev,
+                                      [String(item.id)]: val,
+                                    }));
+                                  }}
+                                  onBlur={() => saveNote(item.id)}
+                                  disabled={!canEditList}
+                                  style={{
+                                    width: "100%",
+                                    ...ui.input,
+                                  }}
+                                />
+                                {savingNoteItemId === item.id ? (
+                                  <div
+                                    style={{
+                                      opacity: 0.85,
+                                      fontSize: "0.9em",
+                                    }}
+                                  >
+                                    Se salvează nota...
+                                  </div>
+                                ) : null}
+                              </div>
+
+                              <div style={{ marginTop: "6px" }}>
+                                <button
+                                  type="button"
+                                  style={ui.buttonSmall}
+                                  disabled={
+                                    !canEditList || isReordering || idx === 0
+                                  }
+                                  onClick={() => handleMoveAlbum(item.id, -1)}
+                                >
+                                  ↑
+                                </button>{" "}
+                                <button
+                                  type="button"
+                                  style={ui.buttonSmall}
+                                  disabled={
+                                    !canEditList ||
+                                    isReordering ||
+                                    idx === selectedListAlbums.length - 1
+                                  }
+                                  onClick={() => handleMoveAlbum(item.id, 1)}
+                                >
+                                  ↓
+                                </button>{" "}
+                                <button
+                                  type="button"
+                                  style={ui.button}
+                                  onClick={() => handleRemoveAlbum(item)}
+                                  disabled={!canEditList}
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            </li>
+                          );
+                        })}
                       </ul>
                     ) : (
                       <p>Lista este goală.</p>
                     )}
+                    {selectedListAlbums.length > listContentPageSize ? (
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: "10px",
+                          marginTop: "12px",
+                        }}
+                      >
+                        <button
+                          type="button"
+                          style={ui.buttonSmall}
+                          disabled={safeListContentPage <= 1}
+                          onClick={() =>
+                            setListContentPage((page) =>
+                              Math.max(1, page - 1),
+                            )
+                          }
+                        >
+                          Prev
+                        </button>
+                        <span style={{ opacity: 0.85 }}>
+                          Pagina {safeListContentPage} /{" "}
+                          {listContentTotalPages} · {selectedListAlbums.length}{" "}
+                          albume
+                        </span>
+                        <button
+                          type="button"
+                          style={ui.buttonSmall}
+                          disabled={safeListContentPage >= listContentTotalPages}
+                          onClick={() =>
+                            setListContentPage((page) =>
+                              Math.min(listContentTotalPages, page + 1),
+                            )
+                          }
+                        >
+                          Next
+                        </button>
+                      </div>
+                    ) : null}
                   </>
                 ) : null}
               </div>

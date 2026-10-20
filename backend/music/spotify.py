@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import base64
+import json
 import time
 from dataclasses import dataclass
 from typing import Any
+from urllib import parse, request
+from urllib.error import HTTPError, URLError
 
-import requests
 from decouple import config
 
 
@@ -30,27 +32,27 @@ class SpotifyToken:
     expires_at: float
 
     def is_expired(self) -> bool:
-        # Safety margin.
+                        
         return time.time() >= (self.expires_at - 30)
 
 
 class SpotifyClient:
-    """Tiny Spotify Web API client using Client Credentials flow.
-
-    Notes:
-    - This is suitable for metadata import jobs.
-    - It does NOT act on behalf of a Spotify user.
-    """
+\
+\
+\
+\
+\
+       
 
     def __init__(self) -> None:
         self._client_id = config("SPOTIFY_CLIENT_ID", default="").strip()
         self._client_secret = config("SPOTIFY_CLIENT_SECRET", default="").strip()
         self._token: SpotifyToken | None = None
 
-        # Tuning knobs for long-running import jobs.
-        # - verbose: when True, prints rate-limit waits to stderr.
-        # - max_rate_limit_wait_s: if a 429 asks to wait longer than this, raise
-        #   SpotifyRateLimitError instead of sleeping.
+                                                    
+                                                                  
+                                                                                
+                                                      
         self.verbose: bool = False
         self.max_rate_limit_wait_s: int = 3600
 
@@ -67,16 +69,30 @@ class SpotifyClient:
         creds = f"{self._client_id}:{self._client_secret}".encode("utf-8")
         auth_header = base64.b64encode(creds).decode("utf-8")
 
-        res = requests.post(
+        body = parse.urlencode({"grant_type": "client_credentials"}).encode("utf-8")
+        req = request.Request(
             "https://accounts.spotify.com/api/token",
-            headers={"Authorization": f"Basic {auth_header}"},
-            data={"grant_type": "client_credentials"},
-            timeout=30,
+            data=body,
+            headers={
+                "Authorization": f"Basic {auth_header}",
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            method="POST",
         )
-        if res.status_code != 200:
-            raise SpotifyAuthError(f"Spotify token error: {res.status_code} {res.text}")
+        try:
+            with request.urlopen(req, timeout=30) as res:
+                status = getattr(res, "status", 200)
+                response_body = res.read().decode("utf-8", errors="replace")
+        except HTTPError as exc:
+            response_body = exc.read().decode("utf-8", errors="replace")
+            raise SpotifyAuthError(f"Spotify token error: {exc.code} {response_body}") from exc
+        except URLError as exc:
+            raise SpotifyAuthError(f"Spotify token request failed: {exc.reason}") from exc
 
-        payload = res.json()
+        if status != 200:
+            raise SpotifyAuthError(f"Spotify token error: {status} {response_body}")
+
+        payload = json.loads(response_body)
         access_token = payload.get("access_token")
         token_type = payload.get("token_type") or "Bearer"
         expires_in = int(payload.get("expires_in") or 3600)
@@ -95,31 +111,45 @@ class SpotifyClient:
         token = self._get_token()
         url = f"https://api.spotify.com/v1{path}"
 
-        # Backfill/import jobs can run for a long time and may hit rate limits.
-        # Keep a higher retry budget to allow the caller to make progress.
+                                                                               
+                                                                          
         max_attempts = 10
         last_error: SpotifyAPIError | None = None
         for attempt in range(1, max_attempts + 1):
-            res = requests.request(
-                method.upper(),
-                url,
+            full_url = url
+            if params:
+                full_url = f"{url}?{parse.urlencode(params)}"
+            req = request.Request(
+                full_url,
                 headers={"Authorization": f"{token.token_type} {token.access_token}"},
-                params=params or None,
-                timeout=30,
+                method=method.upper(),
             )
+            try:
+                with request.urlopen(req, timeout=30) as res:
+                    status = getattr(res, "status", 200)
+                    headers = res.headers
+                    response_body = res.read().decode("utf-8", errors="replace")
+            except HTTPError as exc:
+                status = int(exc.code)
+                headers = exc.headers
+                response_body = exc.read().decode("utf-8", errors="replace")
+            except URLError as exc:
+                time.sleep(min(2 * attempt, 10))
+                last_error = SpotifyAPIError(f"Spotify request failed: {exc.reason}")
+                continue
 
-            if res.status_code == 429:
-                retry_after = res.headers.get("Retry-After")
+            if status == 429:
+                retry_after = headers.get("Retry-After")
                 try:
                     raw = int(retry_after) if retry_after is not None else 1
                 except ValueError:
                     raw = 1
-                # Spotify can return large Retry-After values (minutes). Respect it.
+                                                                                    
                 raw = max(1, raw)
 
                 wait_s = raw
-                # Cap to 24h to avoid pathological waits while still allowing
-                # legitimate long Retry-After windows.
+                                                                             
+                                                      
                 wait_s_capped = min(wait_s, 24 * 3600)
 
                 max_wait = int(getattr(self, "max_rate_limit_wait_s", 3600) or 0)
@@ -145,16 +175,16 @@ class SpotifyClient:
                 last_error = SpotifyAPIError(f"Spotify rate limit (429). Retry-After={retry_after}")
                 continue
 
-            if 500 <= res.status_code <= 599:
-                # transient
+            if 500 <= status <= 599:
+                           
                 time.sleep(min(2 * attempt, 10))
-                last_error = SpotifyAPIError(f"Spotify API server error: {res.status_code} {res.text}")
+                last_error = SpotifyAPIError(f"Spotify API server error: {status} {response_body}")
                 continue
 
-            if res.status_code < 200 or res.status_code >= 300:
-                raise SpotifyAPIError(f"Spotify API error: {res.status_code} {res.text}")
+            if status < 200 or status >= 300:
+                raise SpotifyAPIError(f"Spotify API error: {status} {response_body}")
 
-            data = res.json()
+            data = json.loads(response_body)
             if not isinstance(data, dict):
                 raise SpotifyAPIError("Unexpected Spotify response shape")
             return data
@@ -187,9 +217,8 @@ class SpotifyClient:
         limit: int = 50,
         offset: int = 0,
     ) -> dict[str, Any]:
-        # NOTE: In practice, this endpoint may reject large limits with
-        # `400 Invalid limit` depending on API behavior. We clamp to a safe
-        # upper bound observed to work reliably.
+                                                                  
+                                                                               
         safe_limit = max(1, min(int(limit), 5))
         return self.request(
             "GET",
@@ -221,7 +250,7 @@ class SpotifyClient:
         )
 
     def get_tracks(self, track_ids: list[str], *, market: str = "RO") -> dict[str, Any]:
-        # Spotify: up to 50 ids
+                               
         ids = [str(t).strip() for t in track_ids if str(t).strip()]
         if not ids:
             return {"tracks": []}
@@ -235,10 +264,6 @@ class SpotifyClient:
         )
 
     def search(self, *, q: str, types: list[str], market: str = "RO", limit: int = 10, offset: int = 0) -> dict[str, Any]:
-        """Search Spotify catalog.
-
-        types: subset of ["artist", "album", "track"].
-        """
         type_param = ",".join([t for t in types if str(t).strip()])
         if not type_param:
             raise SpotifyAPIError("Spotify search requires at least one type")
@@ -255,10 +280,10 @@ class SpotifyClient:
         )
 
     def search_artist(self, *, name: str, market: str = "RO", limit: int = 5) -> list[dict[str, Any]]:
-        # NOTE: Spotify's query parser can be surprisingly strict with fielded
-        # queries like `artist:...` when names include apostrophes or other
-        # punctuation (e.g. "Carla's Dreams"). Using a plain query with
-        # type=artist is more robust.
+                                                                              
+                                                                           
+                                                                       
+                                     
         q = str(name or "").strip()
         if not q:
             return []
@@ -275,7 +300,7 @@ class SpotifyClient:
         if isinstance(items, list) and items:
             return items
 
-        # Fallback to a plain query which is more tolerant of punctuation.
+                                                                          
         q2 = " ".join([p for p in (title, artist) if p]).strip()
         if not q2:
             return []

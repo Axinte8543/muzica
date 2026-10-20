@@ -1,8 +1,31 @@
 import time
-from prometheus_client import Counter, Histogram
+
+try:
+    from prometheus_client import Counter, Histogram
+    PROMETHEUS_AVAILABLE = True
+except Exception:
+    PROMETHEUS_AVAILABLE = False
+
+    class _NullMetric:
+        def labels(self, *args, **kwargs):
+            return self
+
+        def inc(self, *args, **kwargs):
+            return None
+
+        def observe(self, *args, **kwargs):
+            return None
+
+    class Counter:                          
+        def __new__(cls, *args, **kwargs):
+            return _NullMetric()
+
+    class Histogram:                          
+        def __new__(cls, *args, **kwargs):
+            return _NullMetric()
 
 
-# Celery task metrics
+                     
 CELERY_TASK_DURATION = Histogram(
     'celery_task_duration_seconds',
     'Duration of Celery tasks in seconds',
@@ -15,12 +38,12 @@ CELERY_TASK_COUNTER = Counter(
 )
 
 
-# Cache metrics
+               
 CACHE_HIT_COUNTER = Counter('cache_hits_total', 'Cache hits')
 CACHE_MISS_COUNTER = Counter('cache_misses_total', 'Cache misses')
 
 
-# HTTP request metrics
+                      
 REQUEST_LATENCY = Histogram(
     'django_http_request_duration_seconds',
     'Django request latency in seconds',
@@ -29,5 +52,5 @@ REQUEST_LATENCY = Histogram(
 
 
 def safe_label_path(path: str) -> str:
-    # Keep labels short and stable: use first 64 chars
+                                                      
     return (path or '/')[:64]

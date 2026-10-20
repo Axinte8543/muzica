@@ -1,5 +1,9 @@
 import { test, expect } from "@playwright/test";
 
+// Running tests in Playwright's Node environment — declare `process` to satisfy TS
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const process: any;
+
 const API_BASE = process.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 
 test.describe("UX loading & accessibility", () => {
@@ -41,7 +45,8 @@ test.describe("UX loading & accessibility", () => {
     );
 
     // Intercept messages request and hold it paused so UI stays in loading state
-    let pendingRoute = null as any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let pendingRoute: any = null;
     await page.route("**/api/chat/messages**", (route) => {
       pendingRoute = route;
       // do not continue/fulfill yet — this will keep the request pending

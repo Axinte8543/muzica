@@ -21,7 +21,7 @@ class TestRecommenderManagementCommands(TestCase):
         self.album1 = Album.objects.create(artist=self.artist, title="One", slug="one", release_date="2020-01-01", is_approved=True)
         self.album2 = Album.objects.create(artist=self.artist, title="Two", slug="two", release_date="2020-01-02", is_approved=True)
 
-        # some ratings to allow neighbor computation
+                                                    
         AlbumRating.objects.create(user=self.user, album=self.album1, rating=5)
         AlbumRating.objects.create(user=self.other, album=self.album1, rating=4)
         AlbumRating.objects.create(user=self.other, album=self.album2, rating=5)
@@ -31,18 +31,18 @@ class TestRecommenderManagementCommands(TestCase):
 
     def test_precompute_recommendations_command_creates_cache(self):
         out = StringIO()
-        # run precompute for a small subset
+                                           
         call_command('precompute_recommendations', limit=5, max_users=0, stdout=out)
         output = out.getvalue()
         self.assertIn('Computing item neighbors', output)
-        # ensure at least one user's recommendations are cached
-        # user ids that have ratings are present
+                                                               
+                                                
         self.assertTrue(cache.get(f'recommendations:user:item:{self.user.id}') is not None or cache.get(f'recommendations:user:item:{self.other.id}') is not None)
 
     def test_evaluate_recommender_command_runs_and_prints(self):
         out = StringIO()
-        # evaluate with k small and max_users limited
+                                                     
         call_command('evaluate_recommender', k=5, max_users=1, stdout=out)
         output = out.getvalue()
-        # should print evaluated users or a no-users message
+                                                            
         self.assertTrue('Evaluated' in output or 'No users' in output)

@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import json
 import time
 from dataclasses import dataclass
 from typing import Any
+from urllib import parse, request
+from urllib.error import HTTPError, URLError
 
-import requests
 from decouple import config
 
 
@@ -19,8 +21,8 @@ class MBConfig:
 
     @property
     def user_agent(self) -> str:
-        # MusicBrainz requires a descriptive UA including contact.
-        # https://musicbrainz.org/doc/MusicBrainz_API/Rate_Limiting
+                                                                  
+                                                                   
         email = self.contact_email.strip() if self.contact_email else ""
         if email:
             return f"{self.app_name} ( {email} )"
@@ -28,11 +30,11 @@ class MBConfig:
 
 
 class MusicBrainzClient:
-    """Minimal MusicBrainz WS/2 client.
-
-    - No OAuth required.
-    - Respect rate limiting (1 req/sec is the public guideline).
-    """
+\
+\
+\
+\
+       
 
     def __init__(self) -> None:
         self._cfg = MBConfig(
@@ -42,7 +44,7 @@ class MusicBrainzClient:
         self._last_request_at: float | None = None
 
     def _sleep_if_needed(self) -> None:
-        # Aim for <= 1 request / second.
+                                        
         if self._last_request_at is None:
             return
         dt = time.time() - self._last_request_at
@@ -53,7 +55,7 @@ class MusicBrainzClient:
         url = f"https://musicbrainz.org/ws/2{path}"
         p = {**params, "fmt": "json"}
 
-        # MusicBrainz can temporarily reply with 503/5xx. Retry with a small backoff.
+                                                                                     
         transient = {429, 500, 502, 503, 504}
         max_attempts = 5
         last_status: int | None = None
@@ -61,19 +63,46 @@ class MusicBrainzClient:
 
         for attempt in range(1, max_attempts + 1):
             self._sleep_if_needed()
-            res = requests.get(
-                url,
-                params=p,
+            full_url = f"{url}?{parse.urlencode(p)}"
+            req = request.Request(
+                full_url,
                 headers={"User-Agent": self._cfg.user_agent},
-                timeout=30,
+                method="GET",
             )
+            try:
+                with request.urlopen(req, timeout=60) as res:
+                    status = int(getattr(res, "status", 200))
+                    headers = res.headers
+                    text = res.read().decode("utf-8", errors="replace")
+            except TimeoutError as exc:
+                self._last_request_at = time.time()
+                last_status = 0
+                last_text = str(exc)
+                if attempt < max_attempts:
+                    time.sleep(min(2 * attempt, 10))
+                    continue
+                raise MusicBrainzAPIError(f"MusicBrainz request timed out after retries: {exc}")
+            except HTTPError as exc:
+                self._last_request_at = time.time()
+                status = int(exc.code)
+                headers = exc.headers
+                text = exc.read().decode("utf-8", errors="replace")
+            except URLError as exc:
+                self._last_request_at = time.time()
+                last_status = 0
+                last_text = str(exc)
+                if attempt < max_attempts:
+                    time.sleep(min(2 * attempt, 10))
+                    continue
+                raise MusicBrainzAPIError(f"MusicBrainz request failed after retries: {exc}")
+
             self._last_request_at = time.time()
 
-            last_status = int(res.status_code)
-            last_text = res.text
+            last_status = int(status)
+            last_text = text
 
-            if res.status_code in transient and attempt < max_attempts:
-                retry_after = res.headers.get("Retry-After")
+            if status in transient and attempt < max_attempts:
+                retry_after = headers.get("Retry-After")
                 wait_s = 0
                 if retry_after is not None:
                     try:
@@ -82,16 +111,16 @@ class MusicBrainzClient:
                         wait_s = 0
 
                 if wait_s <= 0:
-                    # Exponential-ish backoff capped to 10s.
+                                                            
                     wait_s = min(2 * attempt, 10)
 
                 time.sleep(max(1, wait_s))
                 continue
 
-            if res.status_code < 200 or res.status_code >= 300:
-                raise MusicBrainzAPIError(f"MusicBrainz error: {res.status_code} {res.text}")
+            if status < 200 or status >= 300:
+                raise MusicBrainzAPIError(f"MusicBrainz error: {status} {text}")
 
-            data = res.json()
+            data = json.loads(text)
             if not isinstance(data, dict):
                 raise MusicBrainzAPIError("Unexpected MusicBrainz response shape")
             return data
@@ -111,16 +140,26 @@ class MusicBrainzClient:
             },
         )
 
-    def get_artist(self, *, artist_mbid: str) -> dict[str, Any]:
-        """Fetch a single artist by MBID.
-
-        This avoids relying on search query syntax when the MBID is already known.
-        """
+    def get_artist(self, *, artist_mbid: str, inc: str = "") -> dict[str, Any]:
+           
         mbid = str(artist_mbid or "").strip()
         if not mbid:
             raise MusicBrainzAPIError("Missing artist_mbid")
+        params: dict[str, Any] = {}
+        include = str(inc or "").strip()
+        if include:
+            params["inc"] = include
         return self.request(
             f"/artist/{mbid}",
+            params=params,
+        )
+
+    def get_release_group(self, *, release_group_mbid: str) -> dict[str, Any]:
+        mbid = str(release_group_mbid or "").strip()
+        if not mbid:
+            raise MusicBrainzAPIError("Missing release_group_mbid")
+        return self.request(
+            f"/release-group/{mbid}",
             params={},
         )
 

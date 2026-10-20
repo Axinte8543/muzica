@@ -28,7 +28,7 @@ export default function MessagesPage() {
   const [isSending, setIsSending] = useState(false);
   const [isOtherUserTyping, setIsOtherUserTyping] = useState(false);
   const [replyToMessage, setReplyToMessage] = useState(null);
-  const [error, setError] = useState(null);
+  const [, setError] = useState(null);
   const [friendsError, setFriendsError] = useState(null);
 
   // Load conversations
@@ -58,10 +58,12 @@ export default function MessagesPage() {
 
   useEffect(() => {
     if (!isAuthVerified || !accessToken) {
-      setFriends([]);
-      setIsLoadingFriends(false);
-      setFriendsError(null);
-      return;
+      const t = setTimeout(() => {
+        setFriends([]);
+        setIsLoadingFriends(false);
+        setFriendsError(null);
+      }, 0);
+      return () => clearTimeout(t);
     }
 
     const loadFriends = async () => {
@@ -124,17 +126,24 @@ export default function MessagesPage() {
   // Load and poll messages when selected user changes
   useEffect(() => {
     if (!selectedUserId) {
-      setMessages([]);
-      setReplyToMessage(null);
-      return;
+      const t = setTimeout(() => {
+        setMessages([]);
+        setReplyToMessage(null);
+      }, 0);
+      return () => clearTimeout(t);
     }
 
-    void loadMessages();
+    const t = setTimeout(() => {
+      void loadMessages();
+    }, 0);
     const intervalId = setInterval(() => {
       void loadMessages({ silent: true });
     }, 3000);
 
-    return () => clearInterval(intervalId);
+    return () => {
+      clearTimeout(t);
+      clearInterval(intervalId);
+    };
   }, [selectedUserId, loadMessages]);
 
   useEffect(() => {
@@ -154,8 +163,10 @@ export default function MessagesPage() {
   // Poll typing status for selected conversation
   useEffect(() => {
     if (!selectedUserId || !isAuthVerified || !accessToken) {
-      setIsOtherUserTyping(false);
-      return;
+      const t = setTimeout(() => {
+        setIsOtherUserTyping(false);
+      }, 0);
+      return () => clearTimeout(t);
     }
 
     let cancelled = false;

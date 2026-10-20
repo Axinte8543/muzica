@@ -4,8 +4,10 @@ import { useAuth } from "../context/useAuth.js";
 import { ui } from "../ui/ui.js";
 import {
   getMyAlbumRating,
+  getMyArtistRating,
   getMySongRating,
   rateAlbum,
+  rateArtist,
   rateSong,
 } from "../api/ratings.js";
 
@@ -17,7 +19,8 @@ function Star({ filled, disabled }) {
         fontSize: "22px",
         lineHeight: 1,
         opacity: disabled ? 0.5 : 1,
-        color: "#111827",
+        color: filled ? "#fbbf24" : "rgba(148, 163, 184, 0.55)",
+        textShadow: filled ? "0 0 10px rgba(251, 191, 36, 0.28)" : "none",
       }}
     >
       {filled ? "★" : "☆"}
@@ -25,7 +28,7 @@ function Star({ filled, disabled }) {
   );
 }
 
-export default function RatingWidget({ kind, itemId }) {
+export default function RatingWidget({ kind, itemId, onRated }) {
   const { baseUrl, isAuthenticated, isAuthVerified, accessToken, logout } =
     useAuth();
 
@@ -38,6 +41,7 @@ export default function RatingWidget({ kind, itemId }) {
 
   const title = useMemo(() => {
     if (kind === "album") return "Rating album";
+    if (kind === "artist") return "Rating artist";
     if (kind === "song") return "Rating melodie";
     return "Rating";
   }, [kind]);
@@ -55,18 +59,26 @@ export default function RatingWidget({ kind, itemId }) {
       setError(null);
 
       try {
-        const rating =
-          kind === "album"
-            ? await getMyAlbumRating({
-                baseUrl,
-                albumId: itemId,
-                accessToken,
-              })
-            : await getMySongRating({
-                baseUrl,
-                songId: itemId,
-                accessToken,
-              });
+        let rating = null;
+        if (kind === "album") {
+          rating = await getMyAlbumRating({
+            baseUrl,
+            albumId: itemId,
+            accessToken,
+          });
+        } else if (kind === "artist") {
+          rating = await getMyArtistRating({
+            baseUrl,
+            artistId: itemId,
+            accessToken,
+          });
+        } else {
+          rating = await getMySongRating({
+            baseUrl,
+            songId: itemId,
+            accessToken,
+          });
+        }
 
         if (!isCancelled) setMyRating(rating);
       } catch (err) {
@@ -96,22 +108,32 @@ export default function RatingWidget({ kind, itemId }) {
     setError(null);
 
     try {
-      const responseData =
-        kind === "album"
-          ? await rateAlbum({
-              baseUrl,
-              albumId: itemId,
-              rating: nextRating,
-              accessToken,
-            })
-          : await rateSong({
-              baseUrl,
-              songId: itemId,
-              rating: nextRating,
-              accessToken,
-            });
+      let responseData = null;
+      if (kind === "album") {
+        responseData = await rateAlbum({
+          baseUrl,
+          albumId: itemId,
+          rating: nextRating,
+          accessToken,
+        });
+      } else if (kind === "artist") {
+        responseData = await rateArtist({
+          baseUrl,
+          artistId: itemId,
+          rating: nextRating,
+          accessToken,
+        });
+      } else {
+        responseData = await rateSong({
+          baseUrl,
+          songId: itemId,
+          rating: nextRating,
+          accessToken,
+        });
+      }
 
       setMyRating(responseData?.rating ?? nextRating);
+      onRated?.(responseData?.rating ?? nextRating);
     } catch (err) {
       if (err?.response?.status === 401) {
         logout();

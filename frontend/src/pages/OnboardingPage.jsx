@@ -60,11 +60,14 @@ export default function OnboardingPage() {
 
   // Update filtered artists when search results change
   useEffect(() => {
-    if (artistSearchQuery.length >= 2 && artistsQuery.data) {
-      setFilteredArtists(artistsQuery.data);
-    } else if (!artistSearchQuery) {
-      setFilteredArtists([]);
-    }
+    const t = setTimeout(() => {
+      if (artistSearchQuery.length >= 2 && artistsQuery.data) {
+        setFilteredArtists(artistsQuery.data);
+      } else if (!artistSearchQuery) {
+        setFilteredArtists([]);
+      }
+    }, 0);
+    return () => clearTimeout(t);
   }, [artistSearchQuery, artistsQuery.data]);
 
   // Toggle genre selection
@@ -316,10 +319,11 @@ export default function OnboardingPage() {
         <div
           style={{
             padding: "12px",
-            background: "#f5f5f5",
+            background: "var(--surface-strong)",
             borderRadius: "6px",
             marginBottom: "16px",
             fontSize: "14px",
+            color: "var(--text-color)",
           }}
         >
           <p style={{ margin: 0 }}>
@@ -341,7 +345,7 @@ export default function OnboardingPage() {
                 : "pointer",
           }}
         >
-          {isSubmitting ? "Se finalizează..." : "Finalizează onboarding"}
+          {isSubmitting ? "Se finalizează..." : "Bine ai venit pe roMusic"}
         </button>
       </form>
     </div>

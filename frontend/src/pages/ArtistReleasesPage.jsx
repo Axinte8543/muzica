@@ -37,8 +37,6 @@ export default function ArtistReleasesPage() {
     const map = {
       albums: "Albume",
       singles: "Single",
-      eps: "EPs",
-      compilations: "Compilatii",
       other: "Altele",
       appearson: "Aparitii",
     };

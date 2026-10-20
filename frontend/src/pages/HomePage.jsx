@@ -130,35 +130,27 @@ export default function HomePage() {
   const [popularAlbums, setPopularAlbums] = useState([]);
   const [weeklyMostListenedAlbums, setWeeklyMostListenedAlbums] = useState([]);
   const [popularReviews, setPopularReviews] = useState([]);
-  const [anticipatedByComments, setAnticipatedByComments] = useState([]);
   const [newReleases, setNewReleases] = useState([]);
   const [recentAlbums, setRecentAlbums] = useState([]);
   const [topAlbums2025, setTopAlbums2025] = useState([]);
   const [trendingAlbums, setTrendingAlbums] = useState([]);
   const [trendingArtists, setTrendingArtists] = useState([]);
-  const [mostDiscussedAlbums, setMostDiscussedAlbums] = useState([]);
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const experimentSeed = user?.id ?? user?.user_id ?? accessToken ?? "guest";
   const heroVariant = pickVariant(experimentSeed, "home-hero-cta");
   const feedVariant = pickVariant(experimentSeed, "home-feed-cta");
-  const heroBadgeLabel =
-    heroVariant === "B" ? "Explorare rapidă" : "Music social, polished";
   const heroTitle =
     heroVariant === "B"
-      ? "Găsește următorul album în câteva secunde."
-      : "Descoperă muzica într-un loc care arată premium.";
+      ? "Găsește rapid albume și artiști noi."
+      : "Explorează muzica românească într-un singur loc.";
   const heroDescription =
     heroVariant === "B"
-      ? "Urmărești artiști, notezi albume și vezi imediat ce merită ascultat. Totul rămâne clar și rapid de parcurs."
-      : "Urmărești artiști, notezi albume, citești comentarii și vezi rapid ce merită ascultat. Totul e organizat mai clar, mai aerisit și mai plăcut vizual.";
+      ? "Urmărești artiști, notezi albume și revii ușor la muzica pe care vrei să o asculți."
+      : "Cauți artiști, notezi albume, citești păreri și îți organizezi descoperirile în liste.";
   const searchButtonLabel =
     heroVariant === "B" ? "Începe căutarea" : "Caută acum";
-  const heroTags =
-    heroVariant === "B"
-      ? ["Explorare rapidă", "Topuri", "Recomandări", "Statistici"]
-      : ["Top albume", "Căutare socială", "Recomandări", "Statistici"];
   const feedHeading =
     feedVariant === "B" ? "Ce merită văzut acum" : "Recomandate pentru tine";
   const recommendationsLabel =
@@ -211,17 +203,17 @@ export default function HomePage() {
           accessToken: safeAccessToken,
           recLimit: 8,
           friendsRecLimit: 8,
-          activityLimit: 10,
-          popularLimit: 10,
+          activityLimit: 5,
+          popularLimit: 8,
           weeklyPopularLimit: 10,
-          weeklyListensLimit: 10,
-          popularReviewsLimit: 10,
-          anticipatedLimit: 10,
+          weeklyListensLimit: 8,
+          popularReviewsLimit: 5,
           genresLimit: 12,
           bestLimit: 5,
-          newLimit: 10,
-          recentLimit: 10,
-          top2025Limit: 5,
+          newLimit: 8,
+          recentLimit: 8,
+          top2025Limit: 8,
+          trendingLimit: 8,
         });
 
         if (isCancelled) return;
@@ -234,7 +226,9 @@ export default function HomePage() {
             : [],
         );
         setFriendsActivity(
-          Array.isArray(data?.friends_activity) ? data.friends_activity : [],
+          Array.isArray(data?.friends_activity)
+            ? data.friends_activity.slice(0, 5)
+            : [],
         );
         setGenres(Array.isArray(data?.genres) ? data.genres : []);
         setBestAlbums(Array.isArray(data?.best_albums) ? data.best_albums : []);
@@ -248,11 +242,6 @@ export default function HomePage() {
         );
         setPopularReviews(
           Array.isArray(data?.popular_reviews) ? data.popular_reviews : [],
-        );
-        setAnticipatedByComments(
-          Array.isArray(data?.anticipated_by_comments)
-            ? data.anticipated_by_comments
-            : [],
         );
         setNewReleases(
           Array.isArray(data?.new_releases) ? data.new_releases : [],
@@ -270,11 +259,6 @@ export default function HomePage() {
         setTrendingArtists(
           Array.isArray(data?.trending_artists) ? data.trending_artists : [],
         );
-        setMostDiscussedAlbums(
-          Array.isArray(data?.most_discussed_albums)
-            ? data.most_discussed_albums
-            : [],
-        );
       } catch (err) {
         const status = err?.response?.status;
         if (!isCancelled) {
@@ -289,10 +273,14 @@ export default function HomePage() {
       }
     }
 
-    load();
+    // Defer initial load to avoid synchronous setState calls inside the effect
+    const t = setTimeout(() => {
+      load();
+    }, 0);
 
     return () => {
       isCancelled = true;
+      clearTimeout(t);
     };
   }, [accessToken, isAuthVerified]);
 
@@ -304,10 +292,10 @@ export default function HomePage() {
       accessToken,
       kind: "activity",
       scope: "friends",
-      limit: 10,
+      limit: 5,
       interval: 5,
       onSnapshot: (payload) => {
-        setFriendsActivity(Array.isArray(payload) ? payload : []);
+        setFriendsActivity(Array.isArray(payload) ? payload.slice(0, 5) : []);
       },
     });
   }, [accessToken, isAuthVerified]);
@@ -321,7 +309,7 @@ export default function HomePage() {
           if (!status?.is_completed) {
             navigate("/onboarding");
           }
-        } catch (err) {
+        } catch {
           // If there's an error checking status, don't force redirect
         }
       }
@@ -551,30 +539,6 @@ export default function HomePage() {
               </button>
             </form>
 
-            <div
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: "8px",
-                marginTop: "2px",
-              }}
-            >
-              {heroTags.map((tag) => (
-                <span
-                  key={tag}
-                  style={{
-                    padding: "6px 10px",
-                    borderRadius: "999px",
-                    backgroundColor: "rgba(255,255,255,0.08)",
-                    color: "#f8fafc",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                    fontSize: "0.85rem",
-                  }}
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
           </div>
         </div>
       </section>
@@ -630,7 +594,7 @@ export default function HomePage() {
 
             <div style={{ display: "grid", gap: "8px" }}>
               <Link
-                to="/lists"
+                to="/lists#public-lists"
                 style={{
                   ...ui.button,
                   textDecoration: "none",
@@ -641,7 +605,7 @@ export default function HomePage() {
               </Link>
               {isAuthVerified ? (
                 <Link
-                  to="/profile/lists"
+                  to="/my-lists"
                   style={{
                     ...ui.button,
                     textDecoration: "none",
@@ -673,7 +637,7 @@ export default function HomePage() {
                   display: "inline-block",
                 }}
               >
-                View all
+                Vezi toate
               </Link>
             </div>
 
@@ -1041,20 +1005,6 @@ export default function HomePage() {
           </section>
 
           <section style={{ marginTop: "26px" }}>
-            <h2 style={{ margin: 0 }}>Most discussed (ultimele 7 zile)</h2>
-
-            {!isLoading && !error && mostDiscussedAlbums.length === 0 ? (
-              <div style={{ marginTop: "10px", opacity: 0.9 }}>
-                Nu avem încă discuții.
-              </div>
-            ) : null}
-
-            {!isLoading && !error && mostDiscussedAlbums.length > 0 ? (
-              <AlbumGrid albums={mostDiscussedAlbums} />
-            ) : null}
-          </section>
-
-          <section style={{ marginTop: "26px" }}>
             <h2 style={{ margin: 0 }}>Activitatea prietenilor</h2>
 
             {!isLoading && !error && friendsActivity.length === 0 ? (
@@ -1215,87 +1165,6 @@ export default function HomePage() {
           </section>
 
           <section style={{ marginTop: "26px" }}>
-            <h2 style={{ margin: 0 }}>
-              Cele mai așteptate albume (după comentarii)
-            </h2>
-
-            {!isLoading && !error && anticipatedByComments.length === 0 ? (
-              <p style={{ marginTop: "10px" }}>Nu am găsit albume.</p>
-            ) : null}
-
-            {!isLoading && !error && anticipatedByComments.length > 0 ? (
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
-                  gap: "16px",
-                  marginTop: "12px",
-                }}
-              >
-                {anticipatedByComments.map((album) => {
-                  const comments = Number.isFinite(Number(album?.reviews_count))
-                    ? Number(album.reviews_count)
-                    : 0;
-
-                  const CardInner = (
-                    <div style={ui.card}>
-                      {album.cover_url ? (
-                        <img
-                          src={album.cover_url}
-                          alt={`Coperta albumului ${album.title}`}
-                          style={{
-                            width: "100%",
-                            aspectRatio: "1 / 1",
-                            objectFit: "cover",
-                            borderRadius: "8px",
-                            display: "block",
-                          }}
-                        />
-                      ) : (
-                        <div
-                          style={{
-                            width: "100%",
-                            aspectRatio: "1 / 1",
-                            borderRadius: "8px",
-                            background: ui.colors.mutedBg,
-                          }}
-                        />
-                      )}
-
-                      <div style={{ marginTop: "10px" }}>
-                        <div style={{ fontWeight: 700 }}>{album.title}</div>
-                        <div style={{ marginTop: "4px" }}>
-                          {album.artist_name}
-                        </div>
-                        {album.release_date ? (
-                          <div style={{ marginTop: "4px", opacity: 0.8 }}>
-                            Lansare: {String(album.release_date)}
-                          </div>
-                        ) : null}
-                        <div style={{ marginTop: "6px", opacity: 0.9 }}>
-                          Comentarii: {comments}
-                        </div>
-                      </div>
-                    </div>
-                  );
-
-                  return album.slug ? (
-                    <Link
-                      key={album.id}
-                      to={`/albums/${album.slug}`}
-                      style={{ color: "inherit", textDecoration: "none" }}
-                    >
-                      {CardInner}
-                    </Link>
-                  ) : (
-                    <div key={album.id}>{CardInner}</div>
-                  );
-                })}
-              </div>
-            ) : null}
-          </section>
-
-          <section style={{ marginTop: "26px" }}>
             <div
               style={{
                 display: "flex",
@@ -1306,7 +1175,7 @@ export default function HomePage() {
             >
               <h2 style={{ margin: 0 }}>Top albume 2025</h2>
               <Link
-                to="/albums?year=2025"
+                to="/albums?year=2025&sort=ratings_count"
                 style={{
                   ...ui.button,
                   textDecoration: "none",
@@ -1314,7 +1183,7 @@ export default function HomePage() {
                   display: "inline-block",
                 }}
               >
-                View all
+                Vezi toate
               </Link>
             </div>
 
@@ -1328,7 +1197,28 @@ export default function HomePage() {
           </section>
 
           <section style={{ marginTop: "26px" }}>
-            <h2 style={{ margin: 0 }}>Lansări noi</h2>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "12px",
+              }}
+            >
+              <h2 style={{ margin: 0 }}>Lansări noi</h2>
+              <Link
+                to="/albums?sort=release_date"
+                style={{
+                  ...ui.button,
+                  textDecoration: "none",
+                  color: "inherit",
+                  display: "inline-block",
+                }}
+              >
+                Vezi toate
+              </Link>
+            </div>
+
             {!isLoading && !error && newReleases.length === 0 ? (
               <p style={{ marginTop: "10px" }}>Nu am găsit albume.</p>
             ) : null}

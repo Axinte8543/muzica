@@ -107,6 +107,8 @@ export async function getPublicLists({
   baseUrl,
   sort = "new",
   limit = 20,
+  page,
+  pageSize,
   tag,
   accessToken,
 }) {
@@ -115,7 +117,8 @@ export async function getPublicLists({
   const response = await apiClient.get(`/api/lists/public`, {
     params: {
       sort,
-      limit,
+      ...(page ? { page } : { limit }),
+      ...(pageSize ? { page_size: pageSize } : {}),
       ...(tag ? { tag } : {}),
     },
   });

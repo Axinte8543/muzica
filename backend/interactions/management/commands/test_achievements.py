@@ -1,10 +1,10 @@
-"""
-Management command to test and display achievement progress for a user.
-
-Usage:
-    python manage.py test_achievements <username>
-    python manage.py test_achievements <username> --update
-"""
+\
+\
+\
+\
+\
+\
+   
 
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
@@ -54,7 +54,7 @@ class Command(BaseCommand):
                 self.stdout.write('ℹ️ No new achievements unlocked')
             self.stdout.write('')
 
-        # Display all achievements
+                                  
         user_achievements = UserAchievement.objects.filter(user=user).select_related(
             'achievement'
         ).order_by('-is_completed', 'achievement__type')
@@ -63,7 +63,7 @@ class Command(BaseCommand):
             self.stdout.write('  No achievements started yet\n')
             return
 
-        # Group by type
+                       
         by_type = {}
         for ua in user_achievements:
             achv_type = ua.achievement.get_type_display()
@@ -75,7 +75,7 @@ class Command(BaseCommand):
             if achv_type not in by_type:
                 continue
             
-            self.stdout.write(self.style.HTTP_INFO(f'\n{achv_type}:'))
+            self.stdout.write(self.style.SUCCESS(f'\n{achv_type}:'))
             
             for ua in by_type[achv_type]:
                 status = '✅' if ua.is_completed else '🔄'
@@ -90,7 +90,7 @@ class Command(BaseCommand):
                     f'     {ua.achievement.description}\n'
                 )
 
-        # Summary
+                 
         total = user_achievements.count()
         completed = user_achievements.filter(is_completed=True).count()
         self.stdout.write(

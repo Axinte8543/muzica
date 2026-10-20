@@ -54,6 +54,22 @@ export async function registerUser({ baseUrl, username, email, password }) {
   return response.data;
 }
 
+export async function resendVerification({ baseUrl, email }) {
+  void baseUrl;
+  const response = await apiClient.post(`/api/auth/verify-email/resend/`, {
+    email,
+  });
+  return response.data;
+}
+
+export async function verifyEmail({ baseUrl, token }) {
+  void baseUrl;
+  const response = await apiClient.post(`/api/auth/verify-email/`, {
+    token,
+  });
+  return response.data;
+}
+
 export async function loginUser({ baseUrl, username, password }) {
   void baseUrl;
   const response = await apiClient.post(`/api/auth/login/`, {
@@ -73,6 +89,60 @@ export async function getCurrentUser({ baseUrl } = {}) {
   void baseUrl;
   // This is the one call that must attach Authorization even before isAuthVerified
   const response = await apiClient.get(`/api/auth/me/`, { requiresAuth: true });
+  return response.data;
+}
+
+export async function requestEmailChange({ baseUrl, newEmail, password } = {}) {
+  void baseUrl;
+  const response = await apiClient.post(
+    `/api/auth/email-change/request/`,
+    { new_email: newEmail, password },
+    { requiresAuth: true },
+  );
+  return response.data;
+}
+
+export async function confirmEmailChange({ baseUrl, token } = {}) {
+  void baseUrl;
+  const response = await apiClient.post(`/api/auth/email-change/confirm/`, {
+    token,
+  });
+  return response.data;
+}
+
+export async function requestPasswordReset({ baseUrl, email } = {}) {
+  void baseUrl;
+  const response = await apiClient.post(`/api/auth/password-reset/`, {
+    email,
+  });
+  return response.data;
+}
+
+export async function confirmPasswordReset({ baseUrl, token, password } = {}) {
+  void baseUrl;
+  const response = await apiClient.post(`/api/auth/password-reset/confirm/`, {
+    token,
+    password,
+  });
+  return response.data;
+}
+
+export async function changePassword({
+  baseUrl,
+  currentPassword,
+  newPassword,
+  totpCode,
+} = {}) {
+  void baseUrl;
+  const response = await apiClient.post(
+    `/api/auth/password/change/`,
+    {
+      current_password: currentPassword,
+      new_password: newPassword,
+      totp_code: totpCode,
+    },
+    { requiresAuth: true },
+  );
   return response.data;
 }
 

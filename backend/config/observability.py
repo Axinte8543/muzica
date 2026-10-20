@@ -15,7 +15,7 @@ except Exception:
 
 
 def health(request):
-    """Simple health endpoint that verifies DB connectivity."""
+                                                               
     try:
         with connections['default'].cursor() as cursor:
             cursor.execute('SELECT 1')
@@ -33,7 +33,7 @@ def health(request):
 
 
 def metrics(request):
-    """Expose Prometheus metrics if prometheus_client is available."""
+                                                                      
     if not generate_latest:
         return HttpResponse('prometheus_client not installed', status=501)
     try:

@@ -72,18 +72,20 @@ function pushRecentSearch(items, q) {
   return next;
 }
 
+function releaseTypeLabel(item) {
+  const type = String(item?.release_type || item?.album_release_type || "").toLowerCase();
+  if (type === "single") return "Single";
+  if (type === "ep") return "EP";
+  if (type === "compilation") return "Compilație";
+  return "Album";
+}
+
 export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const {
-    baseUrl,
-    accessToken,
-    isAuthenticated,
-    isAuthVerified,
-    user,
-    logout,
-  } = useAuth();
+  const { accessToken, isAuthenticated, isAuthVerified, user, logout } =
+    useAuth();
 
   const currentQ = useMemo(() => {
     return (searchParams.get("q") || "").trim();
@@ -98,6 +100,7 @@ export default function Navbar() {
   const [debouncedSearch, setDebouncedSearch] = useState(() =>
     String(currentQ || "").trim(),
   );
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     applyTheme(theme);
@@ -178,10 +181,9 @@ export default function Navbar() {
     navigate(`/search?q=${encodeURIComponent(nextQ)}`, options);
   }
 
-  function goToItem(to, q) {
-    const nextQ = String(q || "").trim();
-    if (nextQ) rememberSearch(nextQ);
-    navigate(to);
+  function goTo(path) {
+    setIsSearchFocused(false);
+    navigate(path);
   }
 
   useEffect(() => {
@@ -276,7 +278,10 @@ export default function Navbar() {
           backdropFilter: "blur(18px)",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <div
+          className="navbar-left"
+          style={{ display: "flex", alignItems: "center", gap: "12px" }}
+        >
           <Link
             to="/"
             aria-label="roMusic - prima pagină"
@@ -288,18 +293,45 @@ export default function Navbar() {
               <span style={brandNameStyle}>roMusic</span>
             </span>
           </Link>
-          <Link to="/albums">Albume</Link>
-          {isAuthenticated ? <Link to="/dashboard">Dashboard</Link> : null}
-          {isAuthenticated ? (
-            <Link to="/recommendations">Recomandări</Link>
-          ) : null}
-          {isAuthenticated ? <Link to="/notifications">Notificări</Link> : null}
-          {isAuthenticated ? <Link to="/messages">Mesaje</Link> : null}
-          {isAuthenticated ? <Link to="/calendar">Calendar</Link> : null}
-          <Link to="/lists">Liste</Link>
-          <Link to="/following">Urmăriți</Link>
-          {isAuthenticated ? <Link to="/activity">Activitate</Link> : null}
-          {isAuthenticated ? <Link to="/suggest">Propune</Link> : null}
+          <div className="navbar-links">
+            <Link to="/albums">Albume</Link>
+            {isAuthenticated ? <Link to="/dashboard">Dashboard</Link> : null}
+            {isAuthenticated ? (
+              <Link to="/recommendations">Recomandări</Link>
+            ) : null}
+            {isAuthenticated ? (
+              <Link to="/notifications">Notificări</Link>
+            ) : null}
+            {isAuthenticated ? <Link to="/messages">Mesaje</Link> : null}
+            <Link to="/lists">Liste</Link>
+            <Link to="/following">Urmăriți</Link>
+            {isAuthenticated ? <Link to="/activity">Activitate</Link> : null}
+            {isAuthenticated ? <Link to="/suggest">Propune</Link> : null}
+          </div>
+          {/* Mobile vertical menu (shows full nav on small screens) */}
+          <div className={`navbar-mobile-menu ${mobileOpen ? "open" : ""}`}>
+            <Link to="/albums">Albume</Link>
+            {isAuthenticated ? <Link to="/dashboard">Dashboard</Link> : null}
+            {isAuthenticated ? (
+              <Link to="/recommendations">Recomandări</Link>
+            ) : null}
+            {isAuthenticated ? (
+              <Link to="/notifications">Notificări</Link>
+            ) : null}
+            {isAuthenticated ? <Link to="/messages">Mesaje</Link> : null}
+            <Link to="/lists">Liste</Link>
+            <Link to="/following">Urmăriți</Link>
+            {isAuthenticated ? <Link to="/activity">Activitate</Link> : null}
+            {isAuthenticated ? <Link to="/suggest">Propune</Link> : null}
+          </div>
+          <button
+            className="navbar-mobile-button"
+            aria-label="Meniu"
+            onClick={() => setMobileOpen((v) => !v)}
+            type="button"
+          >
+            ☰
+          </button>
         </div>
 
         <form
@@ -367,6 +399,7 @@ export default function Navbar() {
                     >
                       Recent searches
                     </div>
+
                     {recentSearches.map((item) => (
                       <button
                         key={item}
@@ -383,179 +416,101 @@ export default function Navbar() {
                     ))}
                   </div>
                 ) : (
-                  <div style={{ display: "grid", gap: 10 }}>
+                  <div style={{ display: "grid", gap: 12 }}>
                     {suggestions.users.length ? (
-                      <div>
-                        <div
-                          style={{
-                            fontSize: "0.85em",
-                            opacity: 0.75,
-                            fontWeight: 700,
-                          }}
-                        >
+                      <div style={{ display: "grid", gap: 6 }}>
+                        <div style={{ fontSize: "0.85em", opacity: 0.75, fontWeight: 700 }}>
                           Users
                         </div>
-                        <div style={{ marginTop: 6, display: "grid", gap: 6 }}>
-                          {suggestions.users.map((u) => {
-                            const username = String(u?.username || "").trim();
-                            const id = u?.id;
-                            if (!username) return null;
-
-                            const to = id
-                              ? `/users/${encodeURIComponent(username)}?id=${encodeURIComponent(String(id))}`
-                              : `/users/${encodeURIComponent(username)}`;
-
-                            return (
-                              <button
-                                key={`${username}-${String(id ?? "")}`}
-                                type="button"
-                                onClick={() => goToItem(to, debouncedSearch)}
-                                style={{
-                                  ...ui.buttonSmall,
-                                  textAlign: "left",
-                                  width: "100%",
-                                }}
-                              >
-                                {username}
-                              </button>
-                            );
-                          })}
-                        </div>
+                        {suggestions.users.slice(0, 4).map((u) => {
+                          const username = String(u?.username || "").trim();
+                          const id = u?.id;
+                          if (!username) return null;
+                          const path = id
+                            ? `/users/${encodeURIComponent(username)}?id=${encodeURIComponent(String(id))}`
+                            : `/users/${encodeURIComponent(username)}`;
+                          return (
+                            <button
+                              key={`user-${String(id ?? username)}`}
+                              type="button"
+                              onClick={() => goTo(path)}
+                              style={{ ...ui.buttonSmall, textAlign: "left", width: "100%" }}
+                            >
+                              {username}
+                            </button>
+                          );
+                        })}
                       </div>
                     ) : null}
 
                     {suggestions.artists.length ? (
-                      <div>
-                        <div
-                          style={{
-                            fontSize: "0.85em",
-                            opacity: 0.75,
-                            fontWeight: 700,
-                          }}
-                        >
+                      <div style={{ display: "grid", gap: 6 }}>
+                        <div style={{ fontSize: "0.85em", opacity: 0.75, fontWeight: 700 }}>
                           Artists
                         </div>
-                        <div style={{ marginTop: 6, display: "grid", gap: 6 }}>
-                          {suggestions.artists.map((a) => (
-                            <button
-                              key={a.id}
-                              type="button"
-                              onClick={() =>
-                                goToItem(
-                                  `/artists/${encodeURIComponent(a.slug)}`,
-                                  debouncedSearch,
-                                )
-                              }
-                              style={{
-                                ...ui.buttonSmall,
-                                textAlign: "left",
-                                width: "100%",
-                              }}
-                            >
-                              {a.name}
-                            </button>
-                          ))}
-                        </div>
+                        {suggestions.artists.slice(0, 5).map((a) => (
+                          <button
+                            key={`artist-${a.id}`}
+                            type="button"
+                            onClick={() => goTo(`/artists/${encodeURIComponent(String(a.slug))}`)}
+                            style={{ ...ui.buttonSmall, textAlign: "left", width: "100%" }}
+                          >
+                            {a.name}
+                          </button>
+                        ))}
                       </div>
                     ) : null}
 
                     {suggestions.albums.length ? (
-                      <div>
-                        <div
-                          style={{
-                            fontSize: "0.85em",
-                            opacity: 0.75,
-                            fontWeight: 700,
-                          }}
-                        >
-                          Albums
+                      <div style={{ display: "grid", gap: 6 }}>
+                        <div style={{ fontSize: "0.85em", opacity: 0.75, fontWeight: 700 }}>
+                          Albume / Singles
                         </div>
-                        <div style={{ marginTop: 6, display: "grid", gap: 6 }}>
-                          {suggestions.albums.map((a) => (
-                            <button
-                              key={a.id}
-                              type="button"
-                              onClick={() =>
-                                goToItem(
-                                  `/albums/${encodeURIComponent(a.slug)}`,
-                                  debouncedSearch,
-                                )
-                              }
-                              style={{
-                                ...ui.buttonSmall,
-                                textAlign: "left",
-                                width: "100%",
-                              }}
-                            >
-                              {a.title}
-                              {a.artist_slug ? (
-                                <span style={{ opacity: 0.85 }}>
-                                  {" "}
-                                  — {a.artist_name}
-                                </span>
-                              ) : null}
-                            </button>
-                          ))}
-                        </div>
+                        {suggestions.albums.slice(0, 5).map((a) => (
+                          <button
+                            key={`album-${a.id}`}
+                            type="button"
+                            onClick={() => goTo(`/albums/${encodeURIComponent(String(a.slug))}`)}
+                            style={{ ...ui.buttonSmall, textAlign: "left", width: "100%" }}
+                          >
+                            [{releaseTypeLabel(a)}]{" "}
+                            {a.title}
+                            {a.artist_name ? ` - ${a.artist_name}` : ""}
+                          </button>
+                        ))}
                       </div>
                     ) : null}
 
                     {suggestions.songs.length ? (
-                      <div>
-                        <div
-                          style={{
-                            fontSize: "0.85em",
-                            opacity: 0.75,
-                            fontWeight: 700,
-                          }}
-                        >
-                          Songs
+                      <div style={{ display: "grid", gap: 6 }}>
+                        <div style={{ fontSize: "0.85em", opacity: 0.75, fontWeight: 700 }}>
+                          Piese
                         </div>
-                        <div style={{ marginTop: 6, display: "grid", gap: 6 }}>
-                          {suggestions.songs.map((s) => (
-                            <button
-                              key={s.id}
-                              type="button"
-                              onClick={() =>
-                                goToItem(
-                                  `/songs/${encodeURIComponent(s.slug)}`,
-                                  debouncedSearch,
-                                )
-                              }
-                              style={{
-                                ...ui.buttonSmall,
-                                textAlign: "left",
-                                width: "100%",
-                              }}
-                            >
-                              {s.title}
-                              {s.artist_slug ? (
-                                <span style={{ opacity: 0.85 }}>
-                                  {" "}
-                                  — {s.artist_name}
-                                </span>
-                              ) : null}
-                            </button>
-                          ))}
-                        </div>
+                        {suggestions.songs.slice(0, 5).map((s) => (
+                          <button
+                            key={`song-${s.id}`}
+                            type="button"
+                            onClick={() => goTo(`/songs/${encodeURIComponent(String(s.slug))}`)}
+                            style={{ ...ui.buttonSmall, textAlign: "left", width: "100%" }}
+                          >
+                            [Piesă]{" "}
+                            {s.title}
+                            {s.artist_name ? ` - ${s.artist_name}` : ""}
+                            {s.album_title
+                              ? ` · ${releaseTypeLabel(s)}: ${s.album_title}`
+                              : ""}
+                          </button>
+                        ))}
                       </div>
                     ) : null}
 
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        gap: 10,
-                      }}
+                    <button
+                      type="button"
+                      onClick={() => goToSearch(debouncedSearch)}
+                      style={{ ...ui.buttonSmall, textAlign: "left", width: "100%" }}
                     >
-                      <button
-                        type="button"
-                        style={ui.buttonSmall}
-                        onClick={() => goToSearch(debouncedSearch)}
-                      >
-                        Vezi toate rezultatele
-                      </button>
-                    </div>
+                      Vezi toate rezultatele pentru "{debouncedSearch}"
+                    </button>
                   </div>
                 )}
               </div>
@@ -563,6 +518,67 @@ export default function Navbar() {
           </div>
         </form>
 
+        {mobileOpen ? (
+          <nav className="navbar-mobile-menu" aria-label="Meniu mobil">
+            <div>
+              <Link to="/albums" onClick={() => setMobileOpen(false)}>
+                Albume
+              </Link>
+            </div>
+
+            {isAuthenticated ? (
+              <>
+                <div>
+                  <Link to="/dashboard" onClick={() => setMobileOpen(false)}>
+                    Dashboard
+                  </Link>
+                </div>
+                <div>
+                  <Link
+                    to="/recommendations"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    Recomandări
+                  </Link>
+                </div>
+                <div>
+                  <Link
+                    to="/notifications"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    Notificări
+                  </Link>
+                </div>
+                <div>
+                  <Link to="/messages" onClick={() => setMobileOpen(false)}>
+                    Mesaje
+                  </Link>
+                </div>
+                <div>
+                  <Link to="/activity" onClick={() => setMobileOpen(false)}>
+                    Activitate
+                  </Link>
+                </div>
+                <div>
+                  <Link to="/suggest" onClick={() => setMobileOpen(false)}>
+                    Propune
+                  </Link>
+                </div>
+              </>
+            ) : null}
+
+            <div>
+              <Link to="/lists" onClick={() => setMobileOpen(false)}>
+                Liste
+              </Link>
+            </div>
+            <div>
+              <Link to="/following" onClick={() => setMobileOpen(false)}>
+                Urmăriți
+              </Link>
+            </div>
+          </nav>
+        ) : null}
         <div
           style={{
             display: "flex",

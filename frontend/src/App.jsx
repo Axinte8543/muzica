@@ -21,23 +21,26 @@ const ArtistPage = lazy(() => import("./pages/ArtistPage.jsx"));
 const SongPage = lazy(() => import("./pages/SongPage.jsx"));
 const LoginPage = lazy(() => import("./pages/LoginPage.jsx"));
 const RegisterPage = lazy(() => import("./pages/RegisterPage.jsx"));
+const VerifyEmailPage = lazy(() => import("./pages/VerifyEmailPage.jsx"));
+const ConfirmEmailChangePage = lazy(
+  () => import("./pages/ConfirmEmailChangePage.jsx"),
+);
+const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage.jsx"));
 const SearchResultsPage = lazy(() => import("./pages/SearchResultsPage.jsx"));
 const TopAlbumsPage = lazy(() => import("./pages/TopAlbumsPage.jsx"));
 const ListsPage = lazy(() => import("./pages/ListsPage.jsx"));
+const MyListsPage = lazy(() => import("./pages/MyListsPage.jsx"));
 const PublicListPage = lazy(() => import("./pages/PublicListPage.jsx"));
 const FollowedArtistsPage = lazy(
   () => import("./pages/FollowedArtistsPage.jsx"),
 );
 const ProfileReviewsPage = lazy(() => import("./pages/ProfileReviewsPage.jsx"));
-const ProfileListsPage = lazy(() => import("./pages/ProfileListsPage.jsx"));
-const ProfileFollowingPage = lazy(
-  () => import("./pages/ProfileFollowingPage.jsx"),
-);
 const ProfileRatingsPage = lazy(() => import("./pages/ProfileRatingsPage.jsx"));
 const ProfileLikedAlbumsPage = lazy(
   () => import("./pages/ProfileLikedAlbumsPage.jsx"),
 );
 const ProfileStatsPage = lazy(() => import("./pages/ProfileStatsPage.jsx"));
+const MyProfilePage = lazy(() => import("./pages/MyProfilePage.jsx"));
 const ProfileTopPage = lazy(() => import("./pages/ProfileTopPage.jsx"));
 const ProfileFriendsPage = lazy(() => import("./pages/ProfileFriendsPage.jsx"));
 const ProfileListensPage = lazy(() => import("./pages/ProfileListensPage.jsx"));
@@ -65,9 +68,6 @@ const RecommendationsPage = lazy(
 );
 const SimilarArtistsPage = lazy(() => import("./pages/SimilarArtistsPage.jsx"));
 const NotificationsPage = lazy(() => import("./pages/NotificationsPage.jsx"));
-const ReleaseCalendarPage = lazy(
-  () => import("./pages/ReleaseCalendarPage.jsx"),
-);
 const GenresPage = lazy(() => import("./pages/GenresPage.jsx"));
 const StaticPage = lazy(() => import("./pages/StaticPage.jsx"));
 const HighestRatedArtistsPage = lazy(
@@ -144,16 +144,20 @@ function RoutedContent() {
           <Route path="/recap/weekly" element={<WeeklyRecapPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
+          <Route
+            path="/confirm-email-change"
+            element={<ConfirmEmailChangePage />}
+          />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/search" element={<SearchResultsPage />} />
           <Route path="/top-albums" element={<TopAlbumsPage />} />
           <Route path="/lists" element={<ListsPage />} />
+          <Route path="/my-lists" element={<MyListsPage />} />
           <Route path="/lists/public/:listId" element={<PublicListPage />} />
           <Route path="/following" element={<FollowedArtistsPage />} />
           <Route path="/profile/reviews" element={<ProfileReviewsPage />} />
-          <Route
-            path="/profile"
-            element={<Navigate to="/profile/listens" replace />}
-          />
+          <Route path="/profile" element={<MyProfilePage />} />
           <Route path="/profile/listens" element={<ProfileListensPage />} />
           <Route
             path="/profile/want-to-listen"
@@ -168,8 +172,6 @@ function RoutedContent() {
             path="/profile/achievements"
             element={<ProfileAchievementsPage />}
           />
-          <Route path="/profile/lists" element={<ProfileListsPage />} />
-          <Route path="/profile/following" element={<ProfileFollowingPage />} />
           <Route path="/profile/ratings" element={<ProfileRatingsPage />} />
           <Route
             path="/profile/liked-albums"
@@ -183,6 +185,7 @@ function RoutedContent() {
             path="/profile/metadata-suggestions"
             element={<MetadataSuggestionsPage />}
           />
+
           <Route path="/profile/top" element={<ProfileTopPage />} />
           <Route
             path="/profile/suggestions"
@@ -198,7 +201,6 @@ function RoutedContent() {
           <Route path="/similar-artists" element={<SimilarArtistsPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/messages" element={<MessagesPage />} />
-          <Route path="/calendar" element={<ReleaseCalendarPage />} />
           <Route
             path="/romanian-songs"
             element={<Navigate to="/albums" replace />}

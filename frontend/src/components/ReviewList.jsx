@@ -68,13 +68,6 @@ export default function ReviewList({ reviews, onChangeReviews }) {
   const [reportMetaByKey, setReportMetaByKey] = useState(() => ({}));
   const [isLoadingMyReports, setIsLoadingMyReports] = useState(false);
 
-  function statusLabel(raw) {
-    const s = String(raw || "").toLowerCase();
-    if (s === "pending") return "În analiză";
-    if (s === "resolved") return "Rezolvat";
-    return "";
-  }
-
   function formatReportFeedback(meta) {
     if (!meta) return "";
     const reason = String(meta.reason || "").trim();
@@ -178,7 +171,7 @@ export default function ReviewList({ reviews, onChangeReviews }) {
   }, [reviews]);
 
   if (!Array.isArray(sourceReviews) || sourceReviews.length === 0) {
-    return <p style={{ marginTop: "10px" }}>No reviews yet</p>;
+    return <p style={{ marginTop: "10px" }}>Nu există încă review-uri.</p>;
   }
 
   async function handleLike(reviewId) {

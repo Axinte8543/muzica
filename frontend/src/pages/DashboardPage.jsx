@@ -116,7 +116,7 @@ export default function DashboardPage() {
 
       const [recsRes, activityRes, listsRes] = await Promise.allSettled([
         getRecommendations({ baseUrl, accessToken, limit: 8 }),
-        getFriendsActivity({ baseUrl, accessToken, limit: 10 }),
+        getFriendsActivity({ baseUrl, accessToken, limit: 5 }),
         getMyLists({ baseUrl, accessToken }),
       ]);
 
@@ -165,10 +165,10 @@ export default function DashboardPage() {
       accessToken,
       kind: "activity",
       scope: "friends",
-      limit: 10,
+      limit: 5,
       interval: 5,
       onSnapshot: (payload) => {
-        setFriendsActivity(Array.isArray(payload) ? payload : []);
+        setFriendsActivity(Array.isArray(payload) ? payload.slice(0, 5) : []);
       },
     });
   }, [accessToken, baseUrl, canLoad]);
@@ -349,7 +349,9 @@ export default function DashboardPage() {
             <ul style={{ margin: 0, paddingLeft: "18px" }}>
               {recentLists.map((l) => (
                 <li key={l.id} style={{ marginBottom: "8px" }}>
-                  <span style={{ fontWeight: 700 }}>{l.name}</span>
+                  <span style={{ fontWeight: 700 }}>
+                    <Link to={`/lists/public/${l.id}`}>{l.name}</Link>
+                  </span>
                   <span style={{ opacity: 0.9 }}> ({l.albums_count ?? 0})</span>
                 </li>
               ))}

@@ -1,7 +1,12 @@
 import React from "react";
 import { ui } from "../ui/ui.js";
 
-export default function BadgeCard({ badge, earned = false, size = "medium" }) {
+export default function BadgeCard({
+  badge,
+  earned = false,
+  size = "medium",
+  onClick,
+}) {
   const sizeStyles = {
     small: { fontSize: "24px", padding: "8px", borderRadius: "8px" },
     medium: { fontSize: "32px", padding: "12px", borderRadius: "12px" },
@@ -22,16 +27,23 @@ export default function BadgeCard({ badge, earned = false, size = "medium" }) {
     textAlign: "center",
     opacity: earned ? 1 : 0.4,
     border: `2px solid ${rarityColors[badge.rarity] || "#999"}`,
-    cursor: earned ? "pointer" : "default",
+    cursor: onClick ? "pointer" : "default",
     transition: "transform 0.2s",
+    width: "100%",
+    minHeight: "100%",
+    color: "inherit",
+    font: "inherit",
   };
 
   return (
-    <div
+    <button
+      type="button"
       style={style}
-      title={badge.name}
+      title={`${badge.name} — apasă pentru detalii`}
+      aria-label={`${badge.name}. ${earned ? "Insignă câștigată." : "Insignă necâștigată."} Apasă pentru a afla condiția.`}
+      onClick={onClick}
       onMouseEnter={(e) => {
-        if (earned) e.currentTarget.style.transform = "scale(1.05)";
+        if (onClick) e.currentTarget.style.transform = "scale(1.05)";
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.transform = "scale(1)";
@@ -44,6 +56,6 @@ export default function BadgeCard({ badge, earned = false, size = "medium" }) {
       <div style={{ fontSize: "10px", marginTop: "2px", color: "#666" }}>
         {badge.category}
       </div>
-    </div>
+    </button>
   );
 }

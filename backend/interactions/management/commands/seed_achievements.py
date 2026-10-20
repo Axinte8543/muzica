@@ -1,16 +1,16 @@
-"""
-Management command to seed achievements into the database.
-
-Usage:
-    python manage.py seed_achievements
-"""
+\
+\
+\
+\
+\
+   
 
 from django.core.management.base import BaseCommand
 from interactions.models import Achievement
 
 
 ACHIEVEMENTS_DATA = [
-    # MILESTONE ACHIEVEMENTS
+                            
     {
         'code': 'reviewer_5',
         'name': 'Critic',
@@ -66,7 +66,7 @@ ACHIEVEMENTS_DATA = [
         'points': 15,
     },
     
-    # STREAK ACHIEVEMENTS
+                         
     {
         'code': 'review_streak_5',
         'name': 'Consistent Critic',
@@ -95,11 +95,11 @@ ACHIEVEMENTS_DATA = [
         'points': 20,
     },
     
-    # DISCOVERY ACHIEVEMENTS
+                            
     {
         'code': 'romanian_explorer',
         'name': 'Romanian Explorer',
-        'description': 'Listen to 10 Romanian artists',
+        'description': 'Listen to 10 different artists',
         'emoji': '🇷🇴',
         'type': 'discovery',
         'target': 10,
@@ -145,12 +145,12 @@ class Command(BaseCommand):
             code = achievement_data['code']
             
             if force:
-                # Delete existing to force recreation
+                                                     
                 Achievement.objects.filter(code=code).delete()
                 achievement, created = Achievement.objects.create(**achievement_data), True
                 created_count += 1
             else:
-                # Get or create
+                               
                 achievement, created = Achievement.objects.get_or_create(
                     code=code,
                     defaults=achievement_data
@@ -158,7 +158,7 @@ class Command(BaseCommand):
                 if created:
                     created_count += 1
                 else:
-                    # Update if exists
+                                      
                     for field, value in achievement_data.items():
                         if field != 'code':
                             setattr(achievement, field, value)

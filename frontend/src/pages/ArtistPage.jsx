@@ -9,15 +9,13 @@ import {
 } from "../api/follows.js";
 import { createMetadataSuggestion } from "../api/moderation.js";
 import { apiClient } from "../api/apiClient.js";
+import RatingWidget from "../components/RatingWidget.jsx";
 import { useAuth } from "../context/useAuth.js";
 import { ui } from "../ui/ui.js";
 
 const FILTER_OPTIONS = [
   ["albums", "Albume"],
   ["singles", "Single"],
-  ["eps", "EPs"],
-  ["compilations", "Compilatii"],
-  ["other", "Altele"],
   ["appearsOn", "Aparitii"],
 ];
 
@@ -280,9 +278,6 @@ export default function ArtistPage({ slug }) {
   const [filters, setFilters] = useState({
     albums: true,
     singles: true,
-    eps: true,
-    compilations: true,
-    other: false,
     appearsOn: true,
   });
 
@@ -298,22 +293,26 @@ export default function ArtistPage({ slug }) {
 
   useEffect(() => {
     if (!slug) {
-      setIsLoading(false);
-      setError("Artistul nu a putut fi incarcat.");
+      queueMicrotask(() => {
+        setIsLoading(false);
+        setError("Artistul nu a putut fi incarcat.");
+      });
       return;
     }
 
     let cancelled = false;
 
     async function loadAll() {
-      setIsLoading(true);
-      setError(null);
-      setDiscography(null);
-      setDiscographyError(null);
-      setTopSongs([]);
-      setTopSongsError(null);
-      setSimilarArtists([]);
-      setSimilarArtistsError(null);
+      queueMicrotask(() => {
+        setIsLoading(true);
+        setError(null);
+        setDiscography(null);
+        setDiscographyError(null);
+        setTopSongs([]);
+        setTopSongsError(null);
+        setSimilarArtists([]);
+        setSimilarArtistsError(null);
+      });
 
       try {
         const [artistResult, discographyResult, topSongsResult, similarResult] =
@@ -377,8 +376,11 @@ export default function ArtistPage({ slug }) {
 
   useEffect(() => {
     if (!artist) return;
-    setSuggestImageUrl(String(artist.image_url || ""));
-    setSuggestBio(String(artist.bio || ""));
+    const t = setTimeout(() => {
+      setSuggestImageUrl(String(artist.image_url || ""));
+      setSuggestBio(String(artist.bio || ""));
+    }, 0);
+    return () => clearTimeout(t);
   }, [artist]);
 
   const followStatusQueryKey = useMemo(() => {
@@ -422,8 +424,6 @@ export default function ArtistPage({ slug }) {
     return [
       ["Albume", getCount(discography?.albums)],
       ["Single", getCount(discography?.singles)],
-      ["EPs", getCount(discography?.eps)],
-      ["Compilatii", getCount(discography?.compilations)],
       ["Aparitii", getCount(discography?.appears_on)],
     ];
   }, [discography]);
@@ -619,7 +619,10 @@ export default function ArtistPage({ slug }) {
             <div style={chipRowStyle}>
               <span style={{ ...chipStyle, fontWeight: 700 }}>Artist</span>
               <span style={chipStyle}>{followersCount} urmaritori</span>
-              {artist.is_romanian ? <span style={chipStyle}>Roman</span> : null}
+              <span style={chipStyle}>
+                ⭐ {formatAvg(artist.average_rating)} ·{" "}
+                {artist.ratings_count ?? 0} voturi
+              </span>
             </div>
 
             <h1
@@ -698,6 +701,19 @@ export default function ArtistPage({ slug }) {
                 {followError}
               </div>
             ) : null}
+
+            <RatingWidget
+              kind="artist"
+              itemId={artist.id}
+              onRated={async () => {
+                try {
+                  const refreshed = await apiClient.get(`/api/artists/${slug}/`);
+                  setArtist(refreshed.data);
+                } catch {
+                  // Keep the saved user rating even if the aggregate refresh fails.
+                }
+              }}
+            />
           </div>
         </div>
 
@@ -828,59 +844,11 @@ export default function ArtistPage({ slug }) {
                   />
                 ) : null}
 
-                {filters.eps ? (
-                  <DiscographyGroup
-                    title="EPs"
-                    items={discography.eps}
-                    renderItem={(release) => (
-                      <li key={release.id} style={itemCardStyle}>
-                        <div style={{ fontWeight: 700 }}>
-                          <LinkLabel
-                            to={release.slug ? `/albums/${release.slug}` : null}
-                          >
-                            {release.title}
-                          </LinkLabel>
-                        </div>
-                      </li>
-                    )}
-                  />
-                ) : null}
+                {/* EPs section removed */}
 
-                {filters.compilations ? (
-                  <DiscographyGroup
-                    title="Compilatii"
-                    items={discography.compilations}
-                    renderItem={(release) => (
-                      <li key={release.id} style={itemCardStyle}>
-                        <div style={{ fontWeight: 700 }}>
-                          <LinkLabel
-                            to={release.slug ? `/albums/${release.slug}` : null}
-                          >
-                            {release.title}
-                          </LinkLabel>
-                        </div>
-                      </li>
-                    )}
-                  />
-                ) : null}
+                {/* compilations removed */}
 
-                {filters.other ? (
-                  <DiscographyGroup
-                    title="Altele"
-                    items={discography.other}
-                    renderItem={(release) => (
-                      <li key={release.id} style={itemCardStyle}>
-                        <div style={{ fontWeight: 700 }}>
-                          <LinkLabel
-                            to={release.slug ? `/albums/${release.slug}` : null}
-                          >
-                            {release.title}
-                          </LinkLabel>
-                        </div>
-                      </li>
-                    )}
-                  />
-                ) : null}
+                {/* 'other' section removed */}
 
                 {filters.appearsOn ? (
                   <DiscographyGroup

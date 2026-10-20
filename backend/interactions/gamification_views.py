@@ -16,14 +16,14 @@ from .gamification import weekly_challenges_payload_for, streak_payload_for
 
 
 class BadgeViewSet(viewsets.ReadOnlyModelViewSet):
-    """View all badges available in the system"""
+                                                 
     queryset = Badge.objects.all()
     serializer_class = BadgeSerializer
     permission_classes = [IsAuthenticated]
 
     @action(detail=False, methods=['get'])
     def by_category(self, request):
-        """Get badges grouped by category"""
+                                            
         category = request.query_params.get('category')
         if category:
             badges = Badge.objects.filter(category=category)
@@ -34,7 +34,7 @@ class BadgeViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class UserBadgeViewSet(viewsets.ReadOnlyModelViewSet):
-    """User's earned badges"""
+                              
     permission_classes = [IsAuthenticated]
     serializer_class = UserBadgeSerializer
 
@@ -43,21 +43,21 @@ class UserBadgeViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=False, methods=['get'])
     def my_badges(self, request):
-        """Get all badges earned by the current user"""
+                                                       
         badges = self.get_queryset()
         serializer = UserBadgeSerializer(badges, many=True)
         return Response(serializer.data)
 
 
 class AchievementViewSet(viewsets.ReadOnlyModelViewSet):
-    """View all achievements available in the system"""
+                                                       
     queryset = Achievement.objects.all()
     serializer_class = AchievementSerializer
     permission_classes = [IsAuthenticated]
 
     @action(detail=False, methods=['get'])
     def by_type(self, request):
-        """Get achievements grouped by type"""
+                                              
         achievement_type = request.query_params.get('type')
         if achievement_type:
             achievements = Achievement.objects.filter(type=achievement_type)
@@ -68,7 +68,7 @@ class AchievementViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class UserAchievementViewSet(viewsets.ReadOnlyModelViewSet):
-    """User's achievements and progress"""
+                                          
     permission_classes = [IsAuthenticated]
     serializer_class = UserAchievementSerializer
 
@@ -77,34 +77,34 @@ class UserAchievementViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=False, methods=['get'])
     def my_achievements(self, request):
-        """Get all achievements for the current user"""
+                                                       
         achievements = self.get_queryset()
         serializer = UserAchievementSerializer(achievements, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
     def unlocked(self, request):
-        """Get only unlocked achievements"""
+                                            
         achievements = self.get_queryset().filter(is_completed=True)
         serializer = UserAchievementSerializer(achievements, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
     def in_progress(self, request):
-        """Get achievements still in progress"""
+                                                
         achievements = self.get_queryset().filter(is_completed=False)
         serializer = UserAchievementSerializer(achievements, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=['post'])
     def refresh(self, request):
-        """Refresh and update all achievements for current user"""
+                                                                  
         from interactions.achievement_tracker import update_all_achievement_progress
         
         user = request.user
         unlocked_codes = update_all_achievement_progress(user)
         
-        # Get updated achievements
+                                  
         achievements = self.get_queryset()
         serializer = UserAchievementSerializer(achievements, many=True)
         
@@ -116,7 +116,7 @@ class UserAchievementViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class UserXPViewSet(viewsets.ReadOnlyModelViewSet):
-    """User's XP and level information"""
+                                         
     permission_classes = [IsAuthenticated]
     serializer_class = UserXPSerializer
 
@@ -125,11 +125,11 @@ class UserXPViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=False, methods=['get'])
     def my_xp(self, request):
-        """Get current user's XP and level"""
+                                             
         try:
             user_xp = UserXP.objects.get(user=request.user)
         except UserXP.DoesNotExist:
-            # Create if doesn't exist
+                                     
             user_xp = UserXP.objects.create(user=request.user)
         
         serializer = UserXPSerializer(user_xp)
@@ -137,29 +137,29 @@ class UserXPViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class GamificationStatsView(viewsets.ViewSet):
-    """Combined gamification stats endpoint"""
+                                              
     permission_classes = [IsAuthenticated]
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def my_stats(self, request):
-        """Get all gamification stats for current user"""
+                                                         
         user = request.user
 
-        # Get or create user XP
+                               
         user_xp, _ = UserXP.objects.get_or_create(user=user)
 
-        # Get badges
+                    
         badges = UserBadge.objects.filter(user=user).select_related('badge')
         badges_serialized = UserBadgeSerializer(badges, many=True).data
 
-        # Get achievements
+                          
         achievements = UserAchievement.objects.filter(user=user).select_related('achievement')
         achievements_serialized = UserAchievementSerializer(achievements, many=True).data
 
-        # Get weekly challenges
+                               
         weekly_challenges = weekly_challenges_payload_for(user)
 
-        # Get streaks
+                     
         streaks = streak_payload_for(user)
 
         return Response({

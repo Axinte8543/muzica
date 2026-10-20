@@ -145,11 +145,17 @@ export default function ProfileRatingsPage() {
   }, [accessToken, baseUrl, albumPage, isAuthVerified, logout, songPage]);
 
   useEffect(() => {
-    setAlbumPage((prev) => Math.min(prev, albumTotalPages));
+    const t = setTimeout(() => {
+      setAlbumPage((prev) => Math.min(prev, albumTotalPages));
+    }, 0);
+    return () => clearTimeout(t);
   }, [albumTotalPages]);
 
   useEffect(() => {
-    setSongPage((prev) => Math.min(prev, songTotalPages));
+    const t = setTimeout(() => {
+      setSongPage((prev) => Math.min(prev, songTotalPages));
+    }, 0);
+    return () => clearTimeout(t);
   }, [songTotalPages]);
 
   if (!isAuthenticated) {
@@ -188,7 +194,7 @@ export default function ProfileRatingsPage() {
       <div style={{ padding: "24px" }}>
         <h1 style={{ marginTop: 0 }}>Ratingurile mele</h1>
 
-        {isLoading ? <p>Loading ratings...</p> : null}
+        {isLoading ? <p>Se încarcă ratingurile...</p> : null}
         {error ? <p style={ui.errorText}>{error}</p> : null}
 
         {!isLoading && !error ? (

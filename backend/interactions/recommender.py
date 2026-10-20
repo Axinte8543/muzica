@@ -9,7 +9,7 @@ from music.models import Album
 
 
 def _build_item_users() -> Dict[int, Dict[int, int]]:
-    """Build sparse item->(user->rating) mapping."""
+                                                    
     rows = AlbumRating.objects.select_related('user').values_list('album_id', 'user_id', 'rating')
     item_users: Dict[int, Dict[int, int]] = {}
     for album_id, user_id, rating in rows:
@@ -18,12 +18,12 @@ def _build_item_users() -> Dict[int, Dict[int, int]]:
 
 
 def _compute_topk_item_neighbors(k: int = 50) -> Dict[int, List[Tuple[int, float]]]:
-    """Compute top-k cosine neighbors for each item using sparse vectors.
-
-    Returns mapping item_id -> list of (neighbor_item_id, similarity)
-    """
+\
+\
+\
+       
     item_users = _build_item_users()
-    # precompute norms
+                      
     norms: Dict[int, float] = {}
     user_items: Dict[int, List[int]] = defaultdict(list)
     for item_id, users in item_users.items():
@@ -36,7 +36,7 @@ def _compute_topk_item_neighbors(k: int = 50) -> Dict[int, List[Tuple[int, float
 
     neighbors: Dict[int, Dict[int, float]] = defaultdict(dict)
 
-    # accumulate dot products by walking users' item lists
+                                                          
     for uid, items in user_items.items():
         for i in items:
             ri = item_users[i].get(uid, 0)
@@ -64,24 +64,24 @@ def _compute_topk_item_neighbors(k: int = 50) -> Dict[int, List[Tuple[int, float
 
 
 def compute_and_cache_neighbors(k: int = 50):
-    """Compute neighbors and persist them in cache for reuse."""
+                                                                
     topk = _compute_topk_item_neighbors(k=k)
-    # cache indefinitely (depends on cache backend persistence)
+                                                               
     cache.set('recommender:item_neighbors', topk, None)
     return topk
 
 
 def recommend_item_based_for_user(user_id: int, limit: int = 20, neighbor_k: int = 50, exclude_albums: List[int] | None = None) -> List[dict]:
-    """Compute simple item-based recommendations for `user_id` and return lightweight payloads.
-
-    Results are cached by this function when precomputed via management command.
-    """
-    # Load precomputed neighbors from cache if present, else compute on the fly.
+\
+\
+\
+       
+                                                                                
     cache_key_neighbors = 'recommender:item_neighbors'
     neighbors = cache.get(cache_key_neighbors)
     if neighbors is None:
         neighbors = _compute_topk_item_neighbors(k=neighbor_k)
-        # cache neighbors for a while; in production use Redis with proper TTL
+                                                                              
         cache.set(cache_key_neighbors, neighbors, 60 * 60)
 
     qs = AlbumRating.objects.filter(user_id=user_id)
@@ -135,7 +135,7 @@ def recommend_item_based_for_user(user_id: int, limit: int = 20, neighbor_k: int
 def compute_and_cache_user_recommendations(user_id: int, limit: int = 12) -> None:
     recs = recommend_item_based_for_user(user_id, limit=limit)
     cache_key = f'recommendations:user:item:{user_id}'
-    cache.set(cache_key, recs, 60 * 60 * 6)  # 6 hours
+    cache.set(cache_key, recs, 60 * 60 * 6)           
 
 
 def invalidate_user_recommendations(user_id: int) -> None:

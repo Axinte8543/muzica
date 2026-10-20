@@ -66,11 +66,17 @@ export default function ProfileListensPage() {
 
   useEffect(() => {
     if (!canLoad) return;
-    void load();
+    const t = setTimeout(() => {
+      void load();
+    }, 0);
+    return () => clearTimeout(t);
   }, [canLoad, load]);
 
   useEffect(() => {
-    setPage((prev) => Math.min(prev, totalPages));
+    const t = setTimeout(() => {
+      setPage((prev) => Math.min(prev, totalPages));
+    }, 0);
+    return () => clearTimeout(t);
   }, [totalPages]);
 
   if (!isAuthenticated) {

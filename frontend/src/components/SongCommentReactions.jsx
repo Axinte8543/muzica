@@ -29,7 +29,11 @@ export default function SongCommentReactions({ commentId, baseUrl }) {
   }, [accessToken, baseUrl, commentId]);
 
   useEffect(() => {
-    void loadReactions();
+    // Defer initial load to avoid synchronous setState inside effect
+    const t = setTimeout(() => {
+      void loadReactions();
+    }, 0);
+    return () => clearTimeout(t);
   }, [loadReactions]);
 
   async function handleReactionClick(emoji) {

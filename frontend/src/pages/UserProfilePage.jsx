@@ -30,7 +30,7 @@ function formatActivity(item) {
       return `${actor} rated ${name}${stars}`.trim();
     }
     case "review_album":
-      return `${actor} reviewed ${name}`.trim();
+      return `${actor} a scris un review la ${name}`.trim();
     case "follow_artist":
       return `${actor} followed ${name}`.trim();
     case "create_list":
@@ -271,8 +271,8 @@ export default function UserProfilePage() {
     : "—";
 
   const heroMetrics = [
-    { label: "Ratings", value: stats?.activity?.albums_rated ?? 0 },
-    { label: "Reviews", value: stats?.activity?.reviews_written ?? 0 },
+    { label: "Ratinguri", value: stats?.activity?.albums_rated ?? 0 },
+    { label: "Review-uri", value: stats?.activity?.reviews_written ?? 0 },
     {
       label: "Artiști urmăriți",
       value: stats?.activity?.artists_followed ?? 0,
@@ -281,7 +281,6 @@ export default function UserProfilePage() {
   ];
 
   const profileHighlights = [
-    { label: "Gen preferat", value: stats?.favorite_genre || "—" },
     { label: "Artist preferat", value: stats?.favorite_artist || "—" },
     { label: "Rating mediu", value: averageRatingLabel },
   ];
@@ -317,14 +316,12 @@ export default function UserProfilePage() {
     ...ui.card,
     padding: "24px",
     display: "grid",
-    gridTemplateColumns: "minmax(0, 1.5fr) minmax(300px, 360px)",
     gap: "18px",
     alignItems: "start",
   };
 
   const contentGridStyle = {
     display: "grid",
-    gridTemplateColumns: "minmax(0, 1.6fr) minmax(280px, 0.9fr)",
     gap: "14px",
     marginTop: "14px",
   };
@@ -512,7 +509,7 @@ export default function UserProfilePage() {
         <Link to="/similar-users">← Înapoi la utilizatori similari</Link>
       </p>
 
-      <div style={heroCardStyle}>
+      <div className="profile-hero" style={heroCardStyle}>
         <div>
           <div style={badgeStyle}>Profil public</div>
           <h1
@@ -656,7 +653,7 @@ export default function UserProfilePage() {
         </div>
       </div>
 
-      <div style={contentGridStyle}>
+      <div className="profile-content-grid" style={contentGridStyle}>
         <div style={{ ...ui.card, padding: "20px" }}>
           <div style={sectionTitleStyle}>Activitate recentă</div>
 
@@ -674,7 +671,7 @@ export default function UserProfilePage() {
             <>
               {recentRatings.length > 0 ? (
                 <div style={{ marginTop: 14 }}>
-                  <div style={{ fontWeight: 700 }}>Recent ratings</div>
+                  <div style={{ fontWeight: 700 }}>Ratinguri recente</div>
                   <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
                     {recentRatings.map((r) => (
                       <div key={r.id} style={{ opacity: 0.96 }}>
@@ -693,7 +690,7 @@ export default function UserProfilePage() {
 
               {recentReviews.length > 0 ? (
                 <div style={{ marginTop: 14 }}>
-                  <div style={{ fontWeight: 700 }}>Recent reviews</div>
+                  <div style={{ fontWeight: 700 }}>Review-uri recente</div>
                   <div style={{ marginTop: 10, display: "grid", gap: 12 }}>
                     {recentReviews.map((rv) => (
                       <div key={rv.id} style={{ opacity: 0.96 }}>
@@ -747,21 +744,21 @@ export default function UserProfilePage() {
                 </div>
               </div>
 
-              {!!commonGenres.length ? (
+              {commonGenres.length ? (
                 <div style={{ marginTop: 12 }}>
                   <div style={{ fontWeight: 700 }}>Genuri comune</div>
                   <div style={{ opacity: 0.9 }}>{commonGenres.join(", ")}</div>
                 </div>
               ) : null}
 
-              {!!commonArtists.length ? (
+              {commonArtists.length ? (
                 <div style={{ marginTop: 12 }}>
                   <div style={{ fontWeight: 700 }}>Artiști comuni</div>
                   <div style={{ opacity: 0.9 }}>{commonArtists.join(", ")}</div>
                 </div>
               ) : null}
 
-              {!!commonAlbums.length ? (
+              {commonAlbums.length ? (
                 <div style={{ marginTop: 12 }}>
                   <div style={{ fontWeight: 700 }}>Albume comune</div>
                   <div style={{ opacity: 0.9 }}>{commonAlbums.join(", ")}</div>

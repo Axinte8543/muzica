@@ -24,8 +24,12 @@ function formatItem(item) {
       return `${actor} a urmărit ${name}`.trim();
     case "create_list":
       return `${actor} a creat lista ${name}`.trim();
+    case "list_add_album":
+      return `${actor} a adăugat ${name}`.trim();
     default:
-      return `${actor} a făcut o acțiune`.trim();
+      return name
+        ? `${actor} a avut o activitate legată de ${name}`.trim()
+        : `${actor} a avut o activitate recentă`.trim();
   }
 }
 
@@ -38,7 +42,7 @@ export default function UserUpdatesPage() {
   const [error, setError] = useState(null);
 
   const applyActivityPayload = useCallback((data) => {
-    setItems(Array.isArray(data) ? data : []);
+    setItems(Array.isArray(data) ? data.slice(0, 20) : []);
   }, []);
 
   const canLoad = useMemo(() => {
@@ -64,7 +68,7 @@ export default function UserUpdatesPage() {
       }
 
       try {
-        const data = await getActivity({ baseUrl, accessToken, limit: 50 });
+        const data = await getActivity({ baseUrl, accessToken, limit: 20 });
         if (!isCancelled) applyActivityPayload(data);
       } catch (err) {
         const status = err?.response?.status;
@@ -93,7 +97,7 @@ export default function UserUpdatesPage() {
       accessToken,
       kind: "activity",
       scope: "all",
-      limit: 50,
+      limit: 20,
       interval: 5,
     });
 

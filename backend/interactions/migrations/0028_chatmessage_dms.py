@@ -1,4 +1,4 @@
-# Generated migration for ChatMessage DM system
+                                               
 
 from django.conf import settings
 from django.db import migrations, models
@@ -13,6 +13,14 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RemoveIndex(
+            model_name='chatmessage',
+            name='interaction_created_5d4975_idx',
+        ),
+        migrations.RemoveIndex(
+            model_name='chatmessage',
+            name='interaction_user_id_b84829_idx',
+        ),
         migrations.RenameField(
             model_name='chatmessage',
             old_name='user',

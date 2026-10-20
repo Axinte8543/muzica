@@ -45,7 +45,7 @@ def _get_or_create_genre(name: str) -> Genre:
         name=clean,
         defaults={"slug": slug},
     )
-    # If slug collision, keep existing; genre name is unique.
+                                                             
     return obj
 
 
@@ -63,15 +63,15 @@ def _unique_slug(model, base: str) -> str:
 
 
 def _resolve_musicbrainz_artist_mbid(*, name: str, romanian_only: bool) -> tuple[str, str]:
-    """Return (mbid, resolved_name). Raises CommandError on failure."""
+                                                                       
     mb = MusicBrainzClient()
     clean = _normalize_name(name)
     if not clean:
         raise CommandError("Empty artist name")
 
     def _artist_field(term: str) -> str:
-        # MusicBrainz (Lucene) queries can behave unexpectedly with punctuation.
-        # Quoting the term improves matches for names like "B.U.G. Mafia" or "R.O.A.".
+                                                                                
+                                                                                      
         safe = term.replace('"', "\\\"")
         if " " in safe or any(not (ch.isalnum() or ch in {"-", "_"}) for ch in safe):
             return f'artist:"{safe}"'
@@ -79,15 +79,15 @@ def _resolve_musicbrainz_artist_mbid(*, name: str, romanian_only: bool) -> tuple
 
     artist_q = _artist_field(clean)
 
-    # MusicBrainz search can return very high-score but irrelevant matches for
-    # ambiguous short names (e.g. Oscar -> Oscar Peterson). We try a few
-    # Romania-scoped queries first (when appropriate), then fall back.
+                                                                              
+                                                                        
+                                                                      
     is_ambiguous_name = (" " not in clean) and (len(clean) <= 5)
 
     queries: list[str] = []
     if romanian_only or is_ambiguous_name:
-        # NOTE: MusicBrainz search index support for country/area filters is not
-        # consistent across all artists, so we try both.
+                                                                                
+                                                        
         queries.extend(
             [
                 f"{artist_q} AND country:RO",
@@ -96,7 +96,7 @@ def _resolve_musicbrainz_artist_mbid(*, name: str, romanian_only: bool) -> tuple
         )
 
     if romanian_only:
-        # Keep a Romania hint even if filters returned nothing.
+                                                               
         queries.append(f"{artist_q} AND romanian")
 
     queries.append(artist_q)
@@ -183,6 +183,17 @@ class Command(BaseCommand):
             help="Path to a text file with one artist name per line",
         )
         parser.add_argument(
+            "--all-existing",
+            action="store_true",
+            help="Process all artists currently present in the local database",
+        )
+        parser.add_argument(
+            "--start-after",
+            type=str,
+            default="",
+            help="When processing a list, skip artists through this name and start after it",
+        )
+        parser.add_argument(
             "--market",
             type=str,
             default="RO",
@@ -230,6 +241,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         raw_artists = str(options.get("artists") or "").strip()
         artists_file = str(options.get("artists_file") or "").strip()
+        all_existing = bool(options.get("all_existing"))
+        start_after = _normalize_name(options.get("start_after") or "")
         market = str(options.get("market") or "RO").strip() or "RO"
         max_release_groups = int(options.get("max_release_groups") or 25)
         max_releases_per_group = int(options.get("max_releases_per_group") or 5)
@@ -240,6 +253,10 @@ class Command(BaseCommand):
         lastfm_limit = max(1, int(options.get("lastfm_limit") or 10))
 
         names: list[str] = []
+        if all_existing:
+            names.extend(
+                Artist.objects.order_by("name", "id").values_list("name", flat=True)
+            )
         if raw_artists:
             names.extend([_normalize_name(x) for x in raw_artists.split(",") if _normalize_name(x)])
         if artists_file:
@@ -251,7 +268,7 @@ class Command(BaseCommand):
                     if n and not n.startswith("#"):
                         names.append(n)
 
-        # De-dup preserving order
+                                 
         seen: set[str] = set()
         romanian_artists = []
         for n in names:
@@ -261,8 +278,13 @@ class Command(BaseCommand):
             seen.add(key)
             romanian_artists.append(n)
 
+        if start_after:
+            start_key = start_after.lower()
+            while romanian_artists and romanian_artists[0].lower() <= start_key:
+                romanian_artists.pop(0)
+
         if not romanian_artists:
-            raise CommandError("Provide --artists or --artists-file")
+            raise CommandError("Provide --artists, --artists-file, or --all-existing")
 
         spotify: SpotifyClient | None = None
         if not skip_spotify:
@@ -282,13 +304,13 @@ class Command(BaseCommand):
 
         stats = ImportStats()
 
-        # Spotify may reject some endpoints for certain apps/tokens. If we hit a
-        # persistent 403 on track detail lookups, skip that enrichment for the
-        # remainder of the run to avoid aborting the batch.
+                                                                                
+                                                                              
+                                                           
         self._spotify_tracks_forbidden = False
-        # If we hit a 429 rate limit with a large Retry-After, disable Spotify
-        # for the remainder of the run to avoid spamming warnings and wasting
-        # time. Users can re-run later once the limit resets.
+                                                                              
+                                                                             
+                                                             
         self._spotify_disabled = False
 
         for artist_name in romanian_artists:
@@ -380,7 +402,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING(f"Spotify: no artist match for {artist.name}"))
             return
 
-        # Pick best by exact name match (case-insensitive), else first.
+                                                                       
         best = None
         for c in candidates:
             if str(c.get("name") or "").strip().lower() == artist.name.strip().lower():
@@ -461,7 +483,7 @@ class Command(BaseCommand):
         if not spotify_artist_id:
             return
 
-        # Albums: match by title and set cover_url + spotify ids.
+                                                                 
         try:
             spotify_albums = self._fetch_all_spotify_artist_albums(
                 spotify=spotify,
@@ -498,10 +520,10 @@ class Command(BaseCommand):
             candidates_db = db_album_by_key.get(key) or []
             if not candidates_db:
                 continue
-            # If multiple, pick first.
+                                      
             matched_album_pairs.append((candidates_db[0], sa))
 
-        # Update albums + then enrich songs using album tracklists.
+                                                                   
         for db_album, sa in matched_album_pairs:
             images = sa.get("images")
             cover_url = _safe_first_image_url(images)
@@ -565,7 +587,7 @@ class Command(BaseCommand):
     def _fetch_all_spotify_artist_albums(self, *, spotify: SpotifyClient, artist_id: str, market: str) -> list[dict[str, Any]]:
         items: list[dict[str, Any]] = []
         offset = 0
-        limit = 50
+        limit = 5
         while True:
             payload = spotify.get_artist_albums(artist_id, market=market, limit=limit, offset=offset)
             page = payload.get("items") or []
@@ -581,7 +603,7 @@ class Command(BaseCommand):
             if len(page) < limit:
                 break
 
-        # De-dup by id
+                      
         seen: set[str] = set()
         uniq: list[dict[str, Any]] = []
         for it in items:
@@ -606,7 +628,7 @@ class Command(BaseCommand):
         if getattr(self, "_spotify_disabled", False):
             return
 
-        # Fetch Spotify track IDs for album
+                                           
         track_items: list[dict[str, Any]] = []
         offset = 0
         limit = 50
@@ -644,7 +666,7 @@ class Command(BaseCommand):
         if not track_ids:
             return
 
-        # Load popularity/preview_url via batch get_tracks
+                                                          
         by_id: dict[str, dict[str, Any]] = {}
         try:
             for i in range(0, len(track_ids), 50):
@@ -657,8 +679,8 @@ class Command(BaseCommand):
                     if isinstance(tr, dict) and tr.get("id"):
                         by_id[str(tr.get("id"))] = tr
         except SpotifyAPIError as e:
-            # If track details are forbidden, keep album covers/artist genres and
-            # continue the batch without popularity/preview enrichment.
+                                                                                 
+                                                                       
             msg = str(e)
             if "429" in msg or "rate limit" in msg.lower():
                 if not getattr(self, "_spotify_disabled", False):
@@ -682,7 +704,7 @@ class Command(BaseCommand):
                 return
             raise
 
-        # Match DB songs by track_number first, else by normalized title
+                                                                        
         db_songs = list(Song.objects.filter(album=db_album).select_related("artist"))
         db_by_track: dict[int, Song] = {}
         db_by_title: dict[str, Song] = {}
@@ -794,7 +816,7 @@ class Command(BaseCommand):
                     defaults={
                         "slug": _unique_slug(Artist, name),
                         "is_approved": False,
-                        "is_romanian": False,
+                        "is_romanian": True,
                     },
                 )
 

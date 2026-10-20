@@ -162,7 +162,7 @@ export default function RecommendationsPage() {
         actionTo="/dashboard"
         actionLabel="Deschide dashboard-ul"
       >
-        <RecommendedAlbums limit={12} />
+        <RecommendedAlbums limit={50} pageSize={10} />
       </Section>
 
       <Section

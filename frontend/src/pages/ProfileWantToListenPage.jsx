@@ -73,7 +73,7 @@ export default function ProfileWantToListenPage() {
         return;
       }
       console.error(err);
-      setError("Nu am putut încărca lista Want To Listen.");
+      setError("Nu am putut încărca lista de ascultat.");
       setItems([]);
     } finally {
       setIsLoading(false);
@@ -115,11 +115,17 @@ export default function ProfileWantToListenPage() {
 
   useEffect(() => {
     if (!canLoad) return;
-    void load();
+    const t = setTimeout(() => {
+      void load();
+    }, 0);
+    return () => clearTimeout(t);
   }, [canLoad, load]);
 
   useEffect(() => {
-    setPage((prev) => Math.min(prev, totalPages));
+    const t = setTimeout(() => {
+      setPage((prev) => Math.min(prev, totalPages));
+    }, 0);
+    return () => clearTimeout(t);
   }, [totalPages]);
 
   if (!isAuthenticated) {
@@ -127,7 +133,7 @@ export default function ProfileWantToListenPage() {
       <div>
         <ProfileNav />
         <div style={ui.container}>
-          <h1 style={{ marginTop: 0 }}>Want To Listen</h1>
+          <h1 style={{ marginTop: 0 }}>De ascultat</h1>
           <p>Trebuie să fii logat ca să vezi watchlist-ul.</p>
           <p>
             <Link to="/login">Mergi la Login</Link>
@@ -142,7 +148,7 @@ export default function ProfileWantToListenPage() {
       <div>
         <ProfileNav />
         <div style={ui.container}>
-          <h1 style={{ marginTop: 0 }}>Want To Listen</h1>
+          <h1 style={{ marginTop: 0 }}>De ascultat</h1>
           <p style={{ marginTop: "14px" }}>Se încarcă...</p>
         </div>
       </div>
@@ -153,7 +159,7 @@ export default function ProfileWantToListenPage() {
     <div>
       <ProfileNav />
       <div style={ui.container}>
-        <h1 style={{ marginTop: 0 }}>Want To Listen</h1>
+        <h1 style={{ marginTop: 0 }}>De ascultat</h1>
 
         {!error ? (
           <p style={{ marginTop: "10px", opacity: 0.9 }}>

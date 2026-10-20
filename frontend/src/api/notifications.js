@@ -41,25 +41,3 @@ export async function getNotificationsDigest({ baseUrl, accessToken, window }) {
   });
   return response.data;
 }
-
-export async function getReleaseCalendar({
-  baseUrl,
-  accessToken,
-  month,
-  remindersOnly,
-  reminderDays,
-  includePast,
-  limit,
-}) {
-  void baseUrl;
-  void accessToken;
-  const params = {};
-  if (month) params.month = month;
-  if (typeof remindersOnly === "boolean") params.reminders_only = remindersOnly;
-  if (typeof reminderDays === "number") params.reminder_days = reminderDays;
-  if (typeof includePast === "boolean") params.include_past = includePast;
-  if (typeof limit === "number") params.limit = limit;
-
-  const response = await apiClient.get(`/api/releases/calendar/`, { params });
-  return response.data;
-}

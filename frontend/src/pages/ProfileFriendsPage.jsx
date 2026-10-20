@@ -90,12 +90,20 @@ export default function ProfileFriendsPage() {
   }, [accessToken, baseUrl, canLoad, friendsPage, logout]);
 
   useEffect(() => {
-    if (!canLoad) return;
-    void load();
+    if (!canLoad) return undefined;
+
+    const t = setTimeout(() => {
+      void load();
+    }, 0);
+
+    return () => clearTimeout(t);
   }, [canLoad, load]);
 
   useEffect(() => {
-    setFriendsPage((prev) => Math.min(prev, friendsTotalPages));
+    const t = setTimeout(() => {
+      setFriendsPage((prev) => Math.min(prev, friendsTotalPages));
+    }, 0);
+    return () => clearTimeout(t);
   }, [friendsTotalPages]);
 
   async function handleAccept(requestId) {

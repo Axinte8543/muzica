@@ -35,7 +35,11 @@ export default function ReviewReactions({ reviewId, baseUrl }) {
   }, [accessToken, baseUrl, reviewId]);
 
   useEffect(() => {
-    void loadReactions();
+    // Defer initial load to avoid calling setState synchronously inside effect
+    const id = setTimeout(() => {
+      void loadReactions();
+    }, 0);
+    return () => clearTimeout(id);
   }, [loadReactions]);
 
   async function handleReactionClick(emoji) {

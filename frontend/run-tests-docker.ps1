@@ -8,4 +8,4 @@ Write-Host "Running unit tests inside container..."
 docker run --rm licenta-frontend-tests
 
 Write-Host "To run Playwright E2E inside container, run the following (after build):"
-Write-Host "docker run --rm licenta-frontend-tests /bin/sh -c \"npx playwright install --with-deps && npm run test:e2e\""
+Write-Host 'docker run --rm licenta-frontend-tests /bin/sh -c "npx playwright install --with-deps && npm run test:e2e"'

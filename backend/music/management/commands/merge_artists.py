@@ -26,13 +26,13 @@ class Command(BaseCommand):
 	help = "Merge a source Artist into a target Artist (repoint albums/songs/follows/similarity)."
 
 	def add_arguments(self, parser):
-		# Identify source/target
+                          
 		parser.add_argument('--source-id', type=int)
 		parser.add_argument('--target-id', type=int)
 		parser.add_argument('--source-name', type=str)
 		parser.add_argument('--target-name', type=str)
 
-		# Behavior flags
+                  
 		parser.add_argument('--strip-names', action='store_true', help='Strip whitespace from artist names')
 		parser.add_argument('--force', action='store_true', help='Allow conflicting IDs (Spotify/MBID) to be overwritten')
 		parser.add_argument('--yes', action='store_true', help='Apply changes (otherwise dry-run)')
@@ -84,50 +84,50 @@ class Command(BaseCommand):
 		songs_moved = Song.objects.filter(artist=source).count()
 		follows_moved = ArtistFollow.objects.filter(artist=source).count()
 		follows_deleted_dupes = ArtistFollow.objects.filter(
-			artist=source,
-			user_id__in=ArtistFollow.objects.filter(artist=target).values_list('user_id', flat=True),
+		 artist=source,
+		 user_id__in=ArtistFollow.objects.filter(artist=target).values_list('user_id', flat=True),
 		).count()
 
 		sim_edges_from_moved = ArtistSimilarity.objects.filter(from_artist=source).count()
 		sim_edges_to_moved = ArtistSimilarity.objects.filter(to_artist=source).count()
 
-		# worst-case: all source edges could collide
+                                              
 		sim_edges_merged = 0
 		activities_updated = UserActivity.objects.filter(
-			activity_type=UserActivity.Type.FOLLOW_ARTIST,
-			target_id=source.id,
+		 activity_type=UserActivity.Type.FOLLOW_ARTIST,
+		 target_id=source.id,
 		).count()
 
 		return MergeStats(
-			albums_moved=albums_moved,
-			songs_moved=songs_moved,
-			follows_moved=follows_moved,
-			follows_deleted_dupes=follows_deleted_dupes,
-			sim_edges_from_moved=sim_edges_from_moved,
-			sim_edges_to_moved=sim_edges_to_moved,
-			sim_edges_merged=sim_edges_merged,
-			activities_updated=activities_updated,
+		 albums_moved=albums_moved,
+		 songs_moved=songs_moved,
+		 follows_moved=follows_moved,
+		 follows_deleted_dupes=follows_deleted_dupes,
+		 sim_edges_from_moved=sim_edges_from_moved,
+		 sim_edges_to_moved=sim_edges_to_moved,
+		 sim_edges_merged=sim_edges_merged,
+		 activities_updated=activities_updated,
 		)
 
 	def _print_stats(self, stats: MergeStats) -> None:
 		self.stdout.write(
-			"  "
-			+ ", ".join(
-				[
-					f"albums_moved={stats.albums_moved}",
-					f"songs_moved={stats.songs_moved}",
-					f"follows_moved={stats.follows_moved}",
-					f"follows_deleted_dupes={stats.follows_deleted_dupes}",
-					f"sim_edges_from_moved={stats.sim_edges_from_moved}",
-					f"sim_edges_to_moved={stats.sim_edges_to_moved}",
-					f"sim_edges_merged={stats.sim_edges_merged}",
-					f"activities_updated={stats.activities_updated}",
-				]
-			)
+		 "  "
+		 + ", ".join(
+		  [
+		   f"albums_moved={stats.albums_moved}",
+		   f"songs_moved={stats.songs_moved}",
+		   f"follows_moved={stats.follows_moved}",
+		   f"follows_deleted_dupes={stats.follows_deleted_dupes}",
+		   f"sim_edges_from_moved={stats.sim_edges_from_moved}",
+		   f"sim_edges_to_moved={stats.sim_edges_to_moved}",
+		   f"sim_edges_merged={stats.sim_edges_merged}",
+		   f"activities_updated={stats.activities_updated}",
+		  ]
+		 )
 		)
 
 	def _merge(self, source: Artist, target: Artist, *, strip_names: bool, force: bool) -> MergeStats:
-		# Merge scalar fields
+                       
 		if strip_names:
 			source_name = source.name.strip()
 			target_name = target.name.strip()
@@ -138,7 +138,7 @@ class Command(BaseCommand):
 				target.name = target_name
 				target.save(update_fields=['name'])
 
-		# IDs: only fill missing unless forced
+                                        
 		target = Artist.objects.select_for_update().get(id=target.id)
 		source = Artist.objects.select_for_update().get(id=source.id)
 
@@ -148,14 +148,14 @@ class Command(BaseCommand):
 			if s_val and t_val and s_val != t_val:
 				if not force:
 					raise CommandError(f"Conflicting {field}: source={s_val} target={t_val}. Use --force to override.")
-				# prefer target by default; nothing to do
+                                             
 			elif s_val and not t_val:
-				# Field is unique=True; clear it on the source first to avoid constraint violation
+                                                                                      
 				setattr(source, field, None)
 				source.save(update_fields=[field])
 				setattr(target, field, s_val)
 
-		# Other metadata (best effort)
+                                
 		if not target.spotify_url and source.spotify_url:
 			target.spotify_url = source.spotify_url
 		if not target.image_url and source.image_url:
@@ -167,7 +167,7 @@ class Command(BaseCommand):
 		target.is_approved = bool(target.is_approved or source.is_approved)
 		target.is_romanian = bool(target.is_romanian or source.is_romanian)
 
-		# aliases: union by comma (+ preserve source name if different)
+                                                                 
 		aliases = self._split_csv(target.aliases) | self._split_csv(source.aliases)
 		source_name_alias = str(source.name or '').strip()
 		target_name_alias = str(target.name or '').strip()
@@ -177,25 +177,25 @@ class Command(BaseCommand):
 
 		target.save()
 
-		# genres: union
+                 
 		if source.genres.exists():
 			target.genres.add(*source.genres.all())
 
 		albums_moved = Album.objects.filter(artist=source).update(artist=target)
 		songs_moved = Song.objects.filter(artist=source).update(artist=target)
 
-		# ArtistFollow: delete dupes first, then bulk update
+                                                      
 		dupe_follow_qs = ArtistFollow.objects.filter(
-			artist=source,
-			user_id__in=ArtistFollow.objects.filter(artist=target).values_list('user_id', flat=True),
+		 artist=source,
+		 user_id__in=ArtistFollow.objects.filter(artist=target).values_list('user_id', flat=True),
 		)
 		follows_deleted_dupes = dupe_follow_qs.count()
 		dupe_follow_qs.delete()
 		follows_moved = ArtistFollow.objects.filter(artist=source).update(artist=target)
 
-		# Similarity: merge edges to avoid unique constraint collisions
+                                                                 
 		sim_edges_merged = 0
-		# source as from_artist
+                         
 		for edge in list(ArtistSimilarity.objects.filter(from_artist=source)):
 			existing = ArtistSimilarity.objects.filter(from_artist=target, to_artist=edge.to_artist, source=edge.source).first()
 			if existing:
@@ -204,7 +204,7 @@ class Command(BaseCommand):
 					existing.save(update_fields=['match'])
 				edge.delete()
 				sim_edges_merged += 1
-		# source as to_artist
+                       
 		for edge in list(ArtistSimilarity.objects.filter(to_artist=source)):
 			existing = ArtistSimilarity.objects.filter(from_artist=edge.from_artist, to_artist=target, source=edge.source).first()
 			if existing:
@@ -217,24 +217,24 @@ class Command(BaseCommand):
 		sim_edges_from_moved = ArtistSimilarity.objects.filter(from_artist=source).update(from_artist=target)
 		sim_edges_to_moved = ArtistSimilarity.objects.filter(to_artist=source).update(to_artist=target)
 
-		# UserActivity is denormalized; update for follow events
+                                                          
 		activities_updated = UserActivity.objects.filter(
-			activity_type=UserActivity.Type.FOLLOW_ARTIST,
-			target_id=source.id,
+		 activity_type=UserActivity.Type.FOLLOW_ARTIST,
+		 target_id=source.id,
 		).update(target_id=target.id, target_name=target.name)
 
-		# Delete source
+                 
 		source.delete()
 
 		return MergeStats(
-			albums_moved=albums_moved,
-			songs_moved=songs_moved,
-			follows_moved=follows_moved,
-			follows_deleted_dupes=follows_deleted_dupes,
-			sim_edges_from_moved=sim_edges_from_moved,
-			sim_edges_to_moved=sim_edges_to_moved,
-			sim_edges_merged=sim_edges_merged,
-			activities_updated=activities_updated,
+		 albums_moved=albums_moved,
+		 songs_moved=songs_moved,
+		 follows_moved=follows_moved,
+		 follows_deleted_dupes=follows_deleted_dupes,
+		 sim_edges_from_moved=sim_edges_from_moved,
+		 sim_edges_to_moved=sim_edges_to_moved,
+		 sim_edges_merged=sim_edges_merged,
+		 activities_updated=activities_updated,
 		)
 
 	def _split_csv(self, value: str) -> set[str]:

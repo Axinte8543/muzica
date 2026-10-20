@@ -1,4 +1,4 @@
-# Generated migration for Badge, Achievement, and XP models
+                                                           
 
 from django.conf import settings
 from django.db import migrations, models

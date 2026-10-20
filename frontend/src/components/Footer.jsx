@@ -47,24 +47,24 @@ export default function Footer() {
     {
       title: "ALBUMS",
       items: [
-        { label: "Highest Rated", to: "/top-albums" },
-        { label: "Must Hear Albums", to: "/albums?sort=rating" },
-        { label: "Year End Lists", to: "/lists" },
-        { label: "New Releases", to: "/albums?sort=release_date" },
-        { label: "Random", to: "/albums/random" },
+        { label: "Cele mai apreciate", to: "/top-albums" },
+        { label: "Albume recomandate", to: "/albums?sort=rating" },
+        { label: "Liste", to: "/lists" },
+        { label: "Lansări noi", to: "/albums?sort=release_date" },
+        { label: "Aleatoriu", to: "/albums/random" },
       ],
     },
     {
       title: "ARTISTS",
       items: [
-        { label: "Highest Rated", to: "/artists/highest-rated" },
-        { label: "Random", to: "/artists/random" },
+        { label: "Top artiști", to: "/artists/highest-rated" },
+        { label: "Aleatoriu", to: "/artists/random" },
       ],
     },
     {
       title: "GENRE",
       items: [
-        { label: "Overview", to: "/genres" },
+        { label: "Prezentare", to: "/genres" },
         { label: "Indie Rock", to: "/albums?genre=indie-rock" },
         { label: "Electronic", to: "/albums?genre=electronic" },
         { label: "Hip Hop", to: "/albums?genre=hip-hop" },

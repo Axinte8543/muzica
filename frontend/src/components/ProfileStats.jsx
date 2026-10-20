@@ -373,7 +373,6 @@ export default function ProfileStats() {
     );
   }
 
-  const favoriteGenre = stats?.favorite_genre || "—";
   const favoriteArtist = stats?.favorite_artist || "—";
   const totalRatings = Number.isFinite(Number(stats?.total_ratings))
     ? Number(stats.total_ratings)
@@ -382,9 +381,6 @@ export default function ProfileStats() {
 
   const ratingDistribution = Array.isArray(stats?.ratings_distribution)
     ? stats.ratings_distribution
-    : [];
-  const topGenresRated = Array.isArray(stats?.top_genres_rated)
-    ? stats.top_genres_rated
     : [];
   const activity =
     stats?.activity && typeof stats.activity === "object"
@@ -679,9 +675,6 @@ export default function ProfileStats() {
 
       <div style={{ ...ui.card, maxWidth: "520px" }}>
         <div>
-          <strong>Favorite genre:</strong> {favoriteGenre}
-        </div>
-        <div style={{ marginTop: "8px" }}>
           <strong>Favorite artist:</strong> {favoriteArtist}
         </div>
         <div style={{ marginTop: "8px" }}>
@@ -735,21 +728,6 @@ export default function ProfileStats() {
               </div>
             ))}
           </div>
-        )}
-      </div>
-
-      <div style={{ ...ui.card, maxWidth: "520px" }}>
-        <div style={{ fontWeight: 700 }}>Genurile evaluate cel mai des</div>
-        {topGenresRated.length === 0 ? (
-          <p style={{ marginTop: "10px" }}>Nu există date.</p>
-        ) : (
-          <ul style={{ marginTop: "10px", paddingLeft: "20px" }}>
-            {topGenresRated.map((g) => (
-              <li key={g.name} style={{ marginBottom: "6px" }}>
-                {g.name} – {g.ratings} ratings
-              </li>
-            ))}
-          </ul>
         )}
       </div>
 

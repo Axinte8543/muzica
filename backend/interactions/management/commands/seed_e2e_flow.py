@@ -114,7 +114,7 @@ class Command(BaseCommand):
             _set_password(alice, PASSWORD)
             _set_password(bob, PASSWORD)
 
-            # Clear and rebuild the interaction layer to keep the dataset deterministic.
+                                                                                        
             ChatMessage.objects.filter(sender__in=[alice, bob], recipient__in=[alice, bob]).delete()
             AlbumRating.objects.filter(user__in=[alice, bob]).delete()
             FriendRequest.objects.filter(sender__in=[alice, bob], receiver__in=[alice, bob]).delete()
@@ -129,7 +129,7 @@ class Command(BaseCommand):
                 reverse_request.status = FriendRequest.Status.ACCEPTED
                 reverse_request.save(update_fields=["status"])
 
-            # Ratings deliberately overlap to force non-empty recommendations.
+                                                                              
             AlbumRating.objects.update_or_create(user=alice, album=album_objs[0], defaults={"rating": 5})
             AlbumRating.objects.update_or_create(user=alice, album=album_objs[1], defaults={"rating": 4})
             AlbumRating.objects.update_or_create(user=bob, album=album_objs[0], defaults={"rating": 4})
@@ -137,7 +137,7 @@ class Command(BaseCommand):
             AlbumRating.objects.update_or_create(user=bob, album=album_objs[2], defaults={"rating": 5})
             AlbumRating.objects.update_or_create(user=bob, album=album_objs[3], defaults={"rating": 4})
 
-            # Seed a starter message so the conversation list is non-empty.
+                                                                           
             ChatMessage.objects.create(
                 sender=bob,
                 recipient=alice,

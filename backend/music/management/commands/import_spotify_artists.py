@@ -111,9 +111,9 @@ class Command(BaseCommand):
         total_albums = 0
         total_tracks = 0
 
-        # Some Spotify apps/tokens cannot access /tracks in Client Credentials mode
-        # and respond with 403. When that happens we fall back to /albums/{id}/tracks
-        # which provides enough data to import songs (without preview/popularity).
+                                                                                   
+                                                                                     
+                                                                                  
         tracks_enrichment_forbidden = False
 
         for artist_id in artist_ids:
@@ -132,7 +132,7 @@ class Command(BaseCommand):
                 created = False
 
                 if artist_obj is None:
-                    # Try to merge into an existing artist created manually (seed) by name.
+                                                                                           
                     candidate = Artist.objects.filter(name__iexact=artist_name).first()
                     if candidate is not None and (not candidate.spotify_id or candidate.spotify_id == artist_id):
                         artist_obj = candidate
@@ -150,7 +150,7 @@ class Command(BaseCommand):
                         artist_obj.save()
                         created = True
 
-                # Ensure spotify_id is set on merged artists.
+                                                             
                 if not artist_obj.spotify_id:
                     artist_obj.spotify_id = artist_id
                     artist_obj.save(update_fields=["spotify_id"])
@@ -194,10 +194,10 @@ class Command(BaseCommand):
                 if genres:
                     artist_obj.genres.set(genres)
 
-            # Albums pagination
+                               
             album_ids: list[str] = []
             offset = 0
-            limit = 50
+            limit = 5
             while True:
                 try:
                     page = client.get_artist_albums(
@@ -229,7 +229,7 @@ class Command(BaseCommand):
                 if total is not None and offset >= int(total):
                     break
 
-            # Import albums and tracks
+                                      
             for alb_id in album_ids:
                 try:
                     alb_full = client.get_album(alb_id, market=market)
@@ -280,11 +280,11 @@ class Command(BaseCommand):
                         if dirty:
                             album_obj.save()
 
-                    # reuse artist genres on albums/songs (simple + consistent)
+                                                                               
                     if genres:
                         album_obj.genres.set(genres)
 
-                # Fetch all album tracks (paginated)
+                                                    
                 track_ids: list[str] = []
                 track_items: list[dict[str, Any]] = []
                 t_offset = 0
@@ -311,7 +311,7 @@ class Command(BaseCommand):
                         break
 
                 if tracks_enrichment_forbidden:
-                    # Fallback: import from album_tracks items.
+                                                               
                     for t in track_items:
                         track_id = str((t or {}).get("id") or "").strip()
                         if not track_id:
@@ -370,7 +370,7 @@ class Command(BaseCommand):
 
                         total_tracks += 1
                 else:
-                    # Enrich tracks with popularity + preview_url via /tracks?ids=
+                                                                                  
                     for i in range(0, len(track_ids), 50):
                         batch = track_ids[i : i + 50]
                         try:
@@ -460,7 +460,7 @@ class Command(BaseCommand):
 
                             total_tracks += 1
 
-                    # If we just discovered 403 mid-album, import the remaining tracks via fallback.
+                                                                                                    
                     if tracks_enrichment_forbidden:
                         for t in track_items:
                             track_id = str((t or {}).get("id") or "").strip()

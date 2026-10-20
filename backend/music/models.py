@@ -18,7 +18,7 @@ class Artist(models.Model):
 	spotify_id = models.CharField(max_length=64, unique=True, null=True, blank=True)
 	spotify_url = models.URLField(blank=True)
 	popularity = models.PositiveIntegerField(null=True, blank=True)
-	is_romanian = models.BooleanField(default=False)
+	is_romanian = models.BooleanField(default=True)
 	aliases = models.TextField(blank=True, help_text="Separate by commas")
 	is_approved = models.BooleanField(default=False)
 	created_at = models.DateTimeField(auto_now_add=True)
@@ -38,7 +38,7 @@ class Album(models.Model):
 	musicbrainz_id = models.CharField(max_length=64, unique=True, null=True, blank=True)
 	spotify_id = models.CharField(max_length=64, unique=True, null=True, blank=True)
 	spotify_url = models.URLField(blank=True)
-	# MusicBrainz release-group classification (used for discography sections / filters).
+                                                                                      
 	mb_primary_type = models.CharField(max_length=32, blank=True, db_index=True)
 	mb_secondary_types = models.TextField(blank=True, help_text="Comma-separated MusicBrainz secondary types")
 	release_date = models.DateField()
@@ -52,7 +52,7 @@ class Album(models.Model):
 
 
 class Song(models.Model):
-	# A song can be either part of an album/EP or a standalone single.
+                                                                   
 	album = models.ForeignKey(Album, on_delete=models.CASCADE, related_name='songs', null=True, blank=True)
 	artist = models.ForeignKey(Artist, on_delete=models.CASCADE, related_name='songs')
 	title = models.CharField(max_length=255)
@@ -80,7 +80,7 @@ class Song(models.Model):
 
 
 class SongFeature(models.Model):
-	"""Featured artists on a song (beyond the primary Song.artist)."""
+                                                                   
 
 	song = models.ForeignKey(Song, on_delete=models.CASCADE, related_name='features')
 	artist = models.ForeignKey(Artist, on_delete=models.CASCADE, related_name='featured_on_songs')
@@ -88,11 +88,11 @@ class SongFeature(models.Model):
 
 	class Meta:
 		constraints = [
-			models.UniqueConstraint(fields=['song', 'artist'], name='unique_song_feature_per_song_artist'),
+		 models.UniqueConstraint(fields=['song', 'artist'], name='unique_song_feature_per_song_artist'),
 		]
 		indexes = [
-			models.Index(fields=['song', '-created_at'], name='sf_song_created_idx'),
-			models.Index(fields=['artist', '-created_at'], name='sf_artist_created_idx'),
+		 models.Index(fields=['song', '-created_at'], name='sf_song_created_idx'),
+		 models.Index(fields=['artist', '-created_at'], name='sf_artist_created_idx'),
 		]
 		ordering = ['-created_at', '-id']
 
@@ -109,7 +109,7 @@ class ArtistSimilarity(models.Model):
 
 	class Meta:
 		constraints = [
-			models.UniqueConstraint(fields=['from_artist', 'to_artist', 'source'], name='unique_artist_similarity_edge'),
+		 models.UniqueConstraint(fields=['from_artist', 'to_artist', 'source'], name='unique_artist_similarity_edge'),
 		]
 
 	def __str__(self) -> str:

@@ -12,6 +12,7 @@ from .models import (
     AlbumReviewReaction,
     AchievementUnlock,
     ArtistFollow,
+    ArtistRating,
     ChatMessage,
     ChatTypingStatus,
     CorrectionReport,
@@ -75,10 +76,10 @@ class ListTagsUpdateSerializer(serializers.Serializer):
             name = str(raw or '').strip()
             if not name:
                 continue
-            # normalize: lower + collapse spaces
+                                                
             name = ' '.join(name.split())
             names.append(name)
-        # de-dup preserve order
+                               
         seen = set()
         out = []
         for n in names:
@@ -101,12 +102,12 @@ class ListAlbumNoteUpdateSerializer(serializers.Serializer):
     note = serializers.CharField(required=True, allow_blank=True)
 
     def validate_note(self, value: str):
-        # Keep it simple; just normalize to string.
+                                                   
         return str(value or '')
 
 
 class ModerationReportCreateSerializer(serializers.Serializer):
-    # target_type: review|review_comment|song_comment
+                                                     
     target_type = serializers.ChoiceField(choices=['review', 'review_comment', 'song_comment'])
     target_id = serializers.IntegerField(min_value=1)
     reason_code = serializers.ChoiceField(choices=ModerationReport.ReasonCode.choices, required=False)
@@ -117,7 +118,7 @@ class ModerationReportCreateSerializer(serializers.Serializer):
 
 
 class MetadataSuggestionCreateSerializer(serializers.Serializer):
-    # target_type: artist|album|song
+                                    
     target_type = serializers.ChoiceField(choices=['artist', 'album', 'song'])
     target_id = serializers.IntegerField(min_value=1)
     kind = serializers.ChoiceField(choices=MetadataSuggestion.Kind.choices)
@@ -212,7 +213,7 @@ class MetadataSuggestionCreateSerializer(serializers.Serializer):
                 raise serializers.ValidationError({'payload': {key: f'{key} is required'}})
             payload[key] = raw
 
-        # OTHER: keep payload as-is.
+                                    
 
         attrs['payload'] = payload
         return attrs
@@ -260,6 +261,8 @@ class MetadataSuggestionSerializer(serializers.ModelSerializer):
     reviewed_by_username = serializers.CharField(source='reviewed_by.username', read_only=True)
     target_type = serializers.SerializerMethodField()
     target_id = serializers.SerializerMethodField()
+    target_name = serializers.SerializerMethodField()
+    target_slug = serializers.SerializerMethodField()
 
     class Meta:
         model = MetadataSuggestion
@@ -267,6 +270,8 @@ class MetadataSuggestionSerializer(serializers.ModelSerializer):
             'id',
             'target_type',
             'target_id',
+            'target_name',
+            'target_slug',
             'kind',
             'payload',
             'note',
@@ -290,6 +295,18 @@ class MetadataSuggestionSerializer(serializers.ModelSerializer):
 
     def get_target_id(self, obj: MetadataSuggestion):
         return int(obj.artist_id or obj.album_id or obj.song_id)
+
+    def get_target_name(self, obj: MetadataSuggestion):
+        target = obj.artist or obj.album or obj.song
+        if not target:
+            return ''
+        return str(getattr(target, 'name', None) or getattr(target, 'title', '') or '')
+
+    def get_target_slug(self, obj: MetadataSuggestion):
+        target = obj.artist or obj.album or obj.song
+        if not target:
+            return ''
+        return str(getattr(target, 'slug', '') or '')
 
 
 class AlbumReviewEditSerializer(serializers.ModelSerializer):
@@ -339,7 +356,7 @@ class AlbumReviewCreateSerializer(serializers.Serializer):
 
 
 class AlbumReviewUpdateSerializer(serializers.Serializer):
-    # PUT update for the authenticated user's own review.
+                                                         
     title = serializers.CharField(max_length=255, required=False, allow_blank=True)
     content = serializers.CharField()
 
@@ -523,7 +540,7 @@ class SongCommentReactionCreateSerializer(serializers.Serializer):
 
 
 class ReactionsSummarySerializer(serializers.Serializer):
-    """Summary of reactions on a comment (emoji -> count)"""
+                                                            
     emoji = serializers.CharField()
     count = serializers.IntegerField()
     user_reacted = serializers.BooleanField()
@@ -551,6 +568,14 @@ class AlbumRatingSerializer(serializers.ModelSerializer):
     class Meta:
         model = AlbumRating
         fields = ["id", "album", "rating", "created_at", "user_username"]
+
+
+class ArtistRatingSerializer(serializers.ModelSerializer):
+    user_username = serializers.CharField(source="user.username", read_only=True)
+
+    class Meta:
+        model = ArtistRating
+        fields = ["id", "artist", "rating", "created_at", "user_username"]
 
 
 class SongRatingSerializer(serializers.ModelSerializer):
@@ -650,7 +675,7 @@ class ListUpdateSerializer(serializers.Serializer):
         return name
 
     def validate_description(self, value: str):
-        # Allow blank, but normalize to a string.
+                                                 
         return str(value or "")
 
 
@@ -697,7 +722,7 @@ class ListAlbumSerializer(serializers.ModelSerializer):
         user = getattr(request, 'user', None)
         if not user or not getattr(user, 'is_authenticated', False):
             return ''
-        # Prefetched notes filtered to request.user in the view.
+                                                                
         notes = list(getattr(obj, 'notes', []).all()) if hasattr(obj, 'notes') else []
         if notes:
             return str(notes[0].note or '')
@@ -718,6 +743,7 @@ class ListSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "description",
+            "is_public",
             "created_at",
             "updated_at",
             "user_username",
@@ -735,7 +761,7 @@ class ListSerializer(serializers.ModelSerializer):
         return int(count)
 
     def get_albums(self, obj: List):
-        # Prefetch via `list_albums__album` in the view for efficiency.
+                                                                       
         items = obj.list_albums.all()
         return ListAlbumSerializer(items, many=True, context=self.context).data
 
@@ -752,14 +778,14 @@ class ListSerializer(serializers.ModelSerializer):
             return None
         if obj.user_id == user.id:
             return ListMembership.Role.OWNER
-        # memberships prefetched in view
+                                        
         for m in getattr(obj, 'memberships', []).all() if hasattr(obj, 'memberships') else []:
             if m.user_id == user.id:
                 return m.role
         return None
 
     def get_collaborators(self, obj: List):
-        # Owner + membership users. Keep it minimal: user_id, username, role.
+                                                                             
         out = [
             {
                 'user_id': int(obj.user_id),
@@ -1006,7 +1032,7 @@ class ProfileStatsSerializer(serializers.Serializer):
 
 
 class FavoriteAlbumsUpdateSerializer(serializers.Serializer):
-    # Always exactly 4 slots, each can be album_id or null.
+                                                           
     slots = serializers.ListField(
         child=serializers.IntegerField(min_value=1, allow_null=True),
         min_length=4,
@@ -1026,7 +1052,7 @@ class FavoriteAlbumsUpdateSerializer(serializers.Serializer):
 
 
 class FavoriteSongsUpdateSerializer(serializers.Serializer):
-    # Always exactly 4 slots, each can be song_id or null.
+                                                          
     slots = serializers.ListField(
         child=serializers.IntegerField(min_value=1, allow_null=True),
         min_length=4,
@@ -1227,31 +1253,7 @@ class AlbumReleaseNotificationSerializer(serializers.Serializer):
     matched_genres = serializers.ListField(child=serializers.CharField(), required=False)
 
 
-class ReleaseCalendarItemSerializer(serializers.Serializer):
-    album_id = serializers.IntegerField()
-    album_title = serializers.CharField()
-    album_slug = serializers.CharField()
-    artist_id = serializers.IntegerField()
-    artist_name = serializers.CharField()
-    artist_slug = serializers.CharField()
-    release_date = serializers.DateField(allow_null=True)
-    created_at = serializers.DateTimeField()
-    reason = serializers.CharField()
-    matched_genres = serializers.ListField(child=serializers.CharField(), required=False)
-    days_until_release = serializers.IntegerField()
-    is_reminder = serializers.BooleanField()
-
-
 class NotificationPreferencesSerializer(serializers.ModelSerializer):
-    def validate_release_reminder_days(self, value):
-        try:
-            days = int(value)
-        except (TypeError, ValueError):
-            raise serializers.ValidationError('release_reminder_days must be an integer')
-        if days < 1 or days > 30:
-            raise serializers.ValidationError('release_reminder_days must be between 1 and 30')
-        return days
-
     class Meta:
         model = NotificationPreferences
         fields = [
@@ -1262,8 +1264,6 @@ class NotificationPreferencesSerializer(serializers.ModelSerializer):
             'notify_artist_follows',
             'notify_followed_artist_releases',
             'notify_genre_releases',
-            'notify_release_reminders',
-            'release_reminder_days',
             'notify_achievement_unlocks',
             'notify_friends_activity',
             'digest_frequency',
@@ -1272,7 +1272,7 @@ class NotificationPreferencesSerializer(serializers.ModelSerializer):
 
 
 class AchievementUnlockNotificationSerializer(serializers.ModelSerializer):
-    """Notification for achievement unlocks"""
+                                              
     
     class Meta:
         model = AchievementUnlock
@@ -1289,6 +1289,8 @@ class AchievementUnlockNotificationSerializer(serializers.ModelSerializer):
 
 class UserActivitySerializer(serializers.ModelSerializer):
     actor_username = serializers.CharField(source='actor.username', read_only=True)
+    target_kind = serializers.SerializerMethodField()
+    target_url = serializers.SerializerMethodField()
 
     class Meta:
         model = UserActivity
@@ -1296,12 +1298,55 @@ class UserActivitySerializer(serializers.ModelSerializer):
             'id',
             'actor_username',
             'activity_type',
+            'target_kind',
+            'target_url',
             'target_id',
             'target_name',
             'rating',
             'created_at',
         ]
         read_only_fields = fields
+
+    def _target_object(self, obj):
+        if not obj.target_id:
+            return None
+
+        from music.models import Album, Artist
+
+        activity_type = str(obj.activity_type or '')
+        if activity_type in {'listen_album', 'rate_album', 'review_album', 'list_add_album'}:
+            return Album.objects.filter(pk=obj.target_id).only('slug').first()
+        if activity_type == 'follow_artist':
+            return Artist.objects.filter(pk=obj.target_id).only('slug').first()
+        if activity_type == 'create_list':
+            return List.objects.filter(pk=obj.target_id).only('id').first()
+        return None
+
+    def get_target_kind(self, obj):
+        activity_type = str(obj.activity_type or '')
+        if activity_type in {'listen_album', 'rate_album', 'review_album', 'list_add_album'}:
+            return 'album'
+        if activity_type == 'follow_artist':
+            return 'artist'
+        if activity_type == 'create_list':
+            return 'list'
+        return ''
+
+    def get_target_url(self, obj):
+        target = self._target_object(obj)
+        if target is None:
+            return ''
+
+        activity_type = str(obj.activity_type or '')
+        if activity_type == 'follow_artist':
+            return f'/artists/{target.slug}'
+        if activity_type == 'create_list':
+            return f'/lists/public/{target.id}'
+        if activity_type == 'review_album':
+            return f'/albums/{target.slug}?tab=reviews'
+        if activity_type in {'listen_album', 'rate_album', 'list_add_album'}:
+            return f'/albums/{target.slug}'
+        return ''
 
 
 class ChatMessageCreateSerializer(serializers.Serializer):
@@ -1374,7 +1419,7 @@ class ChatTypingStatusSerializer(serializers.ModelSerializer):
 
 
 class ConversationSummarySerializer(serializers.Serializer):
-    """Summary of a conversation with another user"""
+                                                     
     user_id = serializers.IntegerField()
     username = serializers.CharField()
     last_message = serializers.CharField()

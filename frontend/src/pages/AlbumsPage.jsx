@@ -17,12 +17,20 @@ function getYearFromDate(dateString) {
   return match ? match[0] : "";
 }
 
+function releaseTypeLabel(album) {
+  const type = String(album?.release_type || "").toLowerCase();
+  if (type === "single") return "Single";
+  if (type === "ep") return "EP";
+  if (type === "compilation") return "Compilație";
+  return "Album";
+}
+
 export default function AlbumsPage() {
   const navigate = useNavigate();
   const { baseUrl, isAuthVerified, accessToken } = useAuth();
   const queryClient = useQueryClient();
 
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const pickFavoriteSlot = useMemo(() => {
     const raw = String(searchParams.get("pickFavoriteSlot") || "").trim();
@@ -113,6 +121,20 @@ export default function AlbumsPage() {
     return raw;
   }, [searchParams]);
 
+  const sortFromUrl = useMemo(() => {
+    const raw = String(searchParams.get("sort") || "").trim();
+    return ["release_date", "rating", "ratings_count", "my_rating"].includes(
+      raw,
+    )
+      ? raw
+      : "release_date";
+  }, [searchParams]);
+
+  const releaseTypeFromUrl = useMemo(() => {
+    const raw = String(searchParams.get("release_type") || "").trim();
+    return ["albums", "singles", "all"].includes(raw) ? raw : "albums";
+  }, [searchParams]);
+
   const [searchInput, setSearchInput] = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
 
@@ -120,7 +142,9 @@ export default function AlbumsPage() {
   const [selectedYear, setSelectedYear] = useState(yearFromUrl);
   const [selectedMonth, setSelectedMonth] = useState(monthFromUrl);
   const [selectedDecade, setSelectedDecade] = useState("");
-  const [selectedSort, setSelectedSort] = useState("release_date");
+  const [selectedSort, setSelectedSort] = useState(sortFromUrl);
+  const [selectedReleaseType, setSelectedReleaseType] =
+    useState(releaseTypeFromUrl);
 
   const [genreOptions, setGenreOptions] = useState([]);
   const [yearOptions, setYearOptions] = useState([]);
@@ -155,26 +179,40 @@ export default function AlbumsPage() {
     const months = Array.isArray(payload?.months) ? payload.months : [];
     const decades = Array.isArray(payload?.decades) ? payload.decades : [];
 
-    setGenreOptions(genres);
-    setYearOptions(
-      years
-        .map((y) => Number(y))
-        .filter((y) => Number.isFinite(y) && y > 0)
-        .sort((a, b) => b - a),
-    );
-    setMonthOptions(
-      months
-        .map((m) => Number(m))
-        .filter((m) => Number.isFinite(m) && m >= 1 && m <= 12)
-        .sort((a, b) => a - b),
-    );
-    setDecadeOptions(
-      decades
-        .map((d) => Number(d))
-        .filter((d) => Number.isFinite(d) && d > 0)
-        .sort((a, b) => b - a),
-    );
+    const t = setTimeout(() => {
+      setGenreOptions(genres);
+      setYearOptions(
+        years
+          .map((y) => Number(y))
+          .filter((y) => Number.isFinite(y) && y > 0)
+          .sort((a, b) => b - a),
+      );
+      setMonthOptions(
+        months
+          .map((m) => Number(m))
+          .filter((m) => Number.isFinite(m) && m >= 1 && m <= 12)
+          .sort((a, b) => a - b),
+      );
+      setDecadeOptions(
+        decades
+          .map((d) => Number(d))
+          .filter((d) => Number.isFinite(d) && d > 0)
+          .sort((a, b) => b - a),
+      );
+    }, 0);
+
+    return () => clearTimeout(t);
   }, [filtersQuery.data]);
+
+  useEffect(() => {
+    setIsLoading(true);
+    setPage(1);
+    setSelectedGenre(genreFromUrl);
+    setSelectedYear(yearFromUrl);
+    setSelectedMonth(monthFromUrl);
+    setSelectedSort(sortFromUrl);
+    setSelectedReleaseType(releaseTypeFromUrl);
+  }, [genreFromUrl, yearFromUrl, monthFromUrl, sortFromUrl, releaseTypeFromUrl]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -186,9 +224,11 @@ export default function AlbumsPage() {
     if (selectedMonth) params.month = selectedMonth;
     if (selectedDecade) params.decade = selectedDecade;
     if (selectedSort) params.sort = selectedSort;
+    if (selectedReleaseType) params.release_type = selectedReleaseType;
     if (pickFavoriteSlot) params.pickMode = "album";
     if (pickFavoriteSongSlot) params.pickMode = "song";
     params.page = page;
+    params.page_size = 20;
 
     apiClient
       .get(`/api/albums/`, { params })
@@ -232,6 +272,7 @@ export default function AlbumsPage() {
     selectedMonth,
     selectedYear,
     selectedSort,
+    selectedReleaseType,
     pickFavoriteSlot,
     pickFavoriteSongSlot,
     isAuthVerified,
@@ -254,6 +295,17 @@ export default function AlbumsPage() {
     setSelectedYear("");
     setSelectedMonth("");
     setSelectedDecade("");
+    setSelectedSort("release_date");
+    setSelectedReleaseType("albums");
+
+    const nextParams = new URLSearchParams();
+    if (pickFavoriteSlot) {
+      nextParams.set("pickFavoriteSlot", String(pickFavoriteSlot));
+    }
+    if (pickFavoriteSongSlot) {
+      nextParams.set("pickFavoriteSongSlot", String(pickFavoriteSongSlot));
+    }
+    setSearchParams(nextParams, { replace: true });
   }
 
   return (
@@ -306,7 +358,7 @@ export default function AlbumsPage() {
             height: "fit-content",
           }}
         >
-          <div style={{ fontWeight: 700, marginBottom: "10px" }}>Search</div>
+          <div style={{ fontWeight: 700, marginBottom: "10px" }}>Căutare</div>
           <form
             onSubmit={handleSearchSubmit}
             style={{ display: "grid", gap: "8px" }}
@@ -324,19 +376,40 @@ export default function AlbumsPage() {
             />
             <div style={{ display: "flex", gap: "8px" }}>
               <button type="submit" style={{ ...ui.button, flex: 1 }}>
-                Search
+                Caută
               </button>
               <button type="button" onClick={handleClearAll} style={ui.button}>
-                Clear
+                Curăță
               </button>
             </div>
           </form>
 
-          <div style={{ fontWeight: 700, margin: "16px 0 10px" }}>Filters</div>
+          <div style={{ fontWeight: 700, margin: "16px 0 10px" }}>Filtre</div>
 
           <div style={{ display: "grid", gap: "10px" }}>
             <label style={{ display: "grid", gap: "6px" }}>
-              <span style={{ fontSize: "14px", opacity: 0.85 }}>Genre</span>
+              <span style={{ fontSize: "14px", opacity: 0.85 }}>Tip</span>
+              <select
+                value={selectedReleaseType}
+                onChange={(e) => {
+                  setIsLoading(true);
+                  setPage(1);
+                  setSelectedReleaseType(e.target.value);
+                }}
+                style={{
+                  padding: "8px 10px",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: "6px",
+                }}
+              >
+                <option value="albums">Albume</option>
+                <option value="singles">Single-uri</option>
+                <option value="all">Toate lansările</option>
+              </select>
+            </label>
+
+            <label style={{ display: "grid", gap: "6px" }}>
+              <span style={{ fontSize: "14px", opacity: 0.85 }}>Gen</span>
               <select
                 value={selectedGenre}
                 onChange={(e) => {
@@ -350,7 +423,7 @@ export default function AlbumsPage() {
                   borderRadius: "6px",
                 }}
               >
-                <option value="">All</option>
+                <option value="">Toate</option>
                 {genreOptions.map((g) => (
                   <option key={g.slug} value={g.slug}>
                     {g.name}
@@ -360,7 +433,7 @@ export default function AlbumsPage() {
             </label>
 
             <label style={{ display: "grid", gap: "6px" }}>
-              <span style={{ fontSize: "14px", opacity: 0.85 }}>Year</span>
+              <span style={{ fontSize: "14px", opacity: 0.85 }}>An</span>
               <select
                 value={selectedYear}
                 onChange={(e) => {
@@ -374,7 +447,7 @@ export default function AlbumsPage() {
                   borderRadius: "6px",
                 }}
               >
-                <option value="">All</option>
+                <option value="">Toți</option>
                 {yearOptions.map((y) => (
                   <option key={y} value={String(y)}>
                     {y}
@@ -398,7 +471,7 @@ export default function AlbumsPage() {
                   borderRadius: "6px",
                 }}
               >
-                <option value="">All</option>
+                <option value="">Toate</option>
                 {monthOptions.map((m) => (
                   <option key={m} value={String(m)}>
                     {String(m).padStart(2, "0")}
@@ -408,7 +481,7 @@ export default function AlbumsPage() {
             </label>
 
             <label style={{ display: "grid", gap: "6px" }}>
-              <span style={{ fontSize: "14px", opacity: 0.85 }}>Decade</span>
+              <span style={{ fontSize: "14px", opacity: 0.85 }}>Deceniu</span>
               <select
                 value={selectedDecade}
                 onChange={(e) => {
@@ -422,7 +495,7 @@ export default function AlbumsPage() {
                   borderRadius: "6px",
                 }}
               >
-                <option value="">All</option>
+                <option value="">Toate</option>
                 {decadeOptions.map((d) => (
                   <option key={d} value={String(d)}>
                     {d}s
@@ -460,11 +533,11 @@ export default function AlbumsPage() {
             </label>
           </div>
 
-          {isLoading && <p>Loading albums...</p>}
+          {isLoading && <p>Se încarcă albumele...</p>}
           {error && <p style={ui.errorText}>{error}</p>}
 
           {!isLoading && !error && albums.length === 0 ? (
-            <p>No albums found</p>
+            <p>Nu am găsit albume.</p>
           ) : null}
 
           {!isLoading && !error && albums.length > 0 ? (
@@ -514,6 +587,10 @@ export default function AlbumsPage() {
                         <div style={{ fontWeight: 700 }}>{album.title}</div>
                         <div style={{ marginTop: "4px" }}>
                           {album.artist_name}
+                        </div>
+                        <div style={{ marginTop: "4px", opacity: 0.82 }}>
+                          {releaseTypeLabel(album)}
+                          {album.songs_count ? ` · ${album.songs_count} piese` : ""}
                         </div>
                         <div style={{ marginTop: "4px", opacity: 0.8 }}>
                           {year}

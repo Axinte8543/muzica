@@ -12,6 +12,19 @@ function formatScore(value) {
   return num.toFixed(2);
 }
 
+function isDemoRecommendation(rec) {
+  const text = [
+    rec?.album,
+    rec?.album_slug,
+    rec?.reason,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  return /\bdemo fresh\b/.test(text);
+}
+
 /**
  * Map recommendation reasons to icons and colors
  */
@@ -85,11 +98,12 @@ function getReasonStyles(reason) {
   };
 }
 
-export default function RecommendedAlbums({ limit = 8 }) {
+export default function RecommendedAlbums({ limit = 8, pageSize = null }) {
   const { baseUrl, isAuthenticated, isAuthVerified, accessToken, logout } =
     useAuth();
 
   const [items, setItems] = useState([]);
+  const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -118,7 +132,12 @@ export default function RecommendedAlbums({ limit = 8 }) {
           limit,
         });
 
-        if (!isCancelled) setItems(Array.isArray(data) ? data : []);
+        if (!isCancelled) {
+          const cleanItems = Array.isArray(data)
+            ? data.filter((rec) => !isDemoRecommendation(rec))
+            : [];
+          setItems(cleanItems);
+        }
       } catch (err) {
         if (err?.response?.status === 401) {
           logout();
@@ -137,6 +156,10 @@ export default function RecommendedAlbums({ limit = 8 }) {
       isCancelled = true;
     };
   }, [canLoad, baseUrl, accessToken, limit, logout]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [items.length, pageSize]);
 
   if (!isAuthenticated) {
     return (
@@ -164,16 +187,32 @@ export default function RecommendedAlbums({ limit = 8 }) {
     return <p style={{ marginTop: "10px" }}>No recommendations yet</p>;
   }
 
+  const normalizedPageSize =
+    Number.isFinite(Number(pageSize)) && Number(pageSize) > 0
+      ? Math.max(1, Number(pageSize))
+      : null;
+  const totalPages = normalizedPageSize
+    ? Math.max(1, Math.ceil(items.length / normalizedPageSize))
+    : 1;
+  const safePage = Math.min(page, totalPages);
+  const visibleItems = normalizedPageSize
+    ? items.slice(
+        (safePage - 1) * normalizedPageSize,
+        safePage * normalizedPageSize,
+      )
+    : items;
+
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
-        gap: "16px",
-        marginTop: "12px",
-      }}
-    >
-      {items.map((rec) => {
+    <>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+          gap: "16px",
+          marginTop: "12px",
+        }}
+      >
+        {visibleItems.map((rec) => {
         const albumTitle = rec?.album || "Album";
         const artistName = rec?.artist || "Artist";
         const albumSlug = rec?.album_slug;
@@ -304,6 +343,39 @@ export default function RecommendedAlbums({ limit = 8 }) {
           <div key={`${albumTitle}-${artistName}`}>{CardInner}</div>
         );
       })}
-    </div>
+      </div>
+
+      {normalizedPageSize && totalPages > 1 ? (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "12px",
+            marginTop: "18px",
+          }}
+        >
+          <button
+            type="button"
+            style={ui.button}
+            onClick={() => setPage((value) => Math.max(1, value - 1))}
+            disabled={safePage <= 1}
+          >
+            Prev
+          </button>
+          <span style={{ opacity: 0.85 }}>
+            Page {safePage} / {totalPages} — {items.length} recomandări
+          </span>
+          <button
+            type="button"
+            style={ui.button}
+            onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
+            disabled={safePage >= totalPages}
+          >
+            Next
+          </button>
+        </div>
+      ) : null}
+    </>
   );
 }

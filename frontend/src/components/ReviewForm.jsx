@@ -28,14 +28,19 @@ export default function ReviewForm({ albumId, onCreated }) {
   useEffect(() => {
     if (!albumId) return;
 
-    // 1) Load local draft (fast)
+    // 1) Load local draft (fast) - defer state updates to next tick
+    let localDraftTimeout = null;
     try {
       const raw = localStorage.getItem(draftKey);
       if (raw) {
         const parsed = JSON.parse(raw);
         if (parsed && typeof parsed === "object") {
-          if (typeof parsed.title === "string") setTitle(parsed.title);
-          if (typeof parsed.content === "string") setContent(parsed.content);
+          const t = typeof parsed.title === "string" ? parsed.title : null;
+          const c = typeof parsed.content === "string" ? parsed.content : null;
+          localDraftTimeout = setTimeout(() => {
+            if (t !== null) setTitle(t);
+            if (c !== null) setContent(c);
+          }, 0);
         }
       }
     } catch {
@@ -65,6 +70,9 @@ export default function ReviewForm({ albumId, onCreated }) {
 
     return () => {
       cancelled = true;
+      if (localDraftTimeout) {
+        clearTimeout(localDraftTimeout);
+      }
     };
   }, [albumId, accessToken, baseUrl, draftKey, isAuthenticated]);
 
@@ -166,7 +174,7 @@ export default function ReviewForm({ albumId, onCreated }) {
   if (!isAuthenticated) {
     return (
       <p style={{ marginTop: "10px", opacity: 0.9 }}>
-        Please log in to write a review
+        Loghează-te ca să scrii un review.
       </p>
     );
   }
@@ -174,7 +182,7 @@ export default function ReviewForm({ albumId, onCreated }) {
   return (
     <form onSubmit={handleSubmit} style={{ marginTop: "10px" }}>
       <label style={{ display: "block", marginTop: "10px" }}>
-        <div style={{ fontWeight: 600 }}>Title</div>
+        <div style={{ fontWeight: 600 }}>Titlu</div>
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -184,7 +192,7 @@ export default function ReviewForm({ albumId, onCreated }) {
       </label>
 
       <label style={{ display: "block", marginTop: "10px" }}>
-        <div style={{ fontWeight: 600 }}>Content</div>
+        <div style={{ fontWeight: 600 }}>Conținut</div>
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
@@ -204,7 +212,7 @@ export default function ReviewForm({ albumId, onCreated }) {
         disabled={isSubmitting || !content.trim()}
         style={{ marginTop: "12px", ...ui.button }}
       >
-        {isSubmitting ? "Se trimite..." : "Submit"}
+        {isSubmitting ? "Se trimite..." : "Trimite review"}
       </button>
     </form>
   );

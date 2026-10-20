@@ -2,6 +2,16 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
+  completeWebAuthnRegistration,
+  credentialToAttestation,
+  getSecuritySessions,
+  getWebAuthnRegisterOptions,
+  normalizePublicKeyOptions,
+  revokeAllSecuritySessions,
+  revokeSecuritySession,
+} from "../api/security.js";
+import { changePassword, requestEmailChange } from "../api/auth.js";
+import {
   getMyPrivacySettings,
   updateMyPrivacySettings,
 } from "../api/privacy.js";
@@ -53,6 +63,25 @@ export default function PrivacySettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const [saveSuccess, setSaveSuccess] = useState(null);
+  const [sessions, setSessions] = useState([]);
+  const [sessionsLoading, setSessionsLoading] = useState(false);
+  const [sessionsError, setSessionsError] = useState(null);
+  const [sessionsActionError, setSessionsActionError] = useState(null);
+  const [sessionsActionSuccess, setSessionsActionSuccess] = useState(null);
+  const [passkeyBusy, setPasskeyBusy] = useState(false);
+  const [passkeyError, setPasskeyError] = useState(null);
+  const [passkeySuccess, setPasskeySuccess] = useState(null);
+  // Email change state
+  const [newEmailValue, setNewEmailValue] = useState("");
+  const [emailChangeLoading, setEmailChangeLoading] = useState(false);
+  const [emailChangeMessage, setEmailChangeMessage] = useState(null);
+  const [emailChangeError, setEmailChangeError] = useState(null);
+  // Password change state
+  const [currentPasswordValue, setCurrentPasswordValue] = useState("");
+  const [newPasswordValue, setNewPasswordValue] = useState("");
+  const [passwordChangeLoading, setPasswordChangeLoading] = useState(false);
+  const [passwordChangeMessage, setPasswordChangeMessage] = useState(null);
+  const [passwordChangeError, setPasswordChangeError] = useState(null);
 
   const [formData, setFormData] = useState({
     public_lists: true,
@@ -63,9 +92,130 @@ export default function PrivacySettingsPage() {
   const [unsavedChanges, setUnsavedChanges] = useState(false);
   const [expandedControl, setExpandedControl] = useState(null);
 
+  function RelativeTime({ value }) {
+    const [text, setText] = useState(() => (value ? String(value) : "-"));
+    const [title, setTitle] = useState("");
+
+    useEffect(() => {
+      let mounted = true;
+
+      function update() {
+        if (!mounted) return;
+        if (!value) {
+          setText("-");
+          setTitle("");
+          return;
+        }
+        try {
+          const d = new Date(value);
+          if (Number.isNaN(d.getTime())) {
+            setText(String(value));
+            setTitle("");
+            return;
+          }
+          const diffMs = Date.now() - d.getTime();
+          const seconds = Math.round(diffMs / 1000);
+          const rtf = new Intl.RelativeTimeFormat("ro", { numeric: "auto" });
+          if (seconds < 60) setText(rtf.format(-seconds, "second"));
+          else {
+            const minutes = Math.round(seconds / 60);
+            if (minutes < 60) setText(rtf.format(-minutes, "minute"));
+            else {
+              const hours = Math.round(minutes / 60);
+              if (hours < 24) setText(rtf.format(-hours, "hour"));
+              else {
+                const days = Math.round(hours / 24);
+                if (days <= 7) setText(rtf.format(-days, "day"));
+                else {
+                  try {
+                    setText(
+                      new Intl.DateTimeFormat("ro-RO", {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      }).format(d),
+                    );
+                  } catch {
+                    setText(d.toLocaleString());
+                  }
+                }
+              }
+            }
+          }
+          try {
+            setTitle(
+              new Intl.DateTimeFormat("ro-RO", {
+                dateStyle: "medium",
+                timeStyle: "short",
+              }).format(d),
+            );
+          } catch {
+            setTitle(d.toLocaleString());
+          }
+        } catch {
+          setText(String(value));
+          setTitle("");
+        }
+      }
+
+      update();
+      const id = setInterval(update, 60 * 1000);
+      return () => {
+        clearInterval(id);
+        mounted = false;
+      };
+    }, [value]);
+
+    return (
+      <time dateTime={value || ""} title={title}>
+        {text}
+      </time>
+    );
+  }
+
   const canLoad = useMemo(() => {
     return Boolean(isAuthVerified && accessToken);
   }, [isAuthVerified, accessToken]);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    async function loadSessions() {
+      if (!canLoad) {
+        setSessions([]);
+        setSessionsLoading(false);
+        setSessionsError(null);
+        return;
+      }
+
+      setSessionsLoading(true);
+      setSessionsError(null);
+
+      try {
+        const data = await getSecuritySessions({ baseUrl });
+        if (!isCancelled) {
+          setSessions(Array.isArray(data) ? data : []);
+        }
+      } catch (err) {
+        const status = err?.response?.status;
+        if (status === 401) {
+          logout();
+          return;
+        }
+        console.error(err);
+        if (!isCancelled) {
+          setSessionsError("Nu am putut încărca sesiunile active.");
+        }
+      } finally {
+        if (!isCancelled) setSessionsLoading(false);
+      }
+    }
+
+    void loadSessions();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [baseUrl, canLoad, logout]);
 
   // Load privacy settings
   useEffect(() => {
@@ -74,11 +224,8 @@ export default function PrivacySettingsPage() {
     async function loadSettings() {
       if (!canLoad) {
         setSettings(null);
-        setIsLoading(false);
-        setError(null);
         return;
       }
-
       setIsLoading(true);
       setError(null);
 
@@ -173,6 +320,147 @@ export default function PrivacySettingsPage() {
     setSaveSuccess(null);
   }
 
+  async function handleRevokeSession(sessionId) {
+    setSessionsActionError(null);
+    setSessionsActionSuccess(null);
+
+    try {
+      await revokeSecuritySession({ baseUrl, sessionId });
+      setSessions((prev) => prev.filter((session) => session.id !== sessionId));
+      setSessionsActionSuccess("Sesiunea a fost revocată.");
+    } catch (err) {
+      const status = err?.response?.status;
+      if (status === 401) {
+        logout();
+        return;
+      }
+      console.error(err);
+      setSessionsActionError("Nu am putut revoca sesiunea.");
+    }
+  }
+
+  async function handleRevokeAllSessions() {
+    setSessionsActionError(null);
+    setSessionsActionSuccess(null);
+
+    try {
+      await revokeAllSecuritySessions({ baseUrl });
+      setSessions([]);
+      setSessionsActionSuccess("Toate sesiunile au fost revocate.");
+    } catch (err) {
+      const status = err?.response?.status;
+      if (status === 401) {
+        logout();
+        return;
+      }
+      console.error(err);
+      setSessionsActionError("Nu am putut revoca toate sesiunile.");
+    }
+  }
+
+  async function handleRequestEmailChange() {
+    if (!newEmailValue || !currentPasswordValue) {
+      setEmailChangeError("Completează noul email și parola curentă.");
+      return;
+    }
+    setEmailChangeLoading(true);
+    setEmailChangeError(null);
+    setEmailChangeMessage(null);
+    try {
+      await requestEmailChange({
+        baseUrl,
+        newEmail: newEmailValue,
+        password: currentPasswordValue,
+      });
+      setEmailChangeMessage(
+        "A fost trimis un email către adresa nouă; urmează instrucțiunile pentru confirmare.",
+      );
+      setNewEmailValue("");
+      setCurrentPasswordValue("");
+    } catch (err) {
+      console.error(err);
+      const msg =
+        err?.response?.data?.detail || "Eroare la cererea schimbării de email.";
+      setEmailChangeError(msg);
+    } finally {
+      setEmailChangeLoading(false);
+    }
+  }
+
+  async function handleChangePassword() {
+    if (!currentPasswordValue || !newPasswordValue) {
+      setPasswordChangeError("Completează parola curentă și noua parolă.");
+      return;
+    }
+    setPasswordChangeLoading(true);
+    setPasswordChangeError(null);
+    setPasswordChangeMessage(null);
+    try {
+      await changePassword({
+        baseUrl,
+        currentPassword: currentPasswordValue,
+        newPassword: newPasswordValue,
+      });
+      setPasswordChangeMessage("Parola a fost schimbată cu succes.");
+      setCurrentPasswordValue("");
+      setNewPasswordValue("");
+    } catch (err) {
+      console.error(err);
+      const msg =
+        err?.response?.data?.detail || "Eroare la schimbarea parolei.";
+      setPasswordChangeError(msg);
+    } finally {
+      setPasswordChangeLoading(false);
+    }
+  }
+
+  async function handleRegisterPasskey() {
+    if (!window.PublicKeyCredential) {
+      setPasskeyError("Browserul tău nu suportă WebAuthn.");
+      return;
+    }
+
+    setPasskeyBusy(true);
+    setPasskeyError(null);
+    setPasskeySuccess(null);
+
+    try {
+      const options = await getWebAuthnRegisterOptions({ baseUrl });
+      const credential = await navigator.credentials.create(
+        normalizePublicKeyOptions(options),
+      );
+      if (!credential) {
+        setPasskeyError("Înregistrarea passkey a fost anulată.");
+        return;
+      }
+
+      await completeWebAuthnRegistration({
+        baseUrl,
+        attestation: credentialToAttestation(credential),
+      });
+
+      setPasskeySuccess("Passkey înregistrat cu succes.");
+    } catch (err) {
+      console.error("WebAuthn registration error", err);
+      const serverDetail =
+        err?.response?.data?.detail ||
+        err?.response?.data?.error ||
+        err?.message;
+      setPasskeyError(
+        serverDetail
+          ? `Nu am putut înregistra passkey-ul: ${serverDetail}`
+          : "Nu am putut înregistra passkey-ul.",
+      );
+      const status = err?.response?.status;
+      if (status === 401) {
+        logout();
+        return;
+      }
+    } finally {
+      setPasskeyBusy(false);
+    }
+  }
+
   // Redirect if not authenticated
   if (!isLoadingUser && !user) {
     navigate("/login");
@@ -180,7 +468,7 @@ export default function PrivacySettingsPage() {
   }
 
   return (
-    <div style={{ padding: "20px 16px", maxWidth: "800px", margin: "0 auto" }}>
+    <div className="privacy-settings-page">
       {/* Header */}
       <div style={{ marginBottom: "24px" }}>
         <h1 style={{ margin: "0 0 8px 0", fontSize: "28px" }}>
@@ -348,6 +636,231 @@ export default function PrivacySettingsPage() {
                   ) : null}
                 </div>
               ))}
+            </div>
+          </div>
+
+          <div style={{ ...ui.card, marginBottom: "20px" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: "12px",
+                marginBottom: "12px",
+              }}
+            >
+              <div>
+                <h2 style={{ margin: 0, fontSize: "18px" }}>Sesiuni active</h2>
+                <p
+                  style={{
+                    margin: "6px 0 0 0",
+                    opacity: 0.8,
+                    fontSize: "14px",
+                  }}
+                >
+                  Vezi unde ești conectat și revocă instant tokenurile active.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleRevokeAllSessions}
+                disabled={!sessions.length}
+                style={{ ...ui.buttonSmall }}
+              >
+                Revocă toate
+              </button>
+            </div>
+
+            {sessionsLoading ? (
+              <p style={{ margin: 0 }}>Se încarcă...</p>
+            ) : null}
+            {sessionsError ? (
+              <p style={{ ...ui.errorText, margin: 0 }}>{sessionsError}</p>
+            ) : null}
+            {sessionsActionError ? (
+              <p style={{ ...ui.errorText, margin: "8px 0 0 0" }}>
+                {sessionsActionError}
+              </p>
+            ) : null}
+            {sessionsActionSuccess ? (
+              <p style={{ margin: "8px 0 0 0", color: "rgb(22, 163, 74)" }}>
+                {sessionsActionSuccess}
+              </p>
+            ) : null}
+
+            {!sessionsLoading && !sessionsError ? (
+              <div style={{ display: "grid", gap: "10px", marginTop: "12px" }}>
+                {sessions.length ? (
+                  sessions.map((session) => (
+                    <div
+                      key={session.id}
+                      style={{
+                        padding: "12px",
+                        border: `1px solid ${ui.colors.border}`,
+                        borderRadius: "12px",
+                        display: "grid",
+                        gap: "8px",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          gap: "12px",
+                        }}
+                      >
+                        <strong>
+                          {session.is_current
+                            ? "Sesiunea curentă"
+                            : "Sesiune activă"}
+                        </strong>
+                        <button
+                          type="button"
+                          onClick={() => handleRevokeSession(session.id)}
+                          style={{ ...ui.buttonSmall }}
+                        >
+                          Revocă
+                        </button>
+                      </div>
+                      <div style={{ fontSize: "14px", opacity: 0.85 }}>
+                        <div>IP: {session.ip || "necunoscut"}</div>
+                        <div>UA: {session.user_agent || "necunoscut"}</div>
+                        <div>
+                          Ultima activitate:{" "}
+                          <RelativeTime
+                            value={session.last_active || session.created_at}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p style={{ margin: 0, opacity: 0.8 }}>
+                    Nu există alte sesiuni active.
+                  </p>
+                )}
+              </div>
+            ) : null}
+          </div>
+
+          <div style={{ ...ui.card, marginBottom: "20px" }}>
+            <h2 style={{ margin: "0 0 8px 0", fontSize: "18px" }}>
+              Passkeys / WebAuthn
+            </h2>
+            <p style={{ margin: 0, opacity: 0.8, fontSize: "14px" }}>
+              Adaugă o cheie hardware sau un passkey din browser pentru login
+              mai sigur.
+            </p>
+            {passkeyError ? (
+              <p style={{ ...ui.errorText, marginTop: "12px" }}>
+                {passkeyError}
+              </p>
+            ) : null}
+            {passkeySuccess ? (
+              <p style={{ marginTop: "12px", color: "rgb(22, 163, 74)" }}>
+                {passkeySuccess}
+              </p>
+            ) : null}
+            <button
+              type="button"
+              onClick={handleRegisterPasskey}
+              disabled={passkeyBusy}
+              style={{ ...ui.button, marginTop: "12px" }}
+            >
+              {passkeyBusy ? "Se înregistrează..." : "Adaugă passkey"}
+            </button>
+          </div>
+
+          <div style={{ ...ui.card, marginBottom: "20px" }}>
+            <h2 style={{ margin: "0 0 8px 0", fontSize: "18px" }}>
+              Schimbare email
+            </h2>
+            <p style={{ margin: 0, opacity: 0.8, fontSize: "14px" }}>
+              Poți cere schimbarea adresei de email; va trebui să confirmi de la
+              adresa nouă.
+            </p>
+            {emailChangeError ? (
+              <p style={{ ...ui.errorText, marginTop: "12px" }}>
+                {emailChangeError}
+              </p>
+            ) : null}
+            {emailChangeMessage ? (
+              <p style={{ marginTop: "12px", color: "rgb(22, 163, 74)" }}>
+                {emailChangeMessage}
+              </p>
+            ) : null}
+            <div style={{ marginTop: 12 }}>
+              <input
+                type="email"
+                placeholder="Nou email"
+                value={newEmailValue}
+                onChange={(e) => setNewEmailValue(e.target.value)}
+                style={{ width: "100%", marginTop: 6, ...ui.input }}
+              />
+              <input
+                type="password"
+                placeholder="Parola curentă"
+                value={currentPasswordValue}
+                onChange={(e) => setCurrentPasswordValue(e.target.value)}
+                style={{ width: "100%", marginTop: 8, ...ui.input }}
+              />
+              <div style={{ marginTop: 8 }}>
+                <button
+                  type="button"
+                  onClick={handleRequestEmailChange}
+                  disabled={emailChangeLoading}
+                  style={{ ...ui.button }}
+                >
+                  {emailChangeLoading
+                    ? "Se trimite..."
+                    : "Trimite cerere schimbare email"}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ ...ui.card, marginBottom: "20px" }}>
+            <h2 style={{ margin: "0 0 8px 0", fontSize: "18px" }}>
+              Schimbare parolă
+            </h2>
+            <p style={{ margin: 0, opacity: 0.8, fontSize: "14px" }}>
+              Schimbă parola curentă a contului.
+            </p>
+            {passwordChangeError ? (
+              <p style={{ ...ui.errorText, marginTop: "12px" }}>
+                {passwordChangeError}
+              </p>
+            ) : null}
+            {passwordChangeMessage ? (
+              <p style={{ marginTop: "12px", color: "rgb(22, 163, 74)" }}>
+                {passwordChangeMessage}
+              </p>
+            ) : null}
+            <div style={{ marginTop: 12 }}>
+              <input
+                type="password"
+                placeholder="Parola curentă"
+                value={currentPasswordValue}
+                onChange={(e) => setCurrentPasswordValue(e.target.value)}
+                style={{ width: "100%", marginTop: 6, ...ui.input }}
+              />
+              <input
+                type="password"
+                placeholder="Noua parolă"
+                value={newPasswordValue}
+                onChange={(e) => setNewPasswordValue(e.target.value)}
+                style={{ width: "100%", marginTop: 8, ...ui.input }}
+              />
+              <div style={{ marginTop: 8 }}>
+                <button
+                  type="button"
+                  onClick={handleChangePassword}
+                  disabled={passwordChangeLoading}
+                  style={{ ...ui.button }}
+                >
+                  {passwordChangeLoading ? "Se schimbă..." : "Schimbă parola"}
+                </button>
+              </div>
             </div>
           </div>
 

@@ -4,7 +4,7 @@ from django.db import migrations, models
 def backfill_listalbum_positions(apps, schema_editor):
     ListAlbum = apps.get_model('interactions', 'ListAlbum')
 
-    # Set position per list based on added_at (oldest first).
+                                                             
     list_ids = (
         ListAlbum.objects.order_by()
         .values_list('list_id', flat=True)

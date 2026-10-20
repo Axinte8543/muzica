@@ -116,12 +116,18 @@ export default function ProfileLikedAlbumsPage() {
   }
 
   useEffect(() => {
-    if (!canLoad) return;
-    void load();
+    if (!canLoad) return undefined;
+    const t = setTimeout(() => {
+      void load();
+    }, 0);
+    return () => clearTimeout(t);
   }, [canLoad, load]);
 
   useEffect(() => {
-    setPage((prev) => Math.min(prev, totalPages));
+    const t = setTimeout(() => {
+      setPage((prev) => Math.min(prev, totalPages));
+    }, 0);
+    return () => clearTimeout(t);
   }, [totalPages]);
 
   if (!isAuthenticated) {

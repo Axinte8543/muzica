@@ -42,7 +42,7 @@ class UserXPSerializer(serializers.ModelSerializer):
 
 
 class UserGamificationStatsSerializer(serializers.Serializer):
-    """Combined gamification stats for user"""
+                                              
     user_xp = UserXPSerializer(read_only=True)
     badges = UserBadgeSerializer(many=True, read_only=True)
     achievements = UserAchievementSerializer(many=True, read_only=True)

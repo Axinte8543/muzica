@@ -6,16 +6,16 @@ export async function getHome({
   recLimit = 8,
   friendsRecLimit = 8,
   activityLimit = 10,
-  popularLimit = 10,
+  popularLimit = 8,
   weeklyPopularLimit = 10,
   weeklyListensLimit = 10,
-  popularReviewsLimit = 10,
-  anticipatedLimit = 10,
+  popularReviewsLimit = 5,
   genresLimit = 12,
   bestLimit = 5,
-  newLimit = 10,
+  newLimit = 8,
   recentLimit = 10,
-  top2025Limit = 5,
+  top2025Limit = 8,
+  trendingLimit = 8,
 }) {
   // baseUrl/accessToken kept only for backwards compatibility.
   void baseUrl;
@@ -30,12 +30,12 @@ export async function getHome({
       weekly_popular_limit: weeklyPopularLimit,
       weekly_listens_limit: weeklyListensLimit,
       popular_reviews_limit: popularReviewsLimit,
-      anticipated_limit: anticipatedLimit,
       genres_limit: genresLimit,
       best_limit: bestLimit,
       new_limit: newLimit,
       recent_limit: recentLimit,
       top_2025_limit: top2025Limit,
+      trending_limit: trendingLimit,
     },
   });
 

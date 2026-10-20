@@ -44,7 +44,7 @@ def _parse_date_best_effort(raw: str | None) -> date:
 
 
 def _artist_area_is_romania(artist: dict[str, Any]) -> bool:
-    # MusicBrainz uses 'area' for origin.
+                                         
     area = artist.get("area") or {}
     name = str(area.get("name") or "").strip().lower()
     return name == "romania"
@@ -108,7 +108,7 @@ class Command(BaseCommand):
             try:
                 artist_obj = mb.get_artist(artist_mbid=mbid)
             except MusicBrainzAPIError as e:
-                # Fallback to search if direct lookup fails for any reason.
+                                                                           
                 try:
                     payload = mb.search_artist(name=name, query=f"arid:{mbid}", limit=5)
                 except MusicBrainzAPIError as e2:
@@ -129,12 +129,12 @@ class Command(BaseCommand):
             if not artist_list:
                 raise CommandError("No artists found on MusicBrainz")
 
-            # Prefer exact name match, then Romanian area if requested.
+                                                                       
             def score(a: dict[str, Any]) -> tuple[int, int, int]:
                 n = str(a.get("name") or "").strip().lower()
                 exact = 1 if n == name.lower() else 0
                 ro = 1 if _artist_area_is_romania(a) else 0
-                # Higher 'score' value means better match.
+                                                          
                 return (exact, ro, int(a.get("score") or 0))
 
             artist_list.sort(key=score, reverse=True)
@@ -148,16 +148,15 @@ class Command(BaseCommand):
         if not artist_mbid:
             raise CommandError("MusicBrainz artist missing id")
 
-        inferred_ro = _artist_area_is_romania(artist_obj)
-        is_romanian = bool(force_romanian or (romanian_only and inferred_ro) or inferred_ro)
+        is_romanian = True
 
         with transaction.atomic():
             db_artist = Artist.objects.filter(musicbrainz_id=artist_mbid).first()
             created = False
 
             if db_artist is None:
-                # Try to merge into an existing artist created manually (seed) by name.
-                # This avoids duplicate Artist rows when MBIDs are added later.
+                                                                                       
+                                                                               
                 candidate = Artist.objects.filter(name__iexact=artist_name).first()
                 if candidate is not None and (not candidate.musicbrainz_id or candidate.musicbrainz_id == artist_mbid):
                     db_artist = candidate
@@ -179,7 +178,7 @@ class Command(BaseCommand):
             if artist_name and db_artist.name != artist_name:
                 db_artist.name = artist_name
                 dirty = True
-            if is_romanian and not db_artist.is_romanian:
+            if not db_artist.is_romanian:
                 db_artist.is_romanian = True
                 dirty = True
             if approved and not db_artist.is_approved:
@@ -188,7 +187,7 @@ class Command(BaseCommand):
             if dirty:
                 db_artist.save()
 
-        # Release-groups pagination
+                                   
         rg_offset = 0
         rg_limit = 100
         release_groups: list[dict[str, Any]] = []
@@ -228,7 +227,7 @@ class Command(BaseCommand):
             secondary_types_norm = [str(x).strip().lower() for x in secondary_types if str(x).strip()]
             secondary_types_csv = ",".join(secondary_types_norm)
             if primary_type and primary_type not in {"album", "single", "ep"}:
-                # Skip compilations, etc. (can be relaxed later).
+                                                                 
                 pass
 
             with transaction.atomic():
@@ -267,7 +266,7 @@ class Command(BaseCommand):
                     if dirty:
                         album_obj.save()
 
-            # Find a release with recordings to import tracklist.
+                                                                 
             rel_offset = 0
             rel_limit = 25
             releases: list[dict[str, Any]] = []
@@ -345,7 +344,7 @@ class Command(BaseCommand):
                                 defaults=defaults,
                             )
                         else:
-                            # Fallback de-dup: slug uniqueness
+                                                              
                             song_obj, created = Song.objects.get_or_create(
                                 slug=defaults["slug"],
                                 defaults=defaults,

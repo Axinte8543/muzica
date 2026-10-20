@@ -6,6 +6,7 @@ from rest_framework.test import APIClient
 
 from interactions.models import AlbumReview, MetadataSuggestion, ReviewComment
 from music.models import Album, Artist, Song
+from users.models import UserPrivacySettings
 
 
 class TestModerationAndMetadataSuggestions(TestCase):
@@ -14,40 +15,44 @@ class TestModerationAndMetadataSuggestions(TestCase):
 		self.password = "StrongPass123!"
 
 		self.artist = Artist.objects.create(
-			name="Artist",
-			slug="artist",
-			is_approved=True,
+		 name="Artist",
+		 slug="artist",
+		 is_approved=True,
 		)
 		self.album = Album.objects.create(
-			artist=self.artist,
-			title="Album",
-			slug="album",
-			release_date=date(2020, 1, 1),
-			cover_url="",
-			is_approved=True,
+		 artist=self.artist,
+		 title="Album",
+		 slug="album",
+		 release_date=date(2020, 1, 1),
+		 cover_url="",
+		 is_approved=True,
 		)
 		self.song = Song.objects.create(
-			album=self.album,
-			artist=self.artist,
-			title="Song",
-			slug="song",
-			track_number=1,
-			duration_seconds=123,
-			is_approved=True,
+		 album=self.album,
+		 artist=self.artist,
+		 title="Song",
+		 slug="song",
+		 track_number=1,
+		 duration_seconds=123,
+		 is_approved=True,
 		)
 
 		User = get_user_model()
 		self.user = User.objects.create_user(username="alice", password=self.password, email="alice@example.com")
 		self.staff = User.objects.create_user(username="mod", password=self.password, email="mod@example.com", is_staff=True)
+		for user in (self.user, self.staff):
+			UserPrivacySettings.objects.get_or_create(user=user, defaults={"email_verified": True})
+			user.privacy.email_verified = True
+			user.privacy.save(update_fields=["email_verified"])
 
 		self.review = AlbumReview.objects.create(user=self.user, album=self.album, title="t", content="c")
 		self.comment = ReviewComment.objects.create(user=self.user, review=self.review, content="hi")
 
 	def _login(self, username: str):
 		res = self.client.post(
-			"/api/auth/login/",
-			{"username": username, "password": self.password},
-			format="json",
+		 "/api/auth/login/",
+		 {"username": username, "password": self.password},
+		 format="json",
 		)
 		self.assertEqual(res.status_code, 200, res.data)
 		access = res.data.get("access")
@@ -58,9 +63,9 @@ class TestModerationAndMetadataSuggestions(TestCase):
 		self._login("alice")
 
 		create = self.client.post(
-			"/api/moderation/reports/",
-			{"target_type": "review", "target_id": self.review.id, "reason_code": "spam", "reason": "link spam"},
-			format="json",
+		 "/api/moderation/reports/",
+		 {"target_type": "review", "target_id": self.review.id, "reason_code": "spam", "reason": "link spam"},
+		 format="json",
 		)
 		self.assertEqual(create.status_code, 201, create.data)
 		self.assertEqual(create.data.get("reason_code"), "spam")
@@ -71,7 +76,7 @@ class TestModerationAndMetadataSuggestions(TestCase):
 		self.assertEqual(mine.status_code, 200)
 		self.assertTrue(any(r.get("id") == report_id for r in mine.data))
 
-		# Staff sees queue and can filter by reason_code
+                                                  
 		self.client.credentials()
 		self._login("mod")
 
@@ -89,15 +94,15 @@ class TestModerationAndMetadataSuggestions(TestCase):
 		self._login("alice")
 
 		sugg = self.client.post(
-			"/api/moderation/suggestions/metadata/",
-			{
-				"target_type": "album",
-				"target_id": self.album.id,
-				"kind": "cover_url",
-				"payload": {"cover_url": "https://example.com/cover.jpg"},
-				"note": "missing cover",
-			},
-			format="json",
+		 "/api/moderation/suggestions/metadata/",
+		 {
+		  "target_type": "album",
+		  "target_id": self.album.id,
+		  "kind": "cover_url",
+		  "payload": {"cover_url": "https://example.com/cover.jpg"},
+		  "note": "missing cover",
+		 },
+		 format="json",
 		)
 		self.assertEqual(sugg.status_code, 201, sugg.data)
 		suggestion_id = sugg.data.get("id")
@@ -108,35 +113,37 @@ class TestModerationAndMetadataSuggestions(TestCase):
 		self._login("mod")
 
 		approve = self.client.put(
-			f"/api/moderation/suggestions/metadata/{suggestion_id}/decision/",
-			{"action": "approve", "apply": True, "decision_note": "ok"},
-			format="json",
+		 f"/api/moderation/suggestions/metadata/{suggestion_id}/decision/",
+		 {"action": "approve", "apply": True, "decision_note": "ok"},
+		 format="json",
 		)
 		self.assertEqual(approve.status_code, 200, approve.data)
 		self.assertEqual(approve.data.get("status"), "approved")
 		self.assertEqual(approve.data.get("applied"), True)
+		self.assertEqual(approve.data.get("target_name"), "Album")
+		self.assertEqual(approve.data.get("target_slug"), "album")
 
 		self.album.refresh_from_db()
 		self.assertEqual(self.album.cover_url, "https://example.com/cover.jpg")
 
-		# Tracklist suggestion creates songs if missing.
-		# Submit tracklist as alice
+                                                  
+                             
 		self.client.credentials()
 		self._login("alice")
 		tracklist = self.client.post(
-			"/api/moderation/suggestions/metadata/",
-			{
-				"target_type": "album",
-				"target_id": self.album.id,
-				"kind": "tracklist",
-				"payload": {
-					"tracks": [
-						{"track_number": 1, "title": "Song", "duration_seconds": 123},
-						{"track_number": 2, "title": "New Track", "duration_seconds": 200},
-					]
-				},
-			},
-			format="json",
+		 "/api/moderation/suggestions/metadata/",
+		 {
+		  "target_type": "album",
+		  "target_id": self.album.id,
+		  "kind": "tracklist",
+		  "payload": {
+		   "tracks": [
+		    {"track_number": 1, "title": "Song", "duration_seconds": 123},
+		    {"track_number": 2, "title": "New Track", "duration_seconds": 200},
+		   ]
+		  },
+		 },
+		 format="json",
 		)
 		self.assertEqual(tracklist.status_code, 201, tracklist.data)
 		track_id = tracklist.data.get("id")
@@ -145,23 +152,61 @@ class TestModerationAndMetadataSuggestions(TestCase):
 		self.client.credentials()
 		self._login("mod")
 		approve2 = self.client.put(
-			f"/api/moderation/suggestions/metadata/{track_id}/decision/",
-			{"action": "approve", "apply": True},
-			format="json",
+		 f"/api/moderation/suggestions/metadata/{track_id}/decision/",
+		 {"action": "approve", "apply": True},
+		 format="json",
 		)
 		self.assertEqual(approve2.status_code, 200, approve2.data)
 		self.assertEqual(approve2.data.get("applied"), True)
 
-		# Track 2 should exist now.
+                             
 		self.assertTrue(Song.objects.filter(album=self.album, track_number=2, title="New Track", is_approved=True).exists())
+
+	def test_metadata_suggestion_rejection_is_visible_to_suggester(self):
+		self._login("alice")
+		sugg = self.client.post(
+		 "/api/moderation/suggestions/metadata/",
+		 {
+		  "target_type": "album",
+		  "target_id": self.album.id,
+		  "kind": "description",
+		  "payload": {"description": "new text"},
+		  "note": "please update",
+		 },
+		 format="json",
+		)
+		self.assertEqual(sugg.status_code, 201, sugg.data)
+		suggestion_id = sugg.data.get("id")
+		self.assertEqual(sugg.data.get("target_name"), "Album")
+
+		self.client.credentials()
+		self._login("mod")
+		reject = self.client.put(
+		 f"/api/moderation/suggestions/metadata/{suggestion_id}/decision/",
+		 {"action": "reject", "decision_note": "Nu este potrivit."},
+		 format="json",
+		)
+		self.assertEqual(reject.status_code, 200, reject.data)
+		self.assertEqual(reject.data.get("status"), "rejected")
+		self.assertEqual(reject.data.get("decision_note"), "Nu este potrivit.")
+
+		self.client.credentials()
+		self._login("alice")
+		mine = self.client.get("/api/moderation/suggestions/metadata/?status=rejected")
+		self.assertEqual(mine.status_code, 200, mine.data)
+		item = next((x for x in mine.data if x.get("id") == suggestion_id), None)
+		self.assertTrue(item)
+		self.assertEqual(item.get("status"), "rejected")
+		self.assertEqual(item.get("decision_note"), "Nu este potrivit.")
+		self.assertEqual(item.get("target_name"), "Album")
 
 	def test_review_comment_edit_history_public_endpoint(self):
 		self._login("alice")
 		old = self.comment.content
 		res = self.client.put(
-			f"/api/review-comments/{self.comment.id}/",
-			{"content": "edited"},
-			format="json",
+		 f"/api/review-comments/{self.comment.id}/",
+		 {"content": "edited"},
+		 format="json",
 		)
 		self.assertEqual(res.status_code, 200, res.data)
 
@@ -173,14 +218,14 @@ class TestModerationAndMetadataSuggestions(TestCase):
 	def test_album_changelog_created_on_apply(self):
 		self._login("alice")
 		sugg = self.client.post(
-			"/api/moderation/suggestions/metadata/",
-			{
-				"target_type": "album",
-				"target_id": self.album.id,
-				"kind": "cover_url",
-				"payload": {"cover_url": "https://example.com/new.jpg"},
-			},
-			format="json",
+		 "/api/moderation/suggestions/metadata/",
+		 {
+		  "target_type": "album",
+		  "target_id": self.album.id,
+		  "kind": "cover_url",
+		  "payload": {"cover_url": "https://example.com/new.jpg"},
+		 },
+		 format="json",
 		)
 		self.assertEqual(sugg.status_code, 201, sugg.data)
 		suggestion_id = sugg.data.get('id')
@@ -189,9 +234,9 @@ class TestModerationAndMetadataSuggestions(TestCase):
 		self.client.credentials()
 		self._login("mod")
 		approve = self.client.put(
-			f"/api/moderation/suggestions/metadata/{suggestion_id}/decision/",
-			{"action": "approve", "apply": True},
-			format="json",
+		 f"/api/moderation/suggestions/metadata/{suggestion_id}/decision/",
+		 {"action": "approve", "apply": True},
+		 format="json",
 		)
 		self.assertEqual(approve.status_code, 200, approve.data)
 		self.assertEqual(approve.data.get('applied'), True)
@@ -204,11 +249,11 @@ class TestModerationAndMetadataSuggestions(TestCase):
 	def test_contributor_badge_unlocked_after_approved_suggestions(self):
 		for _ in range(5):
 			MetadataSuggestion.objects.create(
-				suggester=self.user,
-				album=self.album,
-				kind=MetadataSuggestion.Kind.COVER_URL,
-				payload={'cover_url': 'x'},
-				status=MetadataSuggestion.Status.APPROVED,
+			 suggester=self.user,
+			 album=self.album,
+			 kind=MetadataSuggestion.Kind.COVER_URL,
+			 payload={'cover_url': 'x'},
+			 status=MetadataSuggestion.Status.APPROVED,
 			)
 		self._login("alice")
 		stats = self.client.get("/api/profile/stats/")
@@ -221,14 +266,14 @@ class TestModerationAndMetadataSuggestions(TestCase):
 	def test_metadata_suggestion_artist_image_url_apply(self):
 		self._login("alice")
 		sugg = self.client.post(
-			"/api/moderation/suggestions/metadata/",
-			{
-				"target_type": "artist",
-				"target_id": self.artist.id,
-				"kind": "image_url",
-				"payload": {"image_url": "https://example.com/artist.jpg"},
-			},
-			format="json",
+		 "/api/moderation/suggestions/metadata/",
+		 {
+		  "target_type": "artist",
+		  "target_id": self.artist.id,
+		  "kind": "image_url",
+		  "payload": {"image_url": "https://example.com/artist.jpg"},
+		 },
+		 format="json",
 		)
 		self.assertEqual(sugg.status_code, 201, sugg.data)
 		suggestion_id = sugg.data.get("id")
@@ -237,9 +282,9 @@ class TestModerationAndMetadataSuggestions(TestCase):
 		self.client.credentials()
 		self._login("mod")
 		approve = self.client.put(
-			f"/api/moderation/suggestions/metadata/{suggestion_id}/decision/",
-			{"action": "approve", "apply": True},
-			format="json",
+		 f"/api/moderation/suggestions/metadata/{suggestion_id}/decision/",
+		 {"action": "approve", "apply": True},
+		 format="json",
 		)
 		self.assertEqual(approve.status_code, 200, approve.data)
 		self.assertEqual(approve.data.get("applied"), True)

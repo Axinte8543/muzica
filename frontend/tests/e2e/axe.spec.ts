@@ -12,8 +12,13 @@ test.describe("Accessibility (axe)", () => {
       class MockEventSource {
         constructor() {
           setTimeout(() => {
-            if (typeof this.onopen === "function") {
-              this.onopen(new Event("open"));
+            // use `any` casts to avoid TypeScript type errors in test file
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const self: any = this;
+            if (typeof self.onopen === "function") {
+              // Event is a browser global; silence TS if lib.dom isn't available
+              // @ts-ignore
+              self.onopen(new Event("open"));
             }
           }, 0);
         }
@@ -25,7 +30,8 @@ test.describe("Accessibility (axe)", () => {
         removeEventListener() {}
       }
 
-      window.EventSource = MockEventSource;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window as any).EventSource = MockEventSource;
     });
 
     await page.route("**/api/auth/me/", (route) =>

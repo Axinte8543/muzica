@@ -326,21 +326,6 @@ export default function ProfileTopPage() {
             </div>
 
             <div style={ui.card}>
-              <h3 style={{ marginTop: 0 }}>Top genuri</h3>
-              {Array.isArray(data.top_genres) && data.top_genres.length ? (
-                <ol style={{ paddingLeft: "18px", margin: 0 }}>
-                  {data.top_genres.map((g) => (
-                    <li key={g.genre_id} style={{ marginBottom: "6px" }}>
-                      {g.genre_name} — {g.listens} listens
-                    </li>
-                  ))}
-                </ol>
-              ) : (
-                <p style={{ margin: 0, opacity: 0.85 }}>Nu există date.</p>
-              )}
-            </div>
-
-            <div style={ui.card}>
               <h3 style={{ marginTop: 0 }}>Top melodii</h3>
               <div
                 style={{

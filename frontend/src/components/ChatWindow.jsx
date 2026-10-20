@@ -14,14 +14,46 @@ export default function ChatWindow({
   currentUserId,
 }) {
   const [inputValue, setInputValue] = useState("");
+  const [visibleCount, setVisibleCount] = useState(10);
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const normalizedCurrentUserId = Number(currentUserId);
 
-  // Auto-scroll to bottom
+  const prevMessagesLengthRef = useRef(messages.length);
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    const endEl = messagesEndRef.current;
+    const container = endEl?.parentElement;
+    const prevLen = prevMessagesLengthRef.current ?? 0;
+    const newLen = messages.length;
+
+    const tolerance = 50; // px from bottom to consider "at bottom"
+    const isAtBottom = () => {
+      if (!container) return false;
+      return (
+        container.scrollHeight - container.clientHeight - container.scrollTop <=
+        tolerance
+      );
+    };
+
+    const lastMsg = messages[newLen - 1];
+
+    const shouldScroll = (() => {
+      if (prevLen === 0) return false;
+      if (newLen > prevLen) {
+        if (lastMsg && Number(lastMsg.sender_id) === normalizedCurrentUserId) {
+          return true;
+        }
+        return isAtBottom();
+      }
+      return false;
+    })();
+
+    if (shouldScroll) {
+      endEl?.scrollIntoView({ behavior: "smooth" });
+    }
+
+    prevMessagesLengthRef.current = newLen;
+  }, [messages, normalizedCurrentUserId]);
 
   useEffect(() => {
     return () => {
@@ -84,63 +116,91 @@ export default function ChatWindow({
           </div>
         ) : (
           <>
-            {messages.map((msg) => {
-              const isSent = Number(msg.sender_id) === normalizedCurrentUserId;
-              const isLatestSent = isSent && msg.id === latestSentMessageId;
-              return (
-                <div
-                  key={msg.id}
-                  className={`message ${isSent ? "sent" : "received"}`}
+            {messages.length > visibleCount ? (
+              <div className="load-more-wrapper">
+                <button
+                  type="button"
+                  className="load-more-btn"
+                  onClick={() => {
+                    const endEl = messagesEndRef.current;
+                    const container = endEl?.parentElement;
+                    const prevScroll = container ? container.scrollHeight : 0;
+                    setVisibleCount((v) => v + 10);
+                    requestAnimationFrame(() => {
+                      if (!container) return;
+                      container.scrollTop = container.scrollHeight - prevScroll;
+                    });
+                  }}
                 >
-                  <div className="message-content">
-                    {msg.reply_to_id ? (
-                      <button
-                        type="button"
-                        className="message-reply-preview"
-                        onClick={() =>
-                          onReplyToMessage?.({
-                            id: msg.reply_to_id,
-                            content: msg.reply_to_content,
-                            sender_username: msg.reply_to_sender_username,
-                          })
-                        }
-                        title="Răspunde la acest mesaj"
-                      >
-                        ↩ {msg.reply_to_sender_username}: {msg.reply_to_content}
-                      </button>
-                    ) : null}
+                  Încarcă mesaje vechi ({messages.length - visibleCount})
+                </button>
+              </div>
+            ) : null}
 
-                    <div className="message-bubble">{msg.content}</div>
-                    <div className="message-meta-row">
-                      <div className="message-timestamp">
-                        {new Date(msg.created_at).toLocaleTimeString("ro-RO", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </div>
-                      {isLatestSent ? (
-                        <div className="message-seen-status">
-                          {msg.is_read ? "Seen" : "Sent"}
-                        </div>
+            {messages
+              .slice(Math.max(0, messages.length - visibleCount))
+              .map((msg) => {
+                const isSent =
+                  Number(msg.sender_id) === normalizedCurrentUserId;
+                const isLatestSent = isSent && msg.id === latestSentMessageId;
+                return (
+                  <div
+                    key={msg.id}
+                    className={`message ${isSent ? "sent" : "received"}`}
+                  >
+                    <div className="message-content">
+                      {msg.reply_to_id ? (
+                        <button
+                          type="button"
+                          className="message-reply-preview"
+                          onClick={() =>
+                            onReplyToMessage?.({
+                              id: msg.reply_to_id,
+                              content: msg.reply_to_content,
+                              sender_username: msg.reply_to_sender_username,
+                            })
+                          }
+                          title="Răspunde la acest mesaj"
+                        >
+                          ↩ {msg.reply_to_sender_username}:{" "}
+                          {msg.reply_to_content}
+                        </button>
                       ) : null}
-                      <button
-                        type="button"
-                        className="message-reply-action"
-                        onClick={() =>
-                          onReplyToMessage?.({
-                            id: msg.id,
-                            content: msg.content,
-                            sender_username: msg.sender_username,
-                          })
-                        }
-                      >
-                        Reply
-                      </button>
+
+                      <div className="message-bubble">{msg.content}</div>
+                      <div className="message-meta-row">
+                        <div className="message-timestamp">
+                          {new Date(msg.created_at).toLocaleTimeString(
+                            "ro-RO",
+                            {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            },
+                          )}
+                        </div>
+                        {isLatestSent ? (
+                          <div className="message-seen-status">
+                            {msg.is_read ? "Seen" : "Sent"}
+                          </div>
+                        ) : null}
+                        <button
+                          type="button"
+                          className="message-reply-action"
+                          onClick={() =>
+                            onReplyToMessage?.({
+                              id: msg.id,
+                              content: msg.content,
+                              sender_username: msg.sender_username,
+                            })
+                          }
+                        >
+                          Reply
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
             {isOtherUserTyping ? (
               <div className="typing-indicator">
                 {conversation.username} scrie...

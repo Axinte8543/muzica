@@ -9,7 +9,7 @@ services:
 
   web:
     build: ./backend
-    env_file: ./backend/.env.sample
+    env_file: ./backend/.env
     depends_on:
       - redis
     entrypoint: ["/app/docker-entrypoint.sh"]
@@ -20,7 +20,7 @@ services:
 
   worker:
     build: ./backend
-    env_file: ./backend/.env.sample
+    env_file: ./backend/.env
     depends_on:
       - redis
     entrypoint: ["/app/docker-entrypoint.sh"]
@@ -29,7 +29,7 @@ services:
 
   beat:
     build: ./backend
-    env_file: ./backend/.env.sample
+    env_file: ./backend/.env
     depends_on:
       - redis
     entrypoint: ["/app/docker-entrypoint.sh"]

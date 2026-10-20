@@ -16,6 +16,41 @@ import { useAuth } from "../context/useAuth.js";
 import { useNotice } from "../context/useNotice.js";
 import { ui } from "../ui/ui.js";
 
+function relativeTime(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  const time = date.getTime();
+  if (!Number.isFinite(time)) return "";
+
+  const diffSeconds = Math.max(0, Math.floor((Date.now() - time) / 1000));
+  if (diffSeconds < 60) return "acum";
+  const minutes = Math.floor(diffSeconds / 60);
+  if (minutes < 60) return `acum ${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `acum ${hours} h`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `acum ${days} zile`;
+
+  return date.toLocaleDateString("ro-RO", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function notificationMeta(type) {
+  switch (type) {
+    case "friend":
+      return { label: "Prietenie", icon: "+", color: "rgba(34, 197, 94, 0.18)" };
+    case "like":
+      return { label: "Like review", icon: "♥", color: "rgba(236, 72, 153, 0.16)" };
+    case "reply":
+      return { label: "Răspuns review", icon: "R", color: "rgba(59, 130, 246, 0.16)" };
+    default:
+      return { label: "Notificare", icon: "•", color: "rgba(148, 163, 184, 0.14)" };
+  }
+}
+
 export default function NotificationsPage() {
   const { baseUrl, isAuthenticated, isAuthVerified, accessToken } = useAuth();
   const { notify } = useNotice();
@@ -32,6 +67,61 @@ export default function NotificationsPage() {
   const canLoad = useMemo(() => {
     return Boolean(isAuthVerified && accessToken);
   }, [isAuthVerified, accessToken]);
+
+  const notificationItems = useMemo(() => {
+    const friendItems = incoming
+      .map((fr) => {
+        const sender = String(fr?.sender_username || "").trim();
+        if (!fr?.id || !sender) return null;
+        return {
+          id: `friend-${fr.id}`,
+          type: "friend",
+          createdAt: fr.created_at,
+          user: sender,
+          text: "vrea să fie prieten cu tine",
+          requestId: fr.id,
+        };
+      })
+      .filter(Boolean);
+
+    const likeItems = reviewLikes
+      .map((lk) => {
+        const liker = String(lk?.liker_username || "").trim();
+        if (!lk?.id || !liker) return null;
+        return {
+          id: `like-${lk.id}`,
+          type: "like",
+          createdAt: lk.created_at,
+          user: liker,
+          text: "a apreciat review-ul tău la",
+          albumSlug: String(lk?.album_slug || "").trim(),
+          albumTitle: String(lk?.album_title || "Album"),
+        };
+      })
+      .filter(Boolean);
+
+    const replyItems = reviewReplies
+      .map((rp) => {
+        const replier = String(rp?.replier_username || "").trim();
+        if (!rp?.id || !replier) return null;
+        return {
+          id: `reply-${rp.id}`,
+          type: "reply",
+          createdAt: rp.created_at,
+          user: replier,
+          text: "a răspuns la review-ul tău la",
+          albumSlug: String(rp?.album_slug || "").trim(),
+          albumTitle: String(rp?.album_title || "Album"),
+        };
+      })
+      .filter(Boolean);
+
+    return [...friendItems, ...likeItems, ...replyItems].sort((a, b) => {
+      const aTime = new Date(a.createdAt || 0).getTime() || 0;
+      const bTime = new Date(b.createdAt || 0).getTime() || 0;
+      return bTime - aTime;
+    });
+  }, [incoming, reviewLikes, reviewReplies]);
 
   const applyNotificationsPayload = useCallback((data) => {
     setIncoming(
@@ -66,7 +156,7 @@ export default function NotificationsPage() {
       });
       setPrefs(nextPrefs || null);
 
-      const data = await getNotifications({ baseUrl, accessToken, limit: 20 });
+      const data = await getNotifications({ baseUrl, accessToken, limit: 10 });
       applyNotificationsPayload(data);
     } catch (err) {
       console.error(err);
@@ -80,8 +170,13 @@ export default function NotificationsPage() {
   }, [baseUrl, accessToken, canLoad, applyNotificationsPayload]);
 
   useEffect(() => {
-    if (!canLoad) return;
-    void load();
+    if (!canLoad) return undefined;
+
+    const t = setTimeout(() => {
+      void load();
+    }, 0);
+
+    return () => clearTimeout(t);
   }, [canLoad, load]);
 
   useEffect(() => {
@@ -91,7 +186,7 @@ export default function NotificationsPage() {
       baseUrl,
       accessToken,
       kind: "notifications",
-      limit: 20,
+      limit: 10,
       interval: 5,
     });
 
@@ -111,7 +206,7 @@ export default function NotificationsPage() {
     };
 
     return () => source.close();
-  }, [canLoad, baseUrl, accessToken]);
+  }, [canLoad, baseUrl, accessToken, applyNotificationsPayload]);
 
   async function refreshIncomingFromFriendsList() {
     const data = await getFriendsList({ baseUrl, accessToken });
@@ -244,155 +339,122 @@ export default function NotificationsPage() {
       </section>
 
       <section style={{ marginTop: "26px" }}>
-        <h2 style={{ margin: 0 }}>Cereri de prietenie</h2>
+        <h2 style={{ margin: 0 }}>Feed notificări</h2>
 
         {!isLoading && !error ? (
-          <div style={{ ...ui.card, marginTop: "12px" }}>
-            {incoming.length ? (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "10px",
-                }}
-              >
-                {incoming.map((fr) => {
-                  const sender = String(fr?.sender_username || "").trim();
-                  const requestId = fr?.id;
-                  if (!sender || !requestId) return null;
-
-                  return (
-                    <div
-                      key={requestId}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        gap: "12px",
-                      }}
-                    >
-                      <div style={{ opacity: 0.95 }}>
-                        <Link to={`/users/${encodeURIComponent(sender)}`}>
-                          {sender}
-                        </Link>{" "}
-                        vrea să fie prieten cu tine.
+          <div
+            style={{
+              display: "grid",
+              gap: "8px",
+              marginTop: "12px",
+            }}
+          >
+            {notificationItems.length ? (
+              notificationItems.map((item) => {
+                const meta = notificationMeta(item.type);
+                return (
+                  <article
+                    key={item.id}
+                    style={{
+                      ...ui.card,
+                      padding: "12px",
+                      display: "grid",
+                      gridTemplateColumns: "minmax(0, 1fr) auto",
+                      gap: "12px",
+                      alignItems: "center",
+                    }}
+                  >
+                    <div style={{ minWidth: 0 }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          flexWrap: "wrap",
+                          marginBottom: "6px",
+                        }}
+                      >
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            border: "1px solid var(--border-color)",
+                            borderRadius: "999px",
+                            padding: "2px 9px",
+                            background: meta.color,
+                            fontSize: "0.88em",
+                            fontWeight: 700,
+                          }}
+                        >
+                          <span>{meta.icon}</span>
+                          {meta.label}
+                        </span>
+                        {item.createdAt ? (
+                          <time
+                            dateTime={item.createdAt}
+                            style={{ opacity: 0.72, fontSize: "0.9em" }}
+                          >
+                            {relativeTime(item.createdAt)}
+                          </time>
+                        ) : null}
                       </div>
 
-                      <div style={{ display: "flex", gap: "8px" }}>
+                      <div style={{ lineHeight: 1.45 }}>
+                        <Link to={`/users/${encodeURIComponent(item.user)}`}>
+                          {item.user}
+                        </Link>{" "}
+                        <span style={{ opacity: 0.9 }}>{item.text}</span>
+                        {item.albumTitle ? (
+                          <>
+                            {" "}
+                            {item.albumSlug ? (
+                              <Link
+                                to={`/albums/${encodeURIComponent(
+                                  item.albumSlug,
+                                )}?tab=reviews`}
+                              >
+                                {item.albumTitle}
+                              </Link>
+                            ) : (
+                              <strong>{item.albumTitle}</strong>
+                            )}
+                          </>
+                        ) : null}
+                      </div>
+                    </div>
+
+                    {item.type === "friend" ? (
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "8px",
+                          flexWrap: "wrap",
+                          justifyContent: "flex-end",
+                        }}
+                      >
                         <button
                           type="button"
-                          style={ui.button}
-                          onClick={() => handleAccept(requestId)}
+                          style={ui.buttonSmall}
+                          onClick={() => handleAccept(item.requestId)}
                         >
                           Acceptă
                         </button>
                         <button
                           type="button"
-                          style={ui.button}
-                          onClick={() => handleReject(requestId)}
+                          style={ui.buttonSmall}
+                          onClick={() => handleReject(item.requestId)}
                         >
                           Respinge
                         </button>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    ) : null}
+                  </article>
+                );
+              })
             ) : (
-              <div style={{ opacity: 0.9 }}>Nu ai cereri de prietenie noi.</div>
-            )}
-          </div>
-        ) : null}
-      </section>
-
-      <section style={{ marginTop: "26px" }}>
-        <h2 style={{ margin: 0 }}>Aprecieri la review-uri</h2>
-
-        {!isLoading && !error ? (
-          <div style={{ ...ui.card, marginTop: "12px" }}>
-            {reviewLikes.length ? (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "10px",
-                }}
-              >
-                {reviewLikes.map((lk) => {
-                  const liker = String(lk?.liker_username || "").trim();
-                  const albumSlug = String(lk?.album_slug || "").trim();
-                  const albumTitle = String(lk?.album_title || "Album");
-                  const id = lk?.id;
-                  if (!id || !liker) return null;
-
-                  return (
-                    <div key={id} style={{ opacity: 0.95 }}>
-                      <Link to={`/users/${encodeURIComponent(liker)}`}>
-                        {liker}
-                      </Link>{" "}
-                      a apreciat review-ul tău la{" "}
-                      {albumSlug ? (
-                        <Link to={`/albums/${encodeURIComponent(albumSlug)}`}>
-                          {albumTitle}
-                        </Link>
-                      ) : (
-                        <span style={{ fontWeight: 700 }}>{albumTitle}</span>
-                      )}
-                      .
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div style={{ opacity: 0.9 }}>
-                Încă nu ai aprecieri la review-uri.
-              </div>
-            )}
-          </div>
-        ) : null}
-      </section>
-
-      <section style={{ marginTop: "26px" }}>
-        <h2 style={{ margin: 0 }}>Răspunsuri la review-uri</h2>
-
-        {!isLoading && !error ? (
-          <div style={{ ...ui.card, marginTop: "12px" }}>
-            {reviewReplies.length ? (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "10px",
-                }}
-              >
-                {reviewReplies.map((rp) => {
-                  const replier = String(rp?.replier_username || "").trim();
-                  const albumSlug = String(rp?.album_slug || "").trim();
-                  const albumTitle = String(rp?.album_title || "Album");
-                  const id = rp?.id;
-                  if (!id || !replier) return null;
-
-                  return (
-                    <div key={id} style={{ opacity: 0.95 }}>
-                      <Link to={`/users/${encodeURIComponent(replier)}`}>
-                        {replier}
-                      </Link>{" "}
-                      a răspuns la review-ul tău la{" "}
-                      {albumSlug ? (
-                        <Link to={`/albums/${encodeURIComponent(albumSlug)}`}>
-                          {albumTitle}
-                        </Link>
-                      ) : (
-                        <span style={{ fontWeight: 700 }}>{albumTitle}</span>
-                      )}
-                      .
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div style={{ opacity: 0.9 }}>
-                Încă nu ai răspunsuri la review-uri.
+              <div style={{ ...ui.card, opacity: 0.9 }}>
+                Nu ai notificări noi.
               </div>
             )}
           </div>

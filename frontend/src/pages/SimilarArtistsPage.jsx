@@ -78,7 +78,8 @@ export default function SimilarArtistsPage() {
 
   useEffect(() => {
     const nextArtist = String(searchParams.get("artist") || "").trim();
-    setArtistSlug(nextArtist);
+    const t = setTimeout(() => setArtistSlug(nextArtist), 0);
+    return () => clearTimeout(t);
   }, [searchParams]);
 
   useEffect(() => {
@@ -106,6 +107,7 @@ export default function SimilarArtistsPage() {
           setItems(Array.isArray(data) ? data : []);
         }
       } catch (err) {
+        console.error(err);
         if (!cancelled) {
           setError("Similar artists nu au putut fi incarcati.");
         }
@@ -116,10 +118,13 @@ export default function SimilarArtistsPage() {
       }
     }
 
-    load();
+    const t = setTimeout(() => {
+      load();
+    }, 0);
 
     return () => {
       cancelled = true;
+      clearTimeout(t);
     };
   }, [artistSlug, baseUrl, canLoad]);
 

@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
+from http.client import RemoteDisconnected
 from typing import Any
+from urllib import request
+from urllib.error import HTTPError, URLError
 
-import requests
 from decouple import config
 
 from .lastfm import LastFMClient, LastFMAPIError
@@ -23,7 +26,7 @@ class IntegrationClients:
 
 
 class CoverArtArchiveClient:
-    """Minimal Cover Art Archive client."""
+                                           
 
     def __init__(self, *, user_agent: str = "licenta-muzica") -> None:
         self._ua = user_agent
@@ -33,17 +36,29 @@ class CoverArtArchiveClient:
         if not mbid:
             return ""
 
-        res = requests.get(
+        req = request.Request(
             f"https://coverartarchive.org/release-group/{mbid}",
             headers={"User-Agent": self._ua},
-            timeout=30,
+            method="GET",
         )
-        if res.status_code == 404:
-            return ""
-        if res.status_code < 200 or res.status_code >= 300:
-            raise CoverArtArchiveError(f"Cover Art Archive error: {res.status_code} {res.text}")
+        try:
+            with request.urlopen(req, timeout=30) as res:
+                status = int(getattr(res, "status", 200))
+                body = res.read().decode("utf-8", errors="replace")
+        except HTTPError as exc:
+            if int(exc.code) == 404:
+                return ""
+            body = exc.read().decode("utf-8", errors="replace")
+            raise CoverArtArchiveError(f"Cover Art Archive error: {exc.code} {body}") from exc
+        except (URLError, TimeoutError, RemoteDisconnected) as exc:
+            raise CoverArtArchiveError(f"Cover Art Archive request failed: {exc}") from exc
 
-        data = res.json()
+        if status == 404:
+            return ""
+        if status < 200 or status >= 300:
+            raise CoverArtArchiveError(f"Cover Art Archive error: {status} {body}")
+
+        data = json.loads(body)
         if not isinstance(data, dict):
             raise CoverArtArchiveError("Unexpected Cover Art Archive response shape")
 
@@ -79,10 +94,10 @@ class ExternalLookupResult:
 
 
 class MusicExternalIntegrationService:
-    """Single orchestration layer for third-party music integrations.
-
-    The goal is to keep all vendor-specific clients behind one stable surface.
-    """
+\
+\
+\
+       
 
     def __init__(self) -> None:
         self._clients = IntegrationClients()

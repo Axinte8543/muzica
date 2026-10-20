@@ -56,9 +56,12 @@ export default function WeeklyChallengeRecapBanner({
 
   useEffect(() => {
     if (challengePayload && typeof challengePayload === "object") {
-      setError(null);
-      setIsLoading(false);
-      return;
+      // Defer state updates to avoid synchronous setState within effect
+      const t = setTimeout(() => {
+        setError(null);
+        setIsLoading(false);
+      }, 0);
+      return () => clearTimeout(t);
     }
 
     let cancelled = false;

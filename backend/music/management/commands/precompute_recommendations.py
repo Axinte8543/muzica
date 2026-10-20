@@ -28,7 +28,7 @@ class Command(BaseCommand):
         if max_users and max_users > 0:
             user_ids = user_ids[:max_users]
 
-        # Precompute global item neighbors once
+                                               
         self.stdout.write('Computing item neighbors...')
         compute_and_cache_neighbors(k=50)
 

@@ -90,7 +90,10 @@ export default function ProfileReviewsPage() {
   }, [accessToken, baseUrl, isAuthVerified, logout]);
 
   useEffect(() => {
-    setPage((prev) => Math.min(prev, totalPages));
+    const t = setTimeout(() => {
+      setPage((prev) => Math.min(prev, totalPages));
+    }, 0);
+    return () => clearTimeout(t);
   }, [totalPages]);
 
   if (!isAuthenticated) {
@@ -126,7 +129,7 @@ export default function ProfileReviewsPage() {
       <div style={{ padding: "24px" }}>
         <h1 style={{ marginTop: 0 }}>Review-urile mele</h1>
 
-        {isLoading ? <p>Loading reviews...</p> : null}
+        {isLoading ? <p>Se încarcă review-urile...</p> : null}
         {error ? <p style={ui.errorText}>{error}</p> : null}
 
         {!isLoading && !error ? (

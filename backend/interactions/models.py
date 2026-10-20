@@ -32,6 +32,19 @@ class SongRating(models.Model):
 		return f"{self.user} - {self.song} ({self.rating})"
 
 
+class ArtistRating(models.Model):
+	user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='artist_ratings')
+	artist = models.ForeignKey(Artist, on_delete=models.CASCADE, related_name='ratings')
+	rating = models.PositiveSmallIntegerField()
+	created_at = models.DateTimeField(auto_now_add=True)
+
+	class Meta:
+		unique_together = ('user', 'artist')
+
+	def __str__(self):
+		return f"{self.user} - {self.artist} ({self.rating})"
+
+
 class AlbumReview(models.Model):
 	user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='album_reviews')
 	album = models.ForeignKey(Album, on_delete=models.CASCADE, related_name='reviews')
@@ -46,14 +59,14 @@ class AlbumReview(models.Model):
 
 class AlbumReviewLike(models.Model):
 	user = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='album_review_likes',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='album_review_likes',
 	)
 	review = models.ForeignKey(
-		AlbumReview,
-		on_delete=models.CASCADE,
-		related_name='likes',
+	 AlbumReview,
+	 on_delete=models.CASCADE,
+	 related_name='likes',
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
 
@@ -65,27 +78,27 @@ class AlbumReviewLike(models.Model):
 
 
 class AlbumReviewReaction(models.Model):
-	"""Emoji reaction on an album review"""
+                                        
 	EMOJI_CHOICES = [
-		('👍', '👍 Thumbs Up'),
-		('❤️', '❤️ Heart'),
-		('😂', '😂 Laughing'),
-		('😮', '😮 Surprised'),
-		('😢', '😢 Sad'),
-		('🔥', '🔥 Fire'),
-		('👏', '👏 Clapping'),
-		('🎉', '🎉 Party'),
+	 ('👍', '👍 Thumbs Up'),
+	 ('❤️', '❤️ Heart'),
+	 ('😂', '😂 Laughing'),
+	 ('😮', '😮 Surprised'),
+	 ('😢', '😢 Sad'),
+	 ('🔥', '🔥 Fire'),
+	 ('👏', '👏 Clapping'),
+	 ('🎉', '🎉 Party'),
 	]
 
 	user = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='album_review_reactions',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='album_review_reactions',
 	)
 	review = models.ForeignKey(
-		AlbumReview,
-		on_delete=models.CASCADE,
-		related_name='reactions',
+	 AlbumReview,
+	 on_delete=models.CASCADE,
+	 related_name='reactions',
 	)
 	emoji = models.CharField(max_length=10, choices=EMOJI_CHOICES)
 	created_at = models.DateTimeField(auto_now_add=True)
@@ -94,8 +107,8 @@ class AlbumReviewReaction(models.Model):
 		unique_together = ('user', 'review', 'emoji')
 		ordering = ['created_at']
 		indexes = [
-			models.Index(fields=['review', 'emoji']),
-			models.Index(fields=['user', '-created_at']),
+		 models.Index(fields=['review', 'emoji']),
+		 models.Index(fields=['user', '-created_at']),
 		]
 
 	def __str__(self):
@@ -104,21 +117,21 @@ class AlbumReviewReaction(models.Model):
 
 class ReviewComment(models.Model):
 	user = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='review_comments',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='review_comments',
 	)
 	review = models.ForeignKey(
-		AlbumReview,
-		on_delete=models.CASCADE,
-		related_name='comments',
+	 AlbumReview,
+	 on_delete=models.CASCADE,
+	 related_name='comments',
 	)
 	parent = models.ForeignKey(
-		'self',
-		on_delete=models.CASCADE,
-		null=True,
-		blank=True,
-		related_name='replies',
+	 'self',
+	 on_delete=models.CASCADE,
+	 null=True,
+	 blank=True,
+	 related_name='replies',
 	)
 	content = models.TextField()
 	created_at = models.DateTimeField(auto_now_add=True)
@@ -127,9 +140,9 @@ class ReviewComment(models.Model):
 	class Meta:
 		ordering = ['created_at']
 		indexes = [
-			models.Index(fields=['review', 'created_at']),
-			models.Index(fields=['parent', 'created_at']),
-			models.Index(fields=['user', 'created_at']),
+		 models.Index(fields=['review', 'created_at']),
+		 models.Index(fields=['parent', 'created_at']),
+		 models.Index(fields=['user', 'created_at']),
 		]
 
 	def __str__(self):
@@ -138,28 +151,28 @@ class ReviewComment(models.Model):
 
 class ReviewCommentMention(models.Model):
 	comment = models.ForeignKey(
-		ReviewComment,
-		on_delete=models.CASCADE,
-		related_name='mentions',
+	 ReviewComment,
+	 on_delete=models.CASCADE,
+	 related_name='mentions',
 	)
 	mentioned_user = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='review_comment_mentions',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='review_comment_mentions',
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
 
 	class Meta:
 		ordering = ['-created_at']
 		constraints = [
-			models.UniqueConstraint(
-				fields=['comment', 'mentioned_user'],
-				name='unique_review_comment_mention',
-			),
+		 models.UniqueConstraint(
+		  fields=['comment', 'mentioned_user'],
+		  name='unique_review_comment_mention',
+		 ),
 		]
 		indexes = [
-			models.Index(fields=['mentioned_user', '-created_at']),
-			models.Index(fields=['comment', '-created_at']),
+		 models.Index(fields=['mentioned_user', '-created_at']),
+		 models.Index(fields=['comment', '-created_at']),
 		]
 
 	def __str__(self):
@@ -168,16 +181,16 @@ class ReviewCommentMention(models.Model):
 
 class ReviewCommentEdit(models.Model):
 	comment = models.ForeignKey(
-		ReviewComment,
-		on_delete=models.CASCADE,
-		related_name='edits',
+	 ReviewComment,
+	 on_delete=models.CASCADE,
+	 related_name='edits',
 	)
 	edited_by = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.SET_NULL,
-		null=True,
-		blank=True,
-		related_name='review_comment_edits',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.SET_NULL,
+	 null=True,
+	 blank=True,
+	 related_name='review_comment_edits',
 	)
 	previous_content = models.TextField(blank=True, default='')
 	edited_at = models.DateTimeField(auto_now_add=True)
@@ -185,7 +198,7 @@ class ReviewCommentEdit(models.Model):
 	class Meta:
 		ordering = ['-edited_at', '-id']
 		indexes = [
-			models.Index(fields=['comment', '-edited_at']),
+		 models.Index(fields=['comment', '-edited_at']),
 		]
 
 	def __str__(self) -> str:
@@ -194,21 +207,21 @@ class ReviewCommentEdit(models.Model):
 
 class SongComment(models.Model):
 	user = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='song_comments',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='song_comments',
 	)
 	song = models.ForeignKey(
-		Song,
-		on_delete=models.CASCADE,
-		related_name='comments',
+	 Song,
+	 on_delete=models.CASCADE,
+	 related_name='comments',
 	)
 	parent = models.ForeignKey(
-		'self',
-		on_delete=models.CASCADE,
-		null=True,
-		blank=True,
-		related_name='replies',
+	 'self',
+	 on_delete=models.CASCADE,
+	 null=True,
+	 blank=True,
+	 related_name='replies',
 	)
 	content = models.TextField()
 	created_at = models.DateTimeField(auto_now_add=True)
@@ -217,9 +230,9 @@ class SongComment(models.Model):
 	class Meta:
 		ordering = ['created_at']
 		indexes = [
-			models.Index(fields=['song', 'created_at']),
-			models.Index(fields=['parent', 'created_at']),
-			models.Index(fields=['user', 'created_at']),
+		 models.Index(fields=['song', 'created_at']),
+		 models.Index(fields=['parent', 'created_at']),
+		 models.Index(fields=['user', 'created_at']),
 		]
 
 	def __str__(self):
@@ -228,28 +241,28 @@ class SongComment(models.Model):
 
 class SongCommentMention(models.Model):
 	comment = models.ForeignKey(
-		SongComment,
-		on_delete=models.CASCADE,
-		related_name='mentions',
+	 SongComment,
+	 on_delete=models.CASCADE,
+	 related_name='mentions',
 	)
 	mentioned_user = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='song_comment_mentions',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='song_comment_mentions',
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
 
 	class Meta:
 		ordering = ['-created_at']
 		constraints = [
-			models.UniqueConstraint(
-				fields=['comment', 'mentioned_user'],
-				name='unique_song_comment_mention',
-			),
+		 models.UniqueConstraint(
+		  fields=['comment', 'mentioned_user'],
+		  name='unique_song_comment_mention',
+		 ),
 		]
 		indexes = [
-			models.Index(fields=['mentioned_user', '-created_at']),
-			models.Index(fields=['comment', '-created_at']),
+		 models.Index(fields=['mentioned_user', '-created_at']),
+		 models.Index(fields=['comment', '-created_at']),
 		]
 
 	def __str__(self):
@@ -258,16 +271,16 @@ class SongCommentMention(models.Model):
 
 class SongCommentEdit(models.Model):
 	comment = models.ForeignKey(
-		SongComment,
-		on_delete=models.CASCADE,
-		related_name='edits',
+	 SongComment,
+	 on_delete=models.CASCADE,
+	 related_name='edits',
 	)
 	edited_by = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.SET_NULL,
-		null=True,
-		blank=True,
-		related_name='song_comment_edits',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.SET_NULL,
+	 null=True,
+	 blank=True,
+	 related_name='song_comment_edits',
 	)
 	previous_content = models.TextField(blank=True, default='')
 	edited_at = models.DateTimeField(auto_now_add=True)
@@ -275,7 +288,7 @@ class SongCommentEdit(models.Model):
 	class Meta:
 		ordering = ['-edited_at', '-id']
 		indexes = [
-			models.Index(fields=['comment', '-edited_at']),
+		 models.Index(fields=['comment', '-edited_at']),
 		]
 
 	def __str__(self) -> str:
@@ -290,14 +303,14 @@ class FavoriteAlbum(models.Model):
 		FOUR = 4, '4'
 
 	user = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='favorite_albums',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='favorite_albums',
 	)
 	album = models.ForeignKey(
-		Album,
-		on_delete=models.CASCADE,
-		related_name='favorited_by',
+	 Album,
+	 on_delete=models.CASCADE,
+	 related_name='favorited_by',
 	)
 	position = models.PositiveSmallIntegerField(choices=Position.choices)
 	created_at = models.DateTimeField(auto_now_add=True)
@@ -305,12 +318,12 @@ class FavoriteAlbum(models.Model):
 
 	class Meta:
 		constraints = [
-			models.UniqueConstraint(fields=['user', 'position'], name='unique_favorite_album_position_per_user'),
-			models.UniqueConstraint(fields=['user', 'album'], name='unique_favorite_album_per_user'),
+		 models.UniqueConstraint(fields=['user', 'position'], name='unique_favorite_album_position_per_user'),
+		 models.UniqueConstraint(fields=['user', 'album'], name='unique_favorite_album_per_user'),
 		]
 		ordering = ['position', 'id']
 		indexes = [
-			models.Index(fields=['user', 'position']),
+		 models.Index(fields=['user', 'position']),
 		]
 
 	def __str__(self):
@@ -325,14 +338,14 @@ class FavoriteSong(models.Model):
 		FOUR = 4, '4'
 
 	user = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='favorite_songs',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='favorite_songs',
 	)
 	song = models.ForeignKey(
-		Song,
-		on_delete=models.CASCADE,
-		related_name='favorited_by',
+	 Song,
+	 on_delete=models.CASCADE,
+	 related_name='favorited_by',
 	)
 	position = models.PositiveSmallIntegerField(choices=Position.choices)
 	created_at = models.DateTimeField(auto_now_add=True)
@@ -340,12 +353,12 @@ class FavoriteSong(models.Model):
 
 	class Meta:
 		constraints = [
-			models.UniqueConstraint(fields=['user', 'position'], name='unique_favorite_song_position_per_user'),
-			models.UniqueConstraint(fields=['user', 'song'], name='unique_favorite_song_per_user'),
+		 models.UniqueConstraint(fields=['user', 'position'], name='unique_favorite_song_position_per_user'),
+		 models.UniqueConstraint(fields=['user', 'song'], name='unique_favorite_song_per_user'),
 		]
 		ordering = ['position', 'id']
 		indexes = [
-			models.Index(fields=['user', 'position']),
+		 models.Index(fields=['user', 'position']),
 		]
 
 	def __str__(self):
@@ -354,30 +367,30 @@ class FavoriteSong(models.Model):
 
 class AlbumListen(models.Model):
 	user = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='album_listens',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='album_listens',
 	)
 	album = models.ForeignKey(
-		Album,
-		on_delete=models.CASCADE,
-		related_name='listens',
+	 Album,
+	 on_delete=models.CASCADE,
+	 related_name='listens',
 	)
 	listened_at = models.DateTimeField(auto_now_add=True)
-	# Used to enforce 1 listen/day/user/album and to query by date cheaply.
+                                                                        
 	listened_date = models.DateField(default=timezone.localdate, db_index=True)
 
 	class Meta:
 		constraints = [
-			models.UniqueConstraint(
-				fields=['user', 'album', 'listened_date'],
-				name='unique_album_listen_per_day',
-			),
+		 models.UniqueConstraint(
+		  fields=['user', 'album', 'listened_date'],
+		  name='unique_album_listen_per_day',
+		 ),
 		]
 		ordering = ['-listened_at']
 		indexes = [
-			models.Index(fields=['album', '-listened_at']),
-			models.Index(fields=['user', '-listened_at']),
+		 models.Index(fields=['album', '-listened_at']),
+		 models.Index(fields=['user', '-listened_at']),
 		]
 
 	def __str__(self):
@@ -386,28 +399,28 @@ class AlbumListen(models.Model):
 
 class WantToListen(models.Model):
 	user = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='want_to_listen',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='want_to_listen',
 	)
 	album = models.ForeignKey(
-		Album,
-		on_delete=models.CASCADE,
-		related_name='wanted_by',
+	 Album,
+	 on_delete=models.CASCADE,
+	 related_name='wanted_by',
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
 
 	class Meta:
 		constraints = [
-			models.UniqueConstraint(
-				fields=['user', 'album'],
-				name='unique_want_to_listen_per_user_album',
-			),
+		 models.UniqueConstraint(
+		  fields=['user', 'album'],
+		  name='unique_want_to_listen_per_user_album',
+		 ),
 		]
 		ordering = ['-created_at', '-id']
 		indexes = [
-			models.Index(fields=['user', '-created_at'], name='w2l_user_created_idx'),
-			models.Index(fields=['album', '-created_at'], name='w2l_album_created_idx'),
+		 models.Index(fields=['user', '-created_at'], name='w2l_user_created_idx'),
+		 models.Index(fields=['album', '-created_at'], name='w2l_album_created_idx'),
 		]
 
 	def __str__(self):
@@ -416,28 +429,28 @@ class WantToListen(models.Model):
 
 class AlbumLike(models.Model):
 	user = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='album_likes',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='album_likes',
 	)
 	album = models.ForeignKey(
-		Album,
-		on_delete=models.CASCADE,
-		related_name='liked_by',
+	 Album,
+	 on_delete=models.CASCADE,
+	 related_name='liked_by',
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
 
 	class Meta:
 		constraints = [
-			models.UniqueConstraint(
-				fields=['user', 'album'],
-				name='unique_album_like_per_user_album',
-			),
+		 models.UniqueConstraint(
+		  fields=['user', 'album'],
+		  name='unique_album_like_per_user_album',
+		 ),
 		]
 		ordering = ['-created_at', '-id']
 		indexes = [
-			models.Index(fields=['user', '-created_at'], name='al_user_created_idx'),
-			models.Index(fields=['album', '-created_at'], name='al_album_created_idx'),
+		 models.Index(fields=['user', '-created_at'], name='al_user_created_idx'),
+		 models.Index(fields=['album', '-created_at'], name='al_album_created_idx'),
 		]
 
 	def __str__(self):
@@ -446,28 +459,28 @@ class AlbumLike(models.Model):
 
 class SongLike(models.Model):
 	user = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='song_likes',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='song_likes',
 	)
 	song = models.ForeignKey(
-		Song,
-		on_delete=models.CASCADE,
-		related_name='liked_by',
+	 Song,
+	 on_delete=models.CASCADE,
+	 related_name='liked_by',
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
 
 	class Meta:
 		constraints = [
-			models.UniqueConstraint(
-				fields=['user', 'song'],
-				name='unique_song_like_per_user_song',
-			),
+		 models.UniqueConstraint(
+		  fields=['user', 'song'],
+		  name='unique_song_like_per_user_song',
+		 ),
 		]
 		ordering = ['-created_at', '-id']
 		indexes = [
-			models.Index(fields=['user', '-created_at'], name='sl_user_created_idx'),
-			models.Index(fields=['song', '-created_at'], name='sl_song_created_idx'),
+		 models.Index(fields=['user', '-created_at'], name='sl_user_created_idx'),
+		 models.Index(fields=['song', '-created_at'], name='sl_song_created_idx'),
 		]
 
 	def __str__(self):
@@ -476,9 +489,9 @@ class SongLike(models.Model):
 
 class List(models.Model):
 	user = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='lists',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='lists',
 	)
 	name = models.CharField(max_length=255)
 	description = models.TextField(blank=True, default='')
@@ -487,21 +500,21 @@ class List(models.Model):
 	updated_at = models.DateTimeField(auto_now=True)
 
 	albums = models.ManyToManyField(
-		Album,
-		through='ListAlbum',
-		related_name='in_lists',
-		blank=True,
+	 Album,
+	 through='ListAlbum',
+	 related_name='in_lists',
+	 blank=True,
 	)
 
 	tags = models.ManyToManyField(
-		'ListTag',
-		related_name='lists',
-		blank=True,
+	 'ListTag',
+	 related_name='lists',
+	 blank=True,
 	)
 
 	class Meta:
 		constraints = [
-			models.UniqueConstraint(fields=['user', 'name'], name='unique_list_name_per_user'),
+		 models.UniqueConstraint(fields=['user', 'name'], name='unique_list_name_per_user'),
 		]
 		ordering = ['-created_at']
 
@@ -511,25 +524,25 @@ class List(models.Model):
 
 class ListLike(models.Model):
 	user = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='list_likes',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='list_likes',
 	)
 	list = models.ForeignKey(
-		List,
-		on_delete=models.CASCADE,
-		related_name='likes',
+	 List,
+	 on_delete=models.CASCADE,
+	 related_name='likes',
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
 
 	class Meta:
 		constraints = [
-			models.UniqueConstraint(fields=['user', 'list'], name='unique_list_like'),
+		 models.UniqueConstraint(fields=['user', 'list'], name='unique_list_like'),
 		]
 		ordering = ['-created_at']
 		indexes = [
-			models.Index(fields=['list', '-created_at']),
-			models.Index(fields=['user', '-created_at']),
+		 models.Index(fields=['list', '-created_at']),
+		 models.Index(fields=['user', '-created_at']),
 		]
 
 	def __str__(self):
@@ -557,20 +570,20 @@ class ListMembership(models.Model):
 
 	list = models.ForeignKey(List, on_delete=models.CASCADE, related_name='memberships')
 	user = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='list_memberships',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='list_memberships',
 	)
 	role = models.CharField(max_length=20, choices=Role.choices, default=Role.EDITOR)
 	created_at = models.DateTimeField(auto_now_add=True)
 
 	class Meta:
 		constraints = [
-			models.UniqueConstraint(fields=['list', 'user'], name='unique_list_membership'),
+		 models.UniqueConstraint(fields=['list', 'user'], name='unique_list_membership'),
 		]
 		indexes = [
-			models.Index(fields=['user', 'role']),
-			models.Index(fields=['list', 'role']),
+		 models.Index(fields=['user', 'role']),
+		 models.Index(fields=['list', 'role']),
 		]
 
 	def __str__(self):
@@ -579,20 +592,20 @@ class ListMembership(models.Model):
 
 class ListTag(models.Model):
 	owner = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='list_tags',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='list_tags',
 	)
 	name = models.CharField(max_length=50)
 	created_at = models.DateTimeField(auto_now_add=True)
 
 	class Meta:
 		constraints = [
-			models.UniqueConstraint(fields=['owner', 'name'], name='unique_list_tag_per_owner'),
+		 models.UniqueConstraint(fields=['owner', 'name'], name='unique_list_tag_per_owner'),
 		]
 		ordering = ['name', 'id']
 		indexes = [
-			models.Index(fields=['owner', 'name']),
+		 models.Index(fields=['owner', 'name']),
 		]
 
 	def __str__(self):
@@ -601,14 +614,14 @@ class ListTag(models.Model):
 
 class ListAlbumNote(models.Model):
 	list_album = models.ForeignKey(
-		ListAlbum,
-		on_delete=models.CASCADE,
-		related_name='notes',
+	 ListAlbum,
+	 on_delete=models.CASCADE,
+	 related_name='notes',
 	)
 	user = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='list_album_notes',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='list_album_notes',
 	)
 	note = models.TextField(blank=True, default='')
 	updated_at = models.DateTimeField(auto_now=True)
@@ -616,11 +629,11 @@ class ListAlbumNote(models.Model):
 
 	class Meta:
 		constraints = [
-			models.UniqueConstraint(fields=['list_album', 'user'], name='unique_list_album_note'),
+		 models.UniqueConstraint(fields=['list_album', 'user'], name='unique_list_album_note'),
 		]
 		indexes = [
-			models.Index(fields=['user', '-updated_at']),
-			models.Index(fields=['list_album', '-updated_at']),
+		 models.Index(fields=['user', '-updated_at']),
+		 models.Index(fields=['list_album', '-updated_at']),
 		]
 
 	def __str__(self):
@@ -629,16 +642,16 @@ class ListAlbumNote(models.Model):
 
 class AlbumReviewEdit(models.Model):
 	review = models.ForeignKey(
-		AlbumReview,
-		on_delete=models.CASCADE,
-		related_name='edits',
+	 AlbumReview,
+	 on_delete=models.CASCADE,
+	 related_name='edits',
 	)
 	edited_by = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.SET_NULL,
-		null=True,
-		blank=True,
-		related_name='album_review_edits',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.SET_NULL,
+	 null=True,
+	 blank=True,
+	 related_name='album_review_edits',
 	)
 	previous_title = models.CharField(max_length=255, blank=True)
 	previous_content = models.TextField(blank=True)
@@ -647,7 +660,7 @@ class AlbumReviewEdit(models.Model):
 	class Meta:
 		ordering = ['-edited_at', '-id']
 		indexes = [
-			models.Index(fields=['review', '-edited_at']),
+		 models.Index(fields=['review', '-edited_at']),
 		]
 
 	def __str__(self):
@@ -656,14 +669,14 @@ class AlbumReviewEdit(models.Model):
 
 class AlbumReviewDraft(models.Model):
 	user = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='album_review_drafts',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='album_review_drafts',
 	)
 	album = models.ForeignKey(
-		Album,
-		on_delete=models.CASCADE,
-		related_name='review_drafts',
+	 Album,
+	 on_delete=models.CASCADE,
+	 related_name='review_drafts',
 	)
 	title = models.CharField(max_length=255, blank=True, default='')
 	content = models.TextField(blank=True, default='')
@@ -672,11 +685,11 @@ class AlbumReviewDraft(models.Model):
 
 	class Meta:
 		constraints = [
-			models.UniqueConstraint(fields=['user', 'album'], name='unique_review_draft_per_user_album'),
+		 models.UniqueConstraint(fields=['user', 'album'], name='unique_review_draft_per_user_album'),
 		]
 		indexes = [
-			models.Index(fields=['user', '-updated_at']),
-			models.Index(fields=['album', '-updated_at']),
+		 models.Index(fields=['user', '-updated_at']),
+		 models.Index(fields=['album', '-updated_at']),
 		]
 
 	def __str__(self):
@@ -695,41 +708,41 @@ class ModerationReport(models.Model):
 		RESOLVED = 'resolved', 'Resolved'
 
 	reporter = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='moderation_reports',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='moderation_reports',
 	)
 	review = models.ForeignKey(
-		AlbumReview,
-		on_delete=models.CASCADE,
-		null=True,
-		blank=True,
-		related_name='reports',
+	 AlbumReview,
+	 on_delete=models.CASCADE,
+	 null=True,
+	 blank=True,
+	 related_name='reports',
 	)
 	review_comment = models.ForeignKey(
-		ReviewComment,
-		on_delete=models.CASCADE,
-		null=True,
-		blank=True,
-		related_name='reports',
+	 ReviewComment,
+	 on_delete=models.CASCADE,
+	 null=True,
+	 blank=True,
+	 related_name='reports',
 	)
 	song_comment = models.ForeignKey(
-		SongComment,
-		on_delete=models.CASCADE,
-		null=True,
-		blank=True,
-		related_name='reports',
+	 SongComment,
+	 on_delete=models.CASCADE,
+	 null=True,
+	 blank=True,
+	 related_name='reports',
 	)
 	reason_code = models.CharField(max_length=20, choices=ReasonCode.choices, default=ReasonCode.OTHER)
 	reason = models.TextField(blank=True, default='')
 	status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
 	created_at = models.DateTimeField(auto_now_add=True)
 	resolved_by = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.SET_NULL,
-		null=True,
-		blank=True,
-		related_name='resolved_moderation_reports',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.SET_NULL,
+	 null=True,
+	 blank=True,
+	 related_name='resolved_moderation_reports',
 	)
 	resolved_at = models.DateTimeField(null=True, blank=True)
 	resolution_reason = models.CharField(max_length=255, blank=True, default='')
@@ -738,27 +751,27 @@ class ModerationReport(models.Model):
 	class Meta:
 		ordering = ['-created_at', '-id']
 		constraints = [
-			models.CheckConstraint(
-				name='moderation_report_has_target',
-				condition=(
-					Q(review__isnull=False)
-					| Q(review_comment__isnull=False)
-					| Q(song_comment__isnull=False)
-				),
-			),
-			models.CheckConstraint(
-				name='moderation_report_one_target_only',
-				condition=(
-					~(Q(review__isnull=False) & Q(review_comment__isnull=False))
-					& ~(Q(review__isnull=False) & Q(song_comment__isnull=False))
-					& ~(Q(review_comment__isnull=False) & Q(song_comment__isnull=False))
-				),
-			),
+		 models.CheckConstraint(
+		  name='moderation_report_has_target',
+		  condition=(
+		   Q(review__isnull=False)
+		   | Q(review_comment__isnull=False)
+		   | Q(song_comment__isnull=False)
+		  ),
+		 ),
+		 models.CheckConstraint(
+		  name='moderation_report_one_target_only',
+		  condition=(
+		   ~(Q(review__isnull=False) & Q(review_comment__isnull=False))
+		   & ~(Q(review__isnull=False) & Q(song_comment__isnull=False))
+		   & ~(Q(review_comment__isnull=False) & Q(song_comment__isnull=False))
+		  ),
+		 ),
 		]
 		indexes = [
-			models.Index(fields=['status', '-created_at']),
-			models.Index(fields=['reason_code', 'status', '-created_at']),
-			models.Index(fields=['reporter', '-created_at']),
+		 models.Index(fields=['status', '-created_at']),
+		 models.Index(fields=['reason_code', 'status', '-created_at']),
+		 models.Index(fields=['reporter', '-created_at']),
 		]
 
 	def __str__(self):
@@ -766,7 +779,7 @@ class ModerationReport(models.Model):
 
 
 class UserSuspension(models.Model):
-	"""Track user suspensions/bans due to moderation"""
+                                                    
 	class SuspensionReason(models.TextChoices):
 		CONTENT_VIOLATION = 'content_violation', 'Content Violation'
 		SPAM = 'spam', 'Spam'
@@ -783,36 +796,36 @@ class UserSuspension(models.Model):
 		CUSTOM = 'custom', 'Custom'
 
 	user = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='suspensions',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='suspensions',
 	)
 	reason = models.CharField(
-		max_length=50,
-		choices=SuspensionReason.choices,
-		default=SuspensionReason.OTHER,
+	 max_length=50,
+	 choices=SuspensionReason.choices,
+	 default=SuspensionReason.OTHER,
 	)
 	duration_type = models.CharField(
-		max_length=20,
-		choices=SuspensionDuration.choices,
-		default=SuspensionDuration.ONE_MONTH,
+	 max_length=20,
+	 choices=SuspensionDuration.choices,
+	 default=SuspensionDuration.ONE_MONTH,
 	)
 	suspended_at = models.DateTimeField(auto_now_add=True)
 	suspended_until = models.DateTimeField(null=True, blank=True)
 	reason_detail = models.TextField(blank=True)
 	suspended_by = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.SET_NULL,
-		null=True,
-		blank=True,
-		related_name='suspensions_issued',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.SET_NULL,
+	 null=True,
+	 blank=True,
+	 related_name='suspensions_issued',
 	)
 	related_report = models.ForeignKey(
-		ModerationReport,
-		on_delete=models.SET_NULL,
-		null=True,
-		blank=True,
-		related_name='suspensions',
+	 ModerationReport,
+	 on_delete=models.SET_NULL,
+	 null=True,
+	 blank=True,
+	 related_name='suspensions',
 	)
 	is_active = models.BooleanField(default=True)
 	appeal_at = models.DateTimeField(null=True, blank=True)
@@ -822,8 +835,8 @@ class UserSuspension(models.Model):
 	class Meta:
 		ordering = ['-suspended_at', '-id']
 		indexes = [
-			models.Index(fields=['user', '-suspended_at']),
-			models.Index(fields=['is_active', '-suspended_at']),
+		 models.Index(fields=['user', '-suspended_at']),
+		 models.Index(fields=['is_active', '-suspended_at']),
 		]
 
 	def __str__(self):
@@ -831,7 +844,7 @@ class UserSuspension(models.Model):
 
 	@property
 	def is_expired(self):
-		"""Check if suspension has expired"""
+                                       
 		if self.suspended_until and timezone.now() > self.suspended_until:
 			return True
 		return False
@@ -839,14 +852,14 @@ class UserSuspension(models.Model):
 
 class ArtistFollow(models.Model):
 	user = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='artist_follows',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='artist_follows',
 	)
 	artist = models.ForeignKey(
-		Artist,
-		on_delete=models.CASCADE,
-		related_name='followers',
+	 Artist,
+	 on_delete=models.CASCADE,
+	 related_name='followers',
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
 
@@ -865,21 +878,21 @@ class FriendRequest(models.Model):
 		REJECTED = 'rejected', 'Rejected'
 
 	sender = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='sent_friend_requests',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='sent_friend_requests',
 	)
 	receiver = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='received_friend_requests',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='received_friend_requests',
 	)
 	status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
 	created_at = models.DateTimeField(auto_now_add=True)
 
 	class Meta:
 		constraints = [
-			models.UniqueConstraint(fields=['sender', 'receiver'], name='unique_friend_request_pair'),
+		 models.UniqueConstraint(fields=['sender', 'receiver'], name='unique_friend_request_pair'),
 		]
 		ordering = ['-created_at']
 
@@ -897,12 +910,12 @@ class UserActivity(models.Model):
 		LIST_ADD_ALBUM = 'list_add_album', 'Add album to list'
 
 	actor = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='activities',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='activities',
 	)
 	activity_type = models.CharField(max_length=30, choices=Type.choices)
-	# Minimal denormalized target info so we can render the feed cheaply.
+                                                                      
 	target_id = models.IntegerField(null=True, blank=True)
 	target_name = models.CharField(max_length=255, blank=True)
 	rating = models.PositiveSmallIntegerField(null=True, blank=True)
@@ -911,9 +924,9 @@ class UserActivity(models.Model):
 	class Meta:
 		ordering = ['-created_at']
 		indexes = [
-			models.Index(fields=['-created_at']),
-			models.Index(fields=['actor', '-created_at']),
-			models.Index(fields=['activity_type', '-created_at']),
+		 models.Index(fields=['-created_at']),
+		 models.Index(fields=['actor', '-created_at']),
+		 models.Index(fields=['activity_type', '-created_at']),
 		]
 
 	def __str__(self):
@@ -931,9 +944,9 @@ class SensitiveActionAudit(models.Model):
 		METADATA_SUGGESTION_DECIDED = 'metadata_suggestion_decided', 'Metadata suggestion decided'
 
 	actor = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='sensitive_action_audits',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='sensitive_action_audits',
 	)
 	action_type = models.CharField(max_length=48, choices=ActionType.choices)
 	target_type = models.CharField(max_length=64)
@@ -945,10 +958,10 @@ class SensitiveActionAudit(models.Model):
 	class Meta:
 		ordering = ['-created_at', '-id']
 		indexes = [
-			models.Index(fields=['-created_at']),
-			models.Index(fields=['actor', '-created_at']),
-			models.Index(fields=['action_type', '-created_at']),
-			models.Index(fields=['target_type', 'target_id']),
+		 models.Index(fields=['-created_at']),
+		 models.Index(fields=['actor', '-created_at']),
+		 models.Index(fields=['action_type', '-created_at']),
+		 models.Index(fields=['target_type', 'target_id']),
 		]
 
 	def __str__(self):
@@ -957,9 +970,9 @@ class SensitiveActionAudit(models.Model):
 
 class AnalyticsEvent(models.Model):
 	user = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='analytics_events',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='analytics_events',
 	)
 	event_name = models.CharField(max_length=64)
 	target_type = models.CharField(max_length=64, blank=True, default='')
@@ -970,10 +983,10 @@ class AnalyticsEvent(models.Model):
 	class Meta:
 		ordering = ['-created_at', '-id']
 		indexes = [
-			models.Index(fields=['-created_at']),
-			models.Index(fields=['user', '-created_at']),
-			models.Index(fields=['event_name', '-created_at']),
-			models.Index(fields=['target_type', 'target_id']),
+		 models.Index(fields=['-created_at']),
+		 models.Index(fields=['user', '-created_at']),
+		 models.Index(fields=['event_name', '-created_at']),
+		 models.Index(fields=['target_type', 'target_id']),
 		]
 
 	def __str__(self):
@@ -991,12 +1004,12 @@ class NotificationPreferences(models.Model):
 		EMAIL = 'email', 'Email'
 
 	user = models.OneToOneField(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='notification_preferences',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='notification_preferences',
 	)
 
-	# Notification categories
+                          
 	notify_friend_requests = models.BooleanField(default=True)
 	notify_review_likes = models.BooleanField(default=True)
 	notify_review_replies = models.BooleanField(default=True)
@@ -1004,23 +1017,21 @@ class NotificationPreferences(models.Model):
 	notify_artist_follows = models.BooleanField(default=True)
 	notify_followed_artist_releases = models.BooleanField(default=True)
 	notify_genre_releases = models.BooleanField(default=True)
-	notify_release_reminders = models.BooleanField(default=True)
-	release_reminder_days = models.PositiveSmallIntegerField(default=3)
 	notify_achievement_unlocks = models.BooleanField(default=True)
 
-	# Digest categories
+                    
 	notify_friends_activity = models.BooleanField(default=True)
 
-	# Digest scheduling (used for in-app summary; email delivery can be added later)
+                                                                                 
 	digest_frequency = models.CharField(
-		max_length=10,
-		choices=DigestFrequency.choices,
-		default=DigestFrequency.OFF,
+	 max_length=10,
+	 choices=DigestFrequency.choices,
+	 default=DigestFrequency.OFF,
 	)
 	digest_channel = models.CharField(
-		max_length=10,
-		choices=DigestChannel.choices,
-		default=DigestChannel.IN_APP,
+	 max_length=10,
+	 choices=DigestChannel.choices,
+	 default=DigestChannel.IN_APP,
 	)
 
 	updated_at = models.DateTimeField(auto_now=True)
@@ -1031,21 +1042,21 @@ class NotificationPreferences(models.Model):
 
 class ChatMessage(models.Model):
 	sender = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='sent_messages',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='sent_messages',
 	)
 	recipient = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='received_messages',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='received_messages',
 	)
 	reply_to = models.ForeignKey(
-		'self',
-		on_delete=models.SET_NULL,
-		null=True,
-		blank=True,
-		related_name='replies',
+	 'self',
+	 on_delete=models.SET_NULL,
+	 null=True,
+	 blank=True,
+	 related_name='replies',
 	)
 	content = models.TextField()
 	is_read = models.BooleanField(default=False)
@@ -1054,9 +1065,9 @@ class ChatMessage(models.Model):
 	class Meta:
 		ordering = ['created_at']
 		indexes = [
-			models.Index(fields=['sender', 'recipient', '-created_at']),
-			models.Index(fields=['recipient', 'is_read']),
-			models.Index(fields=['reply_to']),
+		 models.Index(fields=['sender', 'recipient', '-created_at']),
+		 models.Index(fields=['recipient', 'is_read']),
+		 models.Index(fields=['reply_to']),
 		]
 
 	def __str__(self):
@@ -1066,30 +1077,30 @@ class ChatMessage(models.Model):
 
 
 class ChatTypingStatus(models.Model):
-	"""Tracks temporary typing state between two users in DMs."""
+                                                              
 	user = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='typing_statuses',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='typing_statuses',
 	)
 	partner = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='typing_statuses_for_partner',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='typing_statuses_for_partner',
 	)
 	is_typing = models.BooleanField(default=False)
 	updated_at = models.DateTimeField(auto_now=True)
 
 	class Meta:
 		constraints = [
-			models.UniqueConstraint(
-				fields=['user', 'partner'],
-				name='unique_typing_status_per_pair',
-			),
+		 models.UniqueConstraint(
+		  fields=['user', 'partner'],
+		  name='unique_typing_status_per_pair',
+		 ),
 		]
 		indexes = [
-			models.Index(fields=['partner', 'is_typing', '-updated_at']),
-			models.Index(fields=['user', 'partner']),
+		 models.Index(fields=['partner', 'is_typing', '-updated_at']),
+		 models.Index(fields=['user', 'partner']),
 		]
 
 	def __str__(self):
@@ -1097,22 +1108,22 @@ class ChatTypingStatus(models.Model):
 
 
 class UserOnboarding(models.Model):
-	"""Track user's first-time onboarding: genre/artist preferences."""
+                                                                    
 	user = models.OneToOneField(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='onboarding',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='onboarding',
 	)
 	is_completed = models.BooleanField(default=False)
 	preferred_genres = models.ManyToManyField(
-		'music.Genre',
-		blank=True,
-		related_name='onboarded_users',
+	 'music.Genre',
+	 blank=True,
+	 related_name='onboarded_users',
 	)
 	preferred_artists = models.ManyToManyField(
-		Artist,
-		blank=True,
-		related_name='onboarded_users',
+	 Artist,
+	 blank=True,
+	 related_name='onboarded_users',
 	)
 	completed_at = models.DateTimeField(null=True, blank=True)
 	created_at = models.DateTimeField(auto_now_add=True)
@@ -1128,11 +1139,11 @@ class UserOnboarding(models.Model):
 
 class CorrectionReport(models.Model):
 	user = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.SET_NULL,
-		null=True,
-		blank=True,
-		related_name='correction_reports',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.SET_NULL,
+	 null=True,
+	 blank=True,
+	 related_name='correction_reports',
 	)
 	page_url = models.CharField(max_length=500, blank=True)
 	description = models.TextField()
@@ -1141,8 +1152,8 @@ class CorrectionReport(models.Model):
 	class Meta:
 		ordering = ['-created_at', '-id']
 		indexes = [
-			models.Index(fields=['-created_at']),
-			models.Index(fields=['user', '-created_at']),
+		 models.Index(fields=['-created_at']),
+		 models.Index(fields=['user', '-created_at']),
 		]
 
 	def __str__(self):
@@ -1152,11 +1163,11 @@ class CorrectionReport(models.Model):
 
 
 class MetadataSuggestion(models.Model):
-	"""Crowdsourced metadata corrections with an approval flow.
-
-	Targets only approved catalog entries (artist/album/song). Moderators can
-	approve/reject suggestions; approval may optionally apply changes.
-	"""
+\
+\
+\
+\
+    
 
 	class Kind(models.TextChoices):
 		RELEASE_DATE = 'release_date', 'Release date'
@@ -1174,73 +1185,73 @@ class MetadataSuggestion(models.Model):
 		REJECTED = 'rejected', 'Rejected'
 
 	suggester = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='metadata_suggestions',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='metadata_suggestions',
 	)
 	artist = models.ForeignKey(
-		Artist,
-		on_delete=models.CASCADE,
-		null=True,
-		blank=True,
-		related_name='metadata_suggestions',
+	 Artist,
+	 on_delete=models.CASCADE,
+	 null=True,
+	 blank=True,
+	 related_name='metadata_suggestions',
 	)
 	album = models.ForeignKey(
-		Album,
-		on_delete=models.CASCADE,
-		null=True,
-		blank=True,
-		related_name='metadata_suggestions',
+	 Album,
+	 on_delete=models.CASCADE,
+	 null=True,
+	 blank=True,
+	 related_name='metadata_suggestions',
 	)
 	song = models.ForeignKey(
-		Song,
-		on_delete=models.CASCADE,
-		null=True,
-		blank=True,
-		related_name='metadata_suggestions',
+	 Song,
+	 on_delete=models.CASCADE,
+	 null=True,
+	 blank=True,
+	 related_name='metadata_suggestions',
 	)
 	kind = models.CharField(max_length=32, choices=Kind.choices)
-	# Suggested content; schema depends on `kind`.
+                                               
 	payload = models.JSONField(default=dict, blank=True)
 	note = models.TextField(blank=True, default='')
 	status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
 	created_at = models.DateTimeField(auto_now_add=True)
 	reviewed_by = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.SET_NULL,
-		null=True,
-		blank=True,
-		related_name='reviewed_metadata_suggestions',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.SET_NULL,
+	 null=True,
+	 blank=True,
+	 related_name='reviewed_metadata_suggestions',
 	)
 	reviewed_at = models.DateTimeField(null=True, blank=True)
 	decision_note = models.TextField(blank=True, default='')
-	# When approved, whether changes were applied automatically.
+                                                             
 	applied = models.BooleanField(default=False)
 
 	class Meta:
 		ordering = ['-created_at', '-id']
 		constraints = [
-			models.CheckConstraint(
-				name='metadata_suggestion_has_target',
-				condition=(
-					Q(artist__isnull=False)
-					| Q(album__isnull=False)
-					| Q(song__isnull=False)
-				),
-			),
-			models.CheckConstraint(
-				name='metadata_suggestion_one_target_only',
-				condition=(
-					~(Q(artist__isnull=False) & Q(album__isnull=False))
-					& ~(Q(artist__isnull=False) & Q(song__isnull=False))
-					& ~(Q(album__isnull=False) & Q(song__isnull=False))
-				),
-			),
+		 models.CheckConstraint(
+		  name='metadata_suggestion_has_target',
+		  condition=(
+		   Q(artist__isnull=False)
+		   | Q(album__isnull=False)
+		   | Q(song__isnull=False)
+		  ),
+		 ),
+		 models.CheckConstraint(
+		  name='metadata_suggestion_one_target_only',
+		  condition=(
+		   ~(Q(artist__isnull=False) & Q(album__isnull=False))
+		   & ~(Q(artist__isnull=False) & Q(song__isnull=False))
+		   & ~(Q(album__isnull=False) & Q(song__isnull=False))
+		  ),
+		 ),
 		]
 		indexes = [
-			models.Index(fields=['status', '-created_at']),
-			models.Index(fields=['kind', 'status', '-created_at']),
-			models.Index(fields=['suggester', '-created_at']),
+		 models.Index(fields=['status', '-created_at']),
+		 models.Index(fields=['kind', 'status', '-created_at']),
+		 models.Index(fields=['suggester', '-created_at']),
 		]
 
 	def __str__(self) -> str:
@@ -1248,38 +1259,38 @@ class MetadataSuggestion(models.Model):
 
 
 class CatalogChangelogEvent(models.Model):
-	"""Public changelog entry for an approved catalog item.
-
-	Created when a MetadataSuggestion is applied (or by staff manually later).
-	"""
+\
+\
+\
+    
 
 	actor = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.SET_NULL,
-		null=True,
-		blank=True,
-		related_name='catalog_changelog_events',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.SET_NULL,
+	 null=True,
+	 blank=True,
+	 related_name='catalog_changelog_events',
 	)
 	suggestion = models.ForeignKey(
-		MetadataSuggestion,
-		on_delete=models.SET_NULL,
-		null=True,
-		blank=True,
-		related_name='changelog_events',
+	 MetadataSuggestion,
+	 on_delete=models.SET_NULL,
+	 null=True,
+	 blank=True,
+	 related_name='changelog_events',
 	)
 	artist = models.ForeignKey(
-		Artist,
-		on_delete=models.CASCADE,
-		null=True,
-		blank=True,
-		related_name='changelog_events',
+	 Artist,
+	 on_delete=models.CASCADE,
+	 null=True,
+	 blank=True,
+	 related_name='changelog_events',
 	)
 	album = models.ForeignKey(
-		Album,
-		on_delete=models.CASCADE,
-		null=True,
-		blank=True,
-		related_name='changelog_events',
+	 Album,
+	 on_delete=models.CASCADE,
+	 null=True,
+	 blank=True,
+	 related_name='changelog_events',
 	)
 	kind = models.CharField(max_length=32, blank=True, default='')
 	summary = models.CharField(max_length=255)
@@ -1289,19 +1300,19 @@ class CatalogChangelogEvent(models.Model):
 	class Meta:
 		ordering = ['-created_at', '-id']
 		constraints = [
-			models.CheckConstraint(
-				name='changelog_event_has_target',
-				condition=(Q(artist__isnull=False) | Q(album__isnull=False)),
-			),
-			models.CheckConstraint(
-				name='changelog_event_one_target_only',
-				condition=(~(Q(artist__isnull=False) & Q(album__isnull=False))),
-			),
+		 models.CheckConstraint(
+		  name='changelog_event_has_target',
+		  condition=(Q(artist__isnull=False) | Q(album__isnull=False)),
+		 ),
+		 models.CheckConstraint(
+		  name='changelog_event_one_target_only',
+		  condition=(~(Q(artist__isnull=False) & Q(album__isnull=False))),
+		 ),
 		]
 		indexes = [
-			models.Index(fields=['artist', '-created_at']),
-			models.Index(fields=['album', '-created_at']),
-			models.Index(fields=['kind', '-created_at']),
+		 models.Index(fields=['artist', '-created_at']),
+		 models.Index(fields=['album', '-created_at']),
+		 models.Index(fields=['kind', '-created_at']),
 		]
 
 	def __str__(self) -> str:
@@ -1310,27 +1321,27 @@ class CatalogChangelogEvent(models.Model):
 
 
 class ReviewCommentReaction(models.Model):
-	"""Emoji reaction on a review comment"""
+                                         
 	EMOJI_CHOICES = [
-		('👍', '👍 Thumbs Up'),
-		('❤️', '❤️ Heart'),
-		('😂', '😂 Laughing'),
-		('😮', '😮 Surprised'),
-		('😢', '😢 Sad'),
-		('🔥', '🔥 Fire'),
-		('👏', '👏 Clapping'),
-		('🎉', '🎉 Party'),
+	 ('👍', '👍 Thumbs Up'),
+	 ('❤️', '❤️ Heart'),
+	 ('😂', '😂 Laughing'),
+	 ('😮', '😮 Surprised'),
+	 ('😢', '😢 Sad'),
+	 ('🔥', '🔥 Fire'),
+	 ('👏', '👏 Clapping'),
+	 ('🎉', '🎉 Party'),
 	]
 
 	user = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='review_comment_reactions',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='review_comment_reactions',
 	)
 	comment = models.ForeignKey(
-		ReviewComment,
-		on_delete=models.CASCADE,
-		related_name='reactions',
+	 ReviewComment,
+	 on_delete=models.CASCADE,
+	 related_name='reactions',
 	)
 	emoji = models.CharField(max_length=10, choices=EMOJI_CHOICES)
 	created_at = models.DateTimeField(auto_now_add=True)
@@ -1339,8 +1350,8 @@ class ReviewCommentReaction(models.Model):
 		unique_together = ('user', 'comment', 'emoji')
 		ordering = ['created_at']
 		indexes = [
-			models.Index(fields=['comment', 'emoji']),
-			models.Index(fields=['user', '-created_at']),
+		 models.Index(fields=['comment', 'emoji']),
+		 models.Index(fields=['user', '-created_at']),
 		]
 
 	def __str__(self):
@@ -1348,27 +1359,27 @@ class ReviewCommentReaction(models.Model):
 
 
 class SongCommentReaction(models.Model):
-	"""Emoji reaction on a song comment"""
+                                       
 	EMOJI_CHOICES = [
-		('👍', '👍 Thumbs Up'),
-		('❤️', '❤️ Heart'),
-		('😂', '😂 Laughing'),
-		('😮', '😮 Surprised'),
-		('😢', '😢 Sad'),
-		('🔥', '🔥 Fire'),
-		('👏', '👏 Clapping'),
-		('🎉', '🎉 Party'),
+	 ('👍', '👍 Thumbs Up'),
+	 ('❤️', '❤️ Heart'),
+	 ('😂', '😂 Laughing'),
+	 ('😮', '😮 Surprised'),
+	 ('😢', '😢 Sad'),
+	 ('🔥', '🔥 Fire'),
+	 ('👏', '👏 Clapping'),
+	 ('🎉', '🎉 Party'),
 	]
 
 	user = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='song_comment_reactions',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='song_comment_reactions',
 	)
 	comment = models.ForeignKey(
-		SongComment,
-		on_delete=models.CASCADE,
-		related_name='reactions',
+	 SongComment,
+	 on_delete=models.CASCADE,
+	 related_name='reactions',
 	)
 	emoji = models.CharField(max_length=10, choices=EMOJI_CHOICES)
 	created_at = models.DateTimeField(auto_now_add=True)
@@ -1377,29 +1388,29 @@ class SongCommentReaction(models.Model):
 		unique_together = ('user', 'comment', 'emoji')
 		ordering = ['created_at']
 		indexes = [
-			models.Index(fields=['comment', 'emoji']),
-			models.Index(fields=['user', '-created_at']),
+		 models.Index(fields=['comment', 'emoji']),
+		 models.Index(fields=['user', '-created_at']),
 		]
 
 	def __str__(self):
 		return f"{self.user} reacted {self.emoji} to comment {self.comment_id}"
 
 
-# ============= GAMIFICATION: BADGES & ACHIEVEMENTS =============
+                                                                 
 
 
 class AchievementUnlock(models.Model):
-	"""Track when achievements are unlocked for notifications"""
+                                                             
 	user = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='achievement_unlocks',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='achievement_unlocks',
 	)
 	achievement = models.ForeignKey(
-		'Achievement',
-		on_delete=models.CASCADE,
-		null=True,
-		blank=True,
+	 'Achievement',
+	 on_delete=models.CASCADE,
+	 null=True,
+	 blank=True,
 	)
 	achievement_code = models.CharField(max_length=64)
 	achievement_name = models.CharField(max_length=256, blank=True)
@@ -1410,8 +1421,8 @@ class AchievementUnlock(models.Model):
 	class Meta:
 		ordering = ['-created_at', '-id']
 		indexes = [
-			models.Index(fields=['user', '-created_at']),
-			models.Index(fields=['-created_at']),
+		 models.Index(fields=['user', '-created_at']),
+		 models.Index(fields=['-created_at']),
 		]
 
 	def __str__(self):
@@ -1419,7 +1430,7 @@ class AchievementUnlock(models.Model):
 
 
 class Badge(models.Model):
-	"""Badge definition - a type of badge that can be earned"""
+                                                            
 	class Category(models.TextChoices):
 		MUSIC_EXPLORER = 'explorer', 'Music Explorer'
 		CRITIC = 'critic', 'Critic'
@@ -1428,21 +1439,21 @@ class Badge(models.Model):
 		COLLECTOR = 'collector', 'Collector'
 		MILESTONE = 'milestone', 'Milestone'
 
-	code = models.CharField(max_length=50, unique=True, db_index=True)  # e.g., "first_review", "100_ratings"
+	code = models.CharField(max_length=50, unique=True, db_index=True)                                       
 	name = models.CharField(max_length=100)
 	description = models.TextField()
 	emoji = models.CharField(max_length=10, default='🏆')
 	category = models.CharField(max_length=20, choices=Category.choices)
 	rarity = models.CharField(
-		max_length=10,
-		choices=[
-			('common', 'Common'),
-			('uncommon', 'Uncommon'),
-			('rare', 'Rare'),
-			('epic', 'Epic'),
-			('legendary', 'Legendary'),
-		],
-		default='common',
+	 max_length=10,
+	 choices=[
+	  ('common', 'Common'),
+	  ('uncommon', 'Uncommon'),
+	  ('rare', 'Rare'),
+	  ('epic', 'Epic'),
+	  ('legendary', 'Legendary'),
+	 ],
+	 default='common',
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)
@@ -1450,8 +1461,8 @@ class Badge(models.Model):
 	class Meta:
 		ordering = ['category', 'name']
 		indexes = [
-			models.Index(fields=['code']),
-			models.Index(fields=['category']),
+		 models.Index(fields=['code']),
+		 models.Index(fields=['category']),
 		]
 
 	def __str__(self):
@@ -1459,27 +1470,27 @@ class Badge(models.Model):
 
 
 class UserBadge(models.Model):
-	"""Track which badges a user has earned"""
+                                           
 	user = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='badges_earned',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='badges_earned',
 	)
 	badge = models.ForeignKey(
-		Badge,
-		on_delete=models.CASCADE,
-		related_name='earned_by',
+	 Badge,
+	 on_delete=models.CASCADE,
+	 related_name='earned_by',
 	)
 	earned_at = models.DateTimeField(auto_now_add=True)
-	progress = models.PositiveIntegerField(default=0)  # e.g., current rating count for "100_ratings"
-	target = models.PositiveIntegerField(default=0)  # e.g., 100 for "100_ratings"
+	progress = models.PositiveIntegerField(default=0)                                                
+	target = models.PositiveIntegerField(default=0)                               
 
 	class Meta:
 		unique_together = ('user', 'badge')
 		ordering = ['-earned_at']
 		indexes = [
-			models.Index(fields=['user', '-earned_at']),
-			models.Index(fields=['badge', '-earned_at']),
+		 models.Index(fields=['user', '-earned_at']),
+		 models.Index(fields=['badge', '-earned_at']),
 		]
 
 	def __str__(self):
@@ -1487,7 +1498,7 @@ class UserBadge(models.Model):
 
 
 class Achievement(models.Model):
-	"""Achievement definition - a long-term goal/milestone"""
+                                                          
 	class Type(models.TextChoices):
 		STREAK = 'streak', 'Streak Achievement'
 		MILESTONE = 'milestone', 'Milestone Achievement'
@@ -1499,15 +1510,15 @@ class Achievement(models.Model):
 	description = models.TextField()
 	emoji = models.CharField(max_length=10, default='⭐')
 	type = models.CharField(max_length=20, choices=Type.choices)
-	target = models.PositiveIntegerField()  # e.g., 7 for "7_day_streak"
-	points = models.PositiveIntegerField(default=10)  # XP points awarded
+	target = models.PositiveIntegerField()                              
+	points = models.PositiveIntegerField(default=10)                     
 	created_at = models.DateTimeField(auto_now_add=True)
 
 	class Meta:
 		ordering = ['type', 'name']
 		indexes = [
-			models.Index(fields=['code']),
-			models.Index(fields=['type']),
+		 models.Index(fields=['code']),
+		 models.Index(fields=['type']),
 		]
 
 	def __str__(self):
@@ -1515,18 +1526,18 @@ class Achievement(models.Model):
 
 
 class UserAchievement(models.Model):
-	"""Track which achievements a user has unlocked"""
+                                                   
 	user = models.ForeignKey(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='achievements_unlocked',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='achievements_unlocked',
 	)
 	achievement = models.ForeignKey(
-		Achievement,
-		on_delete=models.CASCADE,
-		related_name='unlocked_by',
+	 Achievement,
+	 on_delete=models.CASCADE,
+	 related_name='unlocked_by',
 	)
-	progress = models.PositiveIntegerField(default=0)  # e.g., current streak days
+	progress = models.PositiveIntegerField(default=0)                             
 	unlocked_at = models.DateTimeField(null=True, blank=True)
 	is_completed = models.BooleanField(default=False)
 	created_at = models.DateTimeField(auto_now_add=True)
@@ -1536,9 +1547,9 @@ class UserAchievement(models.Model):
 		unique_together = ('user', 'achievement')
 		ordering = ['-unlocked_at', '-updated_at']
 		indexes = [
-			models.Index(fields=['user', 'is_completed']),
-			models.Index(fields=['achievement', 'is_completed']),
-			models.Index(fields=['user', '-unlocked_at']),
+		 models.Index(fields=['user', 'is_completed']),
+		 models.Index(fields=['achievement', 'is_completed']),
+		 models.Index(fields=['user', '-unlocked_at']),
 		]
 
 	def __str__(self):
@@ -1547,11 +1558,11 @@ class UserAchievement(models.Model):
 
 
 class UserXP(models.Model):
-	"""Track total XP earned by user from achievements and badges"""
+                                                                 
 	user = models.OneToOneField(
-		settings.AUTH_USER_MODEL,
-		on_delete=models.CASCADE,
-		related_name='user_xp',
+	 settings.AUTH_USER_MODEL,
+	 on_delete=models.CASCADE,
+	 related_name='user_xp',
 	)
 	total_xp = models.PositiveIntegerField(default=0)
 	level = models.PositiveIntegerField(default=1)
@@ -1567,15 +1578,15 @@ class UserXP(models.Model):
 
 	@staticmethod
 	def xp_for_level(level):
-		"""Calculate XP needed to reach a level"""
-		return (level - 1) * 500 + 500  # 500 XP for level 1, then +500 per level
+                                            
+		return (level - 1) * 500 + 500                                           
 
 	def add_xp(self, amount):
-		"""Add XP and handle level up"""
+                                  
 		self.total_xp += amount
 		self.current_level_xp += amount
 
-		# Check for level ups
+                       
 		while self.current_level_xp >= self.xp_for_level(self.level + 1):
 			self.current_level_xp -= self.xp_for_level(self.level + 1)
 			self.level += 1

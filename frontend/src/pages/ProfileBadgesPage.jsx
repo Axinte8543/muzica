@@ -14,6 +14,7 @@ export default function ProfileBadgesPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedBadge, setSelectedBadge] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -81,6 +82,7 @@ export default function ProfileBadgesPage() {
   }
 
   const myBadgeIds = new Set(myBadges.map((b) => b.badge.id));
+  const earnedBadgeById = new Map(myBadges.map((b) => [b.badge.id, b]));
   const categories = [...new Set(allBadges.map((b) => b.category))].sort();
 
   const filteredBadges = selectedCategory
@@ -115,7 +117,12 @@ export default function ProfileBadgesPage() {
                   }}
                 >
                   {myBadges.map((b) => (
-                    <BadgeCard key={b.id} badge={b.badge} earned={true} />
+                    <BadgeCard
+                      key={b.id}
+                      badge={b.badge}
+                      earned={true}
+                      onClick={() => setSelectedBadge(b)}
+                    />
                   ))}
                 </div>
               ) : (
@@ -178,10 +185,106 @@ export default function ProfileBadgesPage() {
                     key={b.id}
                     badge={b}
                     earned={myBadgeIds.has(b.id)}
+                    onClick={() =>
+                      setSelectedBadge(
+                        earnedBadgeById.get(b.id) || { badge: b },
+                      )
+                    }
                   />
                 ))}
               </div>
             </div>
+
+            {selectedBadge && (
+              <div
+                role="presentation"
+                onMouseDown={(event) => {
+                  if (event.target === event.currentTarget) {
+                    setSelectedBadge(null);
+                  }
+                }}
+                style={{
+                  position: "fixed",
+                  inset: 0,
+                  zIndex: 1000,
+                  display: "grid",
+                  placeItems: "center",
+                  padding: "20px",
+                  background: "rgba(2, 6, 23, 0.78)",
+                }}
+              >
+                <div
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="badge-dialog-title"
+                  style={{
+                    ...ui.card,
+                    width: "min(460px, 100%)",
+                    padding: "28px",
+                    position: "relative",
+                    textAlign: "center",
+                    boxShadow: "0 24px 70px rgba(0, 0, 0, 0.45)",
+                  }}
+                >
+                  <button
+                    type="button"
+                    aria-label="Închide detaliile insignei"
+                    onClick={() => setSelectedBadge(null)}
+                    style={{
+                      position: "absolute",
+                      top: "12px",
+                      right: "12px",
+                      border: 0,
+                      background: "transparent",
+                      color: "inherit",
+                      fontSize: "26px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    ×
+                  </button>
+
+                  <div style={{ fontSize: "56px", lineHeight: 1 }}>
+                    {selectedBadge.badge.emoji}
+                  </div>
+                  <h2 id="badge-dialog-title" style={{ margin: "16px 0 6px" }}>
+                    {selectedBadge.badge.name}
+                  </h2>
+                  <div style={{ opacity: 0.7, fontSize: "14px" }}>
+                    {selectedBadge.badge.category} · {selectedBadge.badge.rarity}
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop: "22px",
+                      padding: "16px",
+                      borderRadius: "12px",
+                      background: "rgba(148, 163, 184, 0.1)",
+                    }}
+                  >
+                    <div style={{ fontWeight: 700, marginBottom: "8px" }}>
+                      Ce trebuie să faci
+                    </div>
+                    <div>
+                      {selectedBadge.badge.description ||
+                        "Condiția acestei insigne nu este încă disponibilă."}
+                    </div>
+                  </div>
+
+                  <p
+                    style={{
+                      margin: "18px 0 0",
+                      color: selectedBadge.earned_at ? "#2dd4bf" : "#94a3b8",
+                      fontWeight: 700,
+                    }}
+                  >
+                    {selectedBadge.earned_at
+                      ? "Ai câștigat această insignă."
+                      : "Nu ai câștigat încă această insignă."}
+                  </p>
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>

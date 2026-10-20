@@ -5,7 +5,7 @@ from . import metrics
 
 
 class PrometheusMiddleware(MiddlewareMixin):
-    """Simple middleware that measures request latency and records to Prometheus."""
+                                                                                    
 
     def process_request(self, request):
         request._prom_start_time = time.time()

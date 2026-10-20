@@ -6,7 +6,7 @@ from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
 
 from music.models import Artist
-from music.spotify import SpotifyAuthError, SpotifyClient
+from music.spotify import SpotifyAPIError, SpotifyAuthError, SpotifyClient
 
 
 def _normalize_name(value: str) -> str:
@@ -14,7 +14,7 @@ def _normalize_name(value: str) -> str:
 
 
 def _norm_key(value: str) -> str:
-	# Keep only alnum to make matching more resilient to punctuation.
+                                                                  
 	return re.sub(r"[^a-z0-9]+", "", _normalize_name(value).lower())
 
 
@@ -23,50 +23,55 @@ class Command(BaseCommand):
 
 	def add_arguments(self, parser):
 		parser.add_argument(
-			"--artists",
-			type=str,
-			default="",
-			help="Comma-separated list of artist names",
+		 "--artists",
+		 type=str,
+		 default="",
+		 help="Comma-separated list of artist names",
 		)
 		parser.add_argument(
-			"--artists-file",
-			type=str,
-			default="",
-			help="Path to a UTF-8 text file with one artist name per line",
+		 "--artists-file",
+		 type=str,
+		 default="",
+		 help="Path to a UTF-8 text file with one artist name per line",
 		)
 		parser.add_argument(
-			"--limit",
-			type=int,
-			default=5,
-			help="How many Spotify search candidates to consider (default: 5)",
+		 "--limit",
+		 type=int,
+		 default=5,
+		 help="How many Spotify search candidates to consider (default: 5)",
 		)
 		parser.add_argument("--market", type=str, default="RO", help="Spotify market, default RO")
 		parser.add_argument(
-			"--include-groups",
-			type=str,
-			default="album,single",
-			help="Spotify include_groups for artist albums (default: album,single)",
+		 "--include-groups",
+		 type=str,
+		 default="album,single",
+		 help="Spotify include_groups for artist albums (default: album,single)",
 		)
 		parser.add_argument(
-			"--max-albums",
-			type=int,
-			default=0,
-			help="Stop after importing N albums per artist (0=no limit)",
+		 "--max-albums",
+		 type=int,
+		 default=0,
+		 help="Stop after importing N albums per artist (0=no limit)",
 		)
 		parser.add_argument(
-			"--approved",
-			action="store_true",
-			help="Mark imported artists/albums/songs as approved",
+		 "--approved",
+		 action="store_true",
+		 help="Mark imported artists/albums/songs as approved",
 		)
 		parser.add_argument(
-			"--strict",
-			action="store_true",
-			help="Require an exact (normalized) name match; otherwise skip the artist",
+		 "--strict",
+		 action="store_true",
+		 help="Require an exact (normalized) name match; otherwise skip the artist",
 		)
 		parser.add_argument(
-			"--list-only",
-			action="store_true",
-			help="Only list Spotify search candidates; do not import anything",
+		 "--list-only",
+		 action="store_true",
+		 help="Only list Spotify search candidates; do not import anything",
+		)
+		parser.add_argument(
+		 "--all-existing",
+		 action="store_true",
+		 help="Process all artists currently present in the local database",
 		)
 
 	def handle(self, *args, **options):
@@ -79,8 +84,13 @@ class Command(BaseCommand):
 		strict = bool(options.get("strict"))
 		limit = max(1, min(int(options.get("limit") or 5), 20))
 		list_only = bool(options.get("list_only"))
+		all_existing = bool(options.get("all_existing"))
 
 		names: list[str] = []
+		if all_existing:
+			names.extend(
+			 Artist.objects.order_by("name", "id").values_list("name", flat=True)
+			)
 		if raw_artists:
 			names.extend([_normalize_name(x) for x in raw_artists.split(",") if _normalize_name(x)])
 		if artists_file:
@@ -93,7 +103,7 @@ class Command(BaseCommand):
 			except FileNotFoundError:
 				raise CommandError(f"artists-file not found: {artists_file}")
 
-		# De-dup preserving order
+                           
 		seen: set[str] = set()
 		clean_names: list[str] = []
 		for n in names:
@@ -113,7 +123,11 @@ class Command(BaseCommand):
 
 		resolved_ids: list[str] = []
 		for name in clean_names:
-			candidates = client.search_artist(name=name, market=market, limit=limit)
+			try:
+				candidates = client.search_artist(name=name, market=market, limit=limit)
+			except SpotifyAPIError as exc:
+				self.stdout.write(self.style.WARNING(f"Spotify stopped while searching {name}: {exc}"))
+				break
 			if not candidates:
 				self.stdout.write(self.style.WARNING(f"Spotify: no match for {name}"))
 				continue
@@ -149,16 +163,16 @@ class Command(BaseCommand):
 				self.stdout.write(self.style.WARNING(f"Spotify: invalid artist id for {name}"))
 				continue
 
-			# Pre-attach spotify_id to an existing manually seeded artist using the *query name*.
-			# This avoids duplicate Artists when Spotify canonical naming differs (e.g. no spaces).
+                                                                                        
+                                                                                          
 			existing = Artist.objects.filter(name__iexact=name).first()
 			if existing is not None:
 				other = Artist.objects.filter(spotify_id=artist_id).exclude(pk=existing.pk).only("id", "name").first()
 				if other is not None:
 					self.stdout.write(
-						self.style.WARNING(
-							f"Spotify: ID {artist_id} already attached to {other.name}; skipping pre-attach for {name}."
-						)
+					 self.style.WARNING(
+					  f"Spotify: ID {artist_id} already attached to {other.name}; skipping pre-attach for {name}."
+					 )
 					)
 				else:
 					dirty = []
@@ -172,24 +186,25 @@ class Command(BaseCommand):
 						existing.save(update_fields=dirty)
 
 			self.stdout.write(self.style.MIGRATE_HEADING(f"Spotify resolved: {name} -> {artist_name} ({artist_id})"))
-			resolved_ids.append(artist_id)
+			if list_only:
+				resolved_ids.append(artist_id)
+				continue
+
+			try:
+				call_command(
+				 "import_spotify_artists",
+				 artist_id,
+				 market=market,
+				 include_groups=include_groups,
+				 max_albums=max_albums,
+				 approved=approved,
+				 verbosity=1,
+				)
+			except CommandError as exc:
+				self.stdout.write(self.style.WARNING(f"Spotify import failed for {name}: {exc}"))
+				if "429" in str(exc) or "rate limit" in str(exc).lower():
+					break
 
 		if list_only:
 			self.stdout.write(self.style.SUCCESS("Listed Spotify candidates only; nothing imported."))
 			return
-
-		if not resolved_ids:
-			self.stdout.write(self.style.WARNING("No Spotify artists resolved; nothing to import."))
-			return
-
-		# Import one by one to make it easier to see failures per artist.
-		for artist_id in resolved_ids:
-			call_command(
-				"import_spotify_artists",
-				artist_id,
-				market=market,
-				include_groups=include_groups,
-				max_albums=max_albums,
-				approved=approved,
-				verbosity=1,
-			)

@@ -2,8 +2,6 @@ import time
 import logging
 from django.core.cache import cache
 
-from prometheus_client import CollectorRegistry
-
 from . import metrics
 
 
@@ -19,8 +17,7 @@ def _wrap_cache_get():
                 else:
                     metrics.CACHE_HIT_COUNTER.inc()
                 return val
-            except Exception:
-                # Don't let metrics break application behavior
+            except Exception:                                                   
                 logging.exception('Cache get wrapper failed')
                 return orig_get(key, default=default, version=version)
 
@@ -30,13 +27,11 @@ def _wrap_cache_get():
 
 
 def _register_celery_signals():
-    try:
-        # Register Celery signal handlers if Celery is installed at runtime
+    try:                                                                          
         from celery import signals
 
         @signals.task_prerun.connect
-        def _task_prerun(sender=None, task_id=None, task=None, *args, **kwargs):
-            # store start time on the task object
+        def _task_prerun(sender=None, task_id=None, task=None, *args, **kwargs):                                               
             try:
                 setattr(task, '__prom_start_time__', time.time())
             except Exception:
@@ -51,8 +46,7 @@ def _register_celery_signals():
                     duration = time.time() - start
                     metrics.CELERY_TASK_DURATION.labels(task_name=task_name, status='success').observe(duration)
                     metrics.CELERY_TASK_COUNTER.labels(task_name=task_name, status='success').inc()
-                else:
-                    # Count it anyway
+                else:                                    
                     metrics.CELERY_TASK_COUNTER.labels(task_name=task_name, status='success').inc()
             except Exception:
                 logging.exception('Failed to record task_postrun metrics')
@@ -64,17 +58,11 @@ def _register_celery_signals():
                 metrics.CELERY_TASK_COUNTER.labels(task_name=task_name, status='failure').inc()
             except Exception:
                 logging.exception('Failed to record task_failure metrics')
-    except Exception:
-        # Celery not present or import failed; don't crash.
+    except Exception:                                                           
         logging.debug('Celery not available; skipping celery signal registration')
 
 
-def setup():
-    # Wrap cache get to count hits/misses
-    _wrap_cache_get()
-    # Register Celery signals for task duration
-    _register_celery_signals()
-
-
-# Run setup at import-time from AppConfig.ready()
+def setup():                                        
+    _wrap_cache_get()                                            
+    _register_celery_signals()                                           
 setup()

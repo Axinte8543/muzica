@@ -30,7 +30,7 @@ def _normalize(value: str) -> str:
 
 
 def _norm_key(value: str) -> str:
-    # Lightweight normalization for matching Spotify artist credits.
+                                                                    
     return "".join([c.lower() for c in _normalize(value) if c.isalnum()])
 
 
@@ -43,6 +43,7 @@ class Command(BaseCommand):
         parser.add_argument("--limit", type=int, default=0, help="Max records to process per section (0 = no limit)")
         parser.add_argument("--market", type=str, default="RO", help="Spotify market (default RO)")
         parser.add_argument("--dry-run", action="store_true", help="Compute changes without saving")
+        parser.add_argument("--skip-spotify", action="store_true", help="Use only Cover Art Archive for albums")
 
     def handle(self, *args, **options):
         do_artists = bool(options.get("artists"))
@@ -54,15 +55,17 @@ class Command(BaseCommand):
         limit = max(0, int(options.get("limit") or 0))
         market = str(options.get("market") or "RO").strip() or "RO"
         dry_run = bool(options.get("dry_run"))
+        skip_spotify = bool(options.get("skip_spotify"))
 
         stats = BackfillStats()
 
         integration = MusicExternalIntegrationService()
         spotify = None
-        try:
-            spotify = integration.spotify
-        except SpotifyAuthError:
-            spotify = None
+        if not skip_spotify:
+            try:
+                spotify = integration.spotify
+            except SpotifyAuthError:
+                spotify = None
 
         if do_artists:
             qs = Artist.objects.filter(image_url="").order_by("id")
@@ -86,8 +89,8 @@ class Command(BaseCommand):
                             stats.updated_artists += 1
                             continue
 
-                    # Fallback to search if we have no spotify_id OR the stored
-                    # spotify_id returns no images.
+                                                                               
+                                                   
                     candidates = spotify.search_artist(name=artist.name, market=market, limit=3)
                     if not candidates:
                         continue
@@ -157,8 +160,8 @@ class Command(BaseCommand):
                                 if cand_url:
                                     pending_spotify_url = cand_url
 
-                            # Fallback: search by album title only, then pick a result
-                            # that matches our artist (Spotify credits can differ).
+                                                                                      
+                                                                                   
                             if not cover_url:
                                 q = f"album:{album.title}".strip()
                                 data = spotify.search(q=q, types=["album"], market=market, limit=5)
@@ -174,7 +177,7 @@ class Command(BaseCommand):
                                         if not any(_norm_key((a or {}).get("name") or "") == target_artist_key for a in it_artists if isinstance(a, dict)):
                                             continue
 
-                                        cover_url = _safe_first_image_url(it.get("images"))
+                                        cover_url = safe_image_url(it)
                                         if cover_url:
                                             cover_source = "Spotify"
 

@@ -36,11 +36,11 @@ def _extract_spotify_track_id(*, spotify_id: str | None, spotify_url: str | None
 	if not url:
 		return ""
 
-	# Accept spotify:track:<id>
+                            
 	if url.startswith("spotify:track:"):
 		return url.split(":")[-1].strip()
 
-	# Accept https://open.spotify.com/track/<id>?...
+                                                 
 	try:
 		parsed = urlparse(url)
 	except Exception:
@@ -72,77 +72,77 @@ class Command(BaseCommand):
 
 	def add_arguments(self, parser):
 		parser.add_argument(
-			"--market",
-			type=str,
-			default="RO",
-			help="Spotify market (default: RO)",
+		 "--market",
+		 type=str,
+		 default="RO",
+		 help="Spotify market (default: RO)",
 		)
 		parser.add_argument(
-			"--album-id",
-			type=int,
-			default=0,
-			help="Only backfill songs from this album id",
+		 "--album-id",
+		 type=int,
+		 default=0,
+		 help="Only backfill songs from this album id",
 		)
 		parser.add_argument(
-			"--song-id",
-			type=int,
-			default=0,
-			help="Only backfill this specific song id",
+		 "--song-id",
+		 type=int,
+		 default=0,
+		 help="Only backfill this specific song id",
 		)
 		parser.add_argument(
-			"--artist-id",
-			type=int,
-			default=0,
-			help="Only backfill songs that belong to this artist (matches Song.artist or Song.album.artist)",
+		 "--artist-id",
+		 type=int,
+		 default=0,
+		 help="Only backfill songs that belong to this artist (matches Song.artist or Song.album.artist)",
 		)
 		parser.add_argument(
-			"--artist-name",
-			type=str,
-			default="",
-			help="Only backfill songs that belong to this artist name (case-insensitive; matches Song.artist or Song.album.artist)",
+		 "--artist-name",
+		 type=str,
+		 default="",
+		 help="Only backfill songs that belong to this artist name (case-insensitive; matches Song.artist or Song.album.artist)",
 		)
 		parser.add_argument(
-			"--only-missing",
-			action="store_true",
-			help="Only process songs with no existing SongFeature rows",
+		 "--only-missing",
+		 action="store_true",
+		 help="Only process songs with no existing SongFeature rows",
 		)
 		parser.add_argument(
-			"--max-songs",
-			type=int,
-			default=0,
-			help="Stop after N songs (0 = no limit)",
+		 "--max-songs",
+		 type=int,
+		 default=0,
+		 help="Stop after N songs (0 = no limit)",
 		)
 		parser.add_argument(
-			"--approved",
-			action="store_true",
-			help="Mark newly created feature artists as approved",
+		 "--approved",
+		 action="store_true",
+		 help="Mark newly created feature artists as approved",
 		)
 		parser.add_argument(
-			"--with-artist-details",
-			action="store_true",
-			help="Fetch full artist details from Spotify (slower, but fills image/popularity/genres)",
+		 "--with-artist-details",
+		 action="store_true",
+		 help="Fetch full artist details from Spotify (slower, but fills image/popularity/genres)",
 		)
 		parser.add_argument(
-			"--max-rate-limit-wait-s",
-			type=int,
-			default=3600,
-			help="Max seconds to wait on Spotify 429 before failing the command (default: 3600).",
+		 "--max-rate-limit-wait-s",
+		 type=int,
+		 default=3600,
+		 help="Max seconds to wait on Spotify 429 before failing the command (default: 3600).",
 		)
 		parser.add_argument(
-			"--dry-run",
-			action="store_true",
-			help="Don't write to DB; just print what would change",
+		 "--dry-run",
+		 action="store_true",
+		 help="Don't write to DB; just print what would change",
 		)
 		parser.add_argument(
-			"--sleep-ms",
-			type=int,
-			default=0,
-			help="Sleep N milliseconds between Spotify API calls (helps avoid 429 rate limits)",
+		 "--sleep-ms",
+		 type=int,
+		 default=0,
+		 help="Sleep N milliseconds between Spotify API calls (helps avoid 429 rate limits)",
 		)
 		parser.add_argument(
-			"--progress",
-			action="store_true",
-			help="Print progress while processing",
+		 "--progress",
+		 action="store_true",
+		 help="Print progress while processing",
 		)
 
 	def handle(self, *args, **options):
@@ -167,7 +167,7 @@ class Command(BaseCommand):
 		except SpotifyAuthError as e:
 			raise CommandError(str(e))
 
-		# Make rate-limiting behavior visible during long runs.
+                                                         
 		client.verbose = bool(progress)
 		client.max_rate_limit_wait_s = max(0, int(max_rate_limit_wait_s))
 
@@ -180,9 +180,9 @@ class Command(BaseCommand):
 				artist_id = int(exact[0][0])
 			elif len(exact) > 1:
 				raise CommandError(
-					"Multiple artists match that name exactly: "
-					+ ", ".join([f"{aid}:{aname}" for aid, aname in exact])
-					+ " (use --artist-id)"
+				 "Multiple artists match that name exactly: "
+				 + ", ".join([f"{aid}:{aname}" for aid, aname in exact])
+				 + " (use --artist-id)"
 				)
 			else:
 				partial = list(Artist.objects.filter(name__icontains=artist_name).values_list("id", "name")[:10])
@@ -192,9 +192,9 @@ class Command(BaseCommand):
 					raise CommandError(f"No artist found with name matching '{artist_name}'.")
 				else:
 					raise CommandError(
-						"Multiple artists match that name: "
-						+ ", ".join([f"{aid}:{aname}" for aid, aname in partial])
-						+ " (use --artist-id)"
+					 "Multiple artists match that name: "
+					 + ", ".join([f"{aid}:{aname}" for aid, aname in partial])
+					 + " (use --artist-id)"
 					)
 
 		qs = Song.objects.select_related("artist", "album", "album__artist")
@@ -207,13 +207,13 @@ class Command(BaseCommand):
 		if only_missing:
 			qs = qs.filter(features__isnull=True)
 
-		# We can backfill feats in two ways:
-		# - album tracks endpoint (requires album.spotify_id)
-		# - track search endpoint (requires song.spotify_id / spotify_url)
+                                      
+                                                       
+                                                                    
 		qs = qs.filter(
-			(Q(album__spotify_id__isnull=False) & ~Q(album__spotify_id=""))
-			| (Q(spotify_id__isnull=False) & ~Q(spotify_id=""))
-			| ~Q(spotify_url="")
+		 (Q(album__spotify_id__isnull=False) & ~Q(album__spotify_id=""))
+		 | (Q(spotify_id__isnull=False) & ~Q(spotify_id=""))
+		 | ~Q(spotify_url="")
 		)
 
 		qs = qs.order_by("id")
@@ -231,8 +231,8 @@ class Command(BaseCommand):
 			self.stdout.write(self.style.WARNING("No songs matched filters."))
 			return
 
-		# Build mapping track_id -> song, plus a fallback map for album tracks
-		# when a Song doesn't have spotify_id saved (match on track_number + title).
+                                                                        
+                                                                              
 		track_id_to_song: dict[str, Song] = {}
 		album_track_key_to_song: dict[tuple[str, int, str], Song] = {}
 		for s in songs:
@@ -261,18 +261,18 @@ class Command(BaseCommand):
 			spotify_url = str((a.get("external_urls") or {}).get("spotify") or "").strip()
 
 			defaults: dict[str, Any] = {
-				"name": name,
-				"slug": _unique_slug(Artist, f"{name}-{spotify_artist_id}"),
-				"spotify_url": spotify_url,
-				"is_approved": approved,
+			 "name": name,
+			 "slug": _unique_slug(Artist, f"{name}-{spotify_artist_id}"),
+			 "spotify_url": spotify_url,
+			 "is_approved": approved,
 			}
 
 			artist_obj, created = Artist.objects.get_or_create(
-				spotify_id=spotify_artist_id,
-				defaults=defaults,
+			 spotify_id=spotify_artist_id,
+			 defaults=defaults,
 			)
 
-			# Light update if existing.
+                              
 			dirty_fields: list[str] = []
 			if not created:
 				if name and artist_obj.name != name:
@@ -288,7 +288,7 @@ class Command(BaseCommand):
 					artist_obj.save(update_fields=dirty_fields)
 
 			if with_artist_details:
-				# Fill in richer details (optional) using /artists/{id}.
+                                                            
 				if spotify_artist_id and spotify_artist_id not in artist_detail_cache:
 					artist_detail_cache[spotify_artist_id] = client.get_artist(spotify_artist_id)
 				full = artist_detail_cache.get(spotify_artist_id) or {}
@@ -321,8 +321,8 @@ class Command(BaseCommand):
 				a_id = str((a or {}).get("id") or "").strip()
 				if not a_id:
 					continue
-				# If we don't know the primary artist spotify_id, skip the first artist to avoid
-				# incorrectly creating a feature for the primary.
+                                                                                    
+                                                     
 				if idx == 0 and not song_primary_spotify_id:
 					continue
 				if song_primary_spotify_id and a_id == song_primary_spotify_id:
@@ -364,7 +364,7 @@ class Command(BaseCommand):
 
 		processed_song_ids: set[int] = set()
 
-		# 1) Prefer album-based backfill (fast, uses /albums/{id}/tracks).
+                                                                    
 		album_spotify_ids: set[str] = set()
 		for s in songs:
 			album = getattr(s, "album", None)
@@ -412,7 +412,7 @@ class Command(BaseCommand):
 
 				offset += len(items)
 
-		# 2) Fallback for singles / songs without album Spotify id (uses search).
+                                                                           
 		for song in songs:
 			if int(song.id) in processed_song_ids:
 				continue
@@ -445,11 +445,11 @@ class Command(BaseCommand):
 			_apply_features_for_song(song=song, artists=artists)
 
 		summary = (
-			f"Songs seen: {counters.songs_seen}; "
-			f"Songs updated: {counters.songs_updated}; "
-			f"Features created: {counters.features_created}; "
-			f"Artists created: {counters.artists_created}; "
-			f"Tracks not found: {counters.tracks_not_found}"
+		 f"Songs seen: {counters.songs_seen}; "
+		 f"Songs updated: {counters.songs_updated}; "
+		 f"Features created: {counters.features_created}; "
+		 f"Artists created: {counters.artists_created}; "
+		 f"Tracks not found: {counters.tracks_not_found}"
 		)
 
 		if dry_run:

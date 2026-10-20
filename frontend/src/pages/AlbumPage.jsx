@@ -83,6 +83,39 @@ function formatReportFeedback(meta) {
   return bits.join(" · ");
 }
 
+function TabButton({ isActive, onClick, label, count }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        ...ui.buttonSmall,
+        minHeight: "38px",
+        borderRadius: "999px",
+        padding: "7px 12px",
+        background: isActive
+          ? "rgba(245, 158, 11, 0.18)"
+          : "rgba(15, 23, 42, 0.18)",
+        borderColor: isActive ? "rgba(245, 158, 11, 0.42)" : ui.colors.border,
+        fontWeight: isActive ? 800 : 600,
+      }}
+    >
+      <span>{label}</span>
+      {count !== undefined ? (
+        <span
+          style={{
+            marginLeft: "6px",
+            opacity: 0.78,
+            fontSize: "0.9em",
+          }}
+        >
+          {count}
+        </span>
+      ) : null}
+    </button>
+  );
+}
+
 function ReportState({ status, meta }) {
   if (!status) return null;
 
@@ -122,6 +155,15 @@ export default function AlbumPage({ slug }) {
   const [activeTab, setActiveTab] = useState("overview");
 
   const effectiveBaseUrl = baseUrl;
+
+  useEffect(() => {
+    const tab = String(searchParams.get("tab") || "").trim().toLowerCase();
+    if (
+      ["overview", "reviews", "lists", "comments", "discography"].includes(tab)
+    ) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   const [reportingCommentIds, setReportingCommentIds] = useState(
     () => new Set(),
@@ -416,23 +458,26 @@ export default function AlbumPage({ slug }) {
 
   useEffect(() => {
     if (!album?.id) return;
-    setSuggestCoverUrl(String(album.cover_url || ""));
-    setSuggestReleaseDate(String(album.release_date || ""));
-    setSuggestDescription(String(album.description || ""));
+    const t = setTimeout(() => {
+      setSuggestCoverUrl(String(album.cover_url || ""));
+      setSuggestReleaseDate(String(album.release_date || ""));
+      setSuggestDescription(String(album.description || ""));
 
-    const tracks = Array.isArray(album.songs)
-      ? [...album.songs]
-          .sort((a, b) => (a.track_number ?? 9999) - (b.track_number ?? 9999))
-          .map((s, idx) => {
-            const n = s.track_number ?? idx + 1;
-            const title = String(s.title || "").trim();
-            if (!title) return null;
-            return `${String(n).padStart(2, "0")}. ${title}`;
-          })
-          .filter(Boolean)
-      : [];
+      const tracks = Array.isArray(album.songs)
+        ? [...album.songs]
+            .sort((a, b) => (a.track_number ?? 9999) - (b.track_number ?? 9999))
+            .map((s, idx) => {
+              const n = s.track_number ?? idx + 1;
+              const title = String(s.title || "").trim();
+              if (!title) return null;
+              return `${String(n).padStart(2, "0")}. ${title}`;
+            })
+            .filter(Boolean)
+        : [];
 
-    setSuggestTracklistText(tracks.join("\n"));
+      setSuggestTracklistText(tracks.join("\n"));
+    }, 0);
+    return () => clearTimeout(t);
   }, [album]);
 
   const listenStatusQueryKey = useMemo(() => {
@@ -488,23 +533,26 @@ export default function AlbumPage({ slug }) {
     : null;
 
   useEffect(() => {
-    if (!isAuthVerified || !accessToken) {
-      setSelectedListId("");
-      return;
-    }
-    if (!myLists.length) {
-      setSelectedListId("");
-      return;
-    }
-
-    setSelectedListId((prev) => {
-      const prevStr = String(prev || "");
-      if (prevStr && myLists.some((l) => String(l?.id) === prevStr)) {
-        return prevStr;
+    const t = setTimeout(() => {
+      if (!isAuthVerified || !accessToken) {
+        setSelectedListId("");
+        return;
       }
-      const firstId = myLists[0]?.id;
-      return firstId !== null && firstId !== undefined ? String(firstId) : "";
-    });
+      if (!myLists.length) {
+        setSelectedListId("");
+        return;
+      }
+
+      setSelectedListId((prev) => {
+        const prevStr = String(prev || "");
+        if (prevStr && myLists.some((l) => String(l?.id) === prevStr)) {
+          return prevStr;
+        }
+        const firstId = myLists[0]?.id;
+        return firstId !== null && firstId !== undefined ? String(firstId) : "";
+      });
+    }, 0);
+    return () => clearTimeout(t);
   }, [accessToken, isAuthVerified, myLists]);
 
   async function handleAddAlbumToSelectedList() {
@@ -661,7 +709,7 @@ export default function AlbumPage({ slug }) {
   const isWanted = Boolean(wantedStatusQuery.data?.wanted);
   const isLoadingWanted = wantedStatusQuery.isLoading;
   const wantStatusError = wantedStatusQuery.isError
-    ? "Nu am putut încărca statusul Want To Listen."
+    ? "Nu am putut încărca statusul listei de ascultat."
     : null;
 
   async function handleMarkListened() {
@@ -721,7 +769,7 @@ export default function AlbumPage({ slug }) {
       }
     } catch (err) {
       console.error(err);
-      setWantError("Nu am putut actualiza Want To Listen.");
+      setWantError("Nu am putut actualiza lista de ascultat.");
     } finally {
       setIsSubmittingWanted(false);
     }
@@ -799,8 +847,14 @@ export default function AlbumPage({ slug }) {
   const releaseYear = useMemo(() => {
     if (!album?.release_date) return null;
     const y = Number(String(album.release_date).slice(0, 4));
-    return Number.isFinite(y) ? y : null;
-  }, [album?.release_date]);
+    return Number.isFinite(y) && y !== 1970 ? y : null;
+  }, [album]);
+
+  const displayedReleaseDate = useMemo(() => {
+    const value = String(album?.release_date || "").trim();
+    if (!value || value === "1970-01-01") return "";
+    return value;
+  }, [album]);
 
   const recommendationsQueryKey = useMemo(() => {
     return ["albumRecommendations", effectiveBaseUrl, slug || ""];
@@ -893,22 +947,7 @@ export default function AlbumPage({ slug }) {
     }
   }
 
-  function TabButton({ tabKey, label }) {
-    const isActive = activeTab === tabKey;
-    return (
-      <button
-        type="button"
-        onClick={() => setActiveTab(tabKey)}
-        style={{
-          ...ui.buttonSmall,
-          background: isActive ? ui.colors.mutedBg : "transparent",
-          fontWeight: isActive ? 700 : 400,
-        }}
-      >
-        {label}
-      </button>
-    );
-  }
+  /* TabButton moved to module scope to avoid creating components during render */
 
   function CompactSongRating({ songId, value }) {
     const current = Number(value);
@@ -1041,7 +1080,9 @@ export default function AlbumPage({ slug }) {
               album.artist
             )}
           </p>
-          <p style={{ margin: 0 }}>{album.release_date}</p>
+          {displayedReleaseDate ? (
+            <p style={{ margin: 0 }}>{displayedReleaseDate}</p>
+          ) : null}
 
           {album.genres?.length ? (
             <p style={{ margin: "12px 0 0" }}>
@@ -1058,10 +1099,9 @@ export default function AlbumPage({ slug }) {
             </p>
           ) : null}
 
-          {album.year_rank ? (
+          {releaseYear && album.year_rank ? (
             <p style={{ margin: "8px 0 0", opacity: 0.9 }}>
-              {releaseYear ? `Loc în ${releaseYear}: ` : "Loc în an: "}#
-              {album.year_rank}
+              {`Loc în ${releaseYear}: `}#{album.year_rank}
               {album.year_rank_total ? ` / ${album.year_rank_total}` : ""}
             </p>
           ) : null}
@@ -1070,14 +1110,13 @@ export default function AlbumPage({ slug }) {
             {album.average_rating !== null &&
             album.average_rating !== undefined ? (
               <div style={{ fontWeight: 700 }}>
-                Average Rating ⭐ {formatAverageRating(album.average_rating)} /
-                5
+                Notă medie ⭐ {formatAverageRating(album.average_rating)} / 5
               </div>
             ) : (
-              <div style={{ fontWeight: 700 }}>Average Rating ⭐ -</div>
+              <div style={{ fontWeight: 700 }}>Notă medie ⭐ -</div>
             )}
             <div style={{ opacity: 0.9 }}>
-              Votes: {album.ratings_count ?? 0}
+              Voturi: {album.ratings_count ?? 0}
             </div>
           </div>
         </div>
@@ -1091,23 +1130,48 @@ export default function AlbumPage({ slug }) {
           display: "flex",
           gap: "8px",
           flexWrap: "wrap",
+          padding: "6px",
+          border: `1px solid ${ui.colors.border}`,
+          borderRadius: "999px",
+          width: "fit-content",
+          maxWidth: "100%",
+          background: "rgba(15, 23, 42, 0.18)",
         }}
       >
-        <TabButton tabKey="overview" label="Overview" />
         <TabButton
-          tabKey="reviews"
-          label={`User reviews (${reviews.length})`}
+          isActive={activeTab === "overview"}
+          onClick={() => setActiveTab("overview")}
+          label="Prezentare"
         />
-        <TabButton tabKey="lists" label="Lists" />
-        <TabButton tabKey="comments" label={`Comments (${commentsCount})`} />
-        <TabButton tabKey="discography" label="Discography" />
+        <TabButton
+          isActive={activeTab === "reviews"}
+          onClick={() => setActiveTab("reviews")}
+          label="Review-uri"
+          count={reviews.length}
+        />
+        <TabButton
+          isActive={activeTab === "lists"}
+          onClick={() => setActiveTab("lists")}
+          label="Liste"
+        />
+        <TabButton
+          isActive={activeTab === "comments"}
+          onClick={() => setActiveTab("comments")}
+          label="Comentarii"
+          count={commentsCount}
+        />
+        <TabButton
+          isActive={activeTab === "discography"}
+          onClick={() => setActiveTab("discography")}
+          label="Discografie"
+        />
       </div>
 
       <div
         style={{
           marginTop: "16px",
           display: "grid",
-          gridTemplateColumns: "minmax(0, 1fr) 380px",
+          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
           gap: "16px",
           alignItems: "start",
         }}
@@ -1127,8 +1191,21 @@ export default function AlbumPage({ slug }) {
               ) : null}
 
               <div style={ui.card}>
-                <div style={{ fontWeight: 700, marginBottom: "8px" }}>
-                  Sugerează corecție
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: "12px",
+                    marginBottom: "10px",
+                  }}
+                >
+                  <div>
+                    <div style={{ fontWeight: 800 }}>Sugerează o corectură</div>
+                    <div style={{ opacity: 0.78, marginTop: "2px" }}>
+                      Trimite o modificare punctuală pentru moderare.
+                    </div>
+                  </div>
                 </div>
 
                 {!isAuthenticated ? (
@@ -1143,28 +1220,52 @@ export default function AlbumPage({ slug }) {
                       <button
                         type="button"
                         onClick={() => toggleSuggest("cover_url")}
-                        style={ui.buttonSmall}
+                        style={{
+                          ...ui.buttonSmall,
+                          background:
+                            suggestKind === "cover_url"
+                              ? "rgba(245, 158, 11, 0.18)"
+                              : "var(--button-bg)",
+                        }}
                       >
                         Cover
                       </button>
                       <button
                         type="button"
                         onClick={() => toggleSuggest("release_date")}
-                        style={ui.buttonSmall}
+                        style={{
+                          ...ui.buttonSmall,
+                          background:
+                            suggestKind === "release_date"
+                              ? "rgba(245, 158, 11, 0.18)"
+                              : "var(--button-bg)",
+                        }}
                       >
-                        Release date
+                        Data lansării
                       </button>
                       <button
                         type="button"
                         onClick={() => toggleSuggest("tracklist")}
-                        style={ui.buttonSmall}
+                        style={{
+                          ...ui.buttonSmall,
+                          background:
+                            suggestKind === "tracklist"
+                              ? "rgba(245, 158, 11, 0.18)"
+                              : "var(--button-bg)",
+                        }}
                       >
-                        Tracklist
+                        Lista pieselor
                       </button>
                       <button
                         type="button"
                         onClick={() => toggleSuggest("description")}
-                        style={ui.buttonSmall}
+                        style={{
+                          ...ui.buttonSmall,
+                          background:
+                            suggestKind === "description"
+                              ? "rgba(245, 158, 11, 0.18)"
+                              : "var(--button-bg)",
+                        }}
                       >
                         Descriere
                       </button>
@@ -1245,7 +1346,7 @@ export default function AlbumPage({ slug }) {
                           onChange={(e) =>
                             setSuggestTracklistText(e.target.value)
                           }
-                          placeholder="Tracklist (un track pe linie)"
+                          placeholder="Lista pieselor (o piesă pe linie)"
                           rows={8}
                           style={{ ...ui.input, width: "100%" }}
                         />
@@ -1279,7 +1380,7 @@ export default function AlbumPage({ slug }) {
 
               <div style={ui.card}>
                 <div style={{ fontWeight: 700, marginBottom: "8px" }}>
-                  Rating
+                  Notă album
                 </div>
                 {album.id ? (
                   <RatingWidget kind="album" itemId={album.id} />
@@ -1342,14 +1443,14 @@ export default function AlbumPage({ slug }) {
 
               <div style={ui.card}>
                 <div style={{ fontWeight: 700, marginBottom: "8px" }}>
-                  Want To Listen
+                  De ascultat
                 </div>
 
                 {!isAuthenticated ? (
                   <p
                     style={{ marginTop: 0, marginBottom: "8px", opacity: 0.9 }}
                   >
-                    Loghează-te ca să adaugi albume în Want To Listen.
+                    Loghează-te ca să adaugi albume în lista de ascultat.
                   </p>
                 ) : null}
 
@@ -1363,8 +1464,8 @@ export default function AlbumPage({ slug }) {
                     style={ui.button}
                   >
                     {isWanted
-                      ? "Remove from Want To Listen"
-                      : "Add to Want To Listen"}
+                      ? "Scoate din lista de ascultat"
+                      : "Adaugă la ascultat"}
                   </button>
                 ) : null}
 
@@ -1394,13 +1495,15 @@ export default function AlbumPage({ slug }) {
               </div>
 
               <div style={ui.card}>
-                <div style={{ fontWeight: 700, marginBottom: "8px" }}>Like</div>
+                <div style={{ fontWeight: 700, marginBottom: "8px" }}>
+                  Apreciere
+                </div>
 
                 {!isAuthenticated ? (
                   <p
                     style={{ marginTop: 0, marginBottom: "8px", opacity: 0.9 }}
                   >
-                    Loghează-te ca să dai Like la albume.
+                    Loghează-te ca să apreciezi albume.
                   </p>
                 ) : null}
 
@@ -1411,7 +1514,7 @@ export default function AlbumPage({ slug }) {
                     disabled={!album?.id || isLoadingLiked || isSubmittingLiked}
                     style={ui.button}
                   >
-                    {isLiked ? "Unlike" : "Like"}
+                    {isLiked ? "Retrage aprecierea" : "Apreciază"}
                   </button>
                 ) : null}
 
@@ -1449,13 +1552,38 @@ export default function AlbumPage({ slug }) {
           ) : null}
 
           {activeTab === "reviews" ? (
-            <div style={ui.card}>
-              <div style={{ fontWeight: 700, marginBottom: "8px" }}>
-                Reviews
+            <div style={{ display: "grid", gap: "14px" }}>
+              <div style={ui.card}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: "12px",
+                    flexWrap: "wrap",
+                    marginBottom: "12px",
+                  }}
+                >
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: "1.08rem" }}>
+                      Review-uri utilizatori
+                    </div>
+                    <div style={{ opacity: 0.78, marginTop: "2px" }}>
+                      {reviews.length} review-uri pentru acest album
+                    </div>
+                  </div>
+                  <Link to={`/albums/${album.slug || slug}?tab=reviews`}>
+                    Link direct
+                  </Link>
+                </div>
+                <ReviewForm
+                  albumId={album.id}
+                  onCreated={handleReviewCreated}
+                />
               </div>
-              <ReviewForm albumId={album.id} onCreated={handleReviewCreated} />
 
               {isLoadingReviews ? (
+                <div style={ui.card}>
                 <div
                   style={{ display: "grid", gap: "10px", marginTop: "12px" }}
                 >
@@ -1484,31 +1612,44 @@ export default function AlbumPage({ slug }) {
                     }}
                   />
                 </div>
+                </div>
               ) : null}
               {reviewsError ? <p style={ui.errorText}>{reviewsError}</p> : null}
 
               {!isLoadingReviews && !reviewsError ? (
-                <div>
-                  <div style={{ marginTop: "12px" }}>
-                    <div style={{ fontWeight: 700, marginBottom: "8px" }}>
-                      Cele mai liked comentarii
+                <>
+                  <section style={ui.card}>
+                    <div style={{ fontWeight: 800, marginBottom: "8px" }}>
+                      Review-uri apreciate
                     </div>
-                    <ReviewList
-                      reviews={topLikedReviews}
-                      onChangeReviews={handleChangeReviews}
-                    />
-                  </div>
+                    {topLikedReviews.length ? (
+                      <ReviewList
+                        reviews={topLikedReviews}
+                        onChangeReviews={handleChangeReviews}
+                      />
+                    ) : (
+                      <div style={{ opacity: 0.82 }}>
+                        Încă nu există review-uri apreciate.
+                      </div>
+                    )}
+                  </section>
 
-                  <div style={{ marginTop: "16px" }}>
-                    <div style={{ fontWeight: 700, marginBottom: "8px" }}>
-                      Cele mai recente comentarii
+                  <section style={ui.card}>
+                    <div style={{ fontWeight: 800, marginBottom: "8px" }}>
+                      Toate review-urile
                     </div>
-                    <ReviewList
-                      reviews={reviews}
-                      onChangeReviews={handleChangeReviews}
-                    />
-                  </div>
-                </div>
+                    {reviews.length ? (
+                      <ReviewList
+                        reviews={reviews}
+                        onChangeReviews={handleChangeReviews}
+                      />
+                    ) : (
+                      <div style={{ opacity: 0.82 }}>
+                        Nu există încă review-uri.
+                      </div>
+                    )}
+                  </section>
+                </>
               ) : null}
             </div>
           ) : null}
@@ -1659,7 +1800,7 @@ export default function AlbumPage({ slug }) {
           {activeTab === "comments" ? (
             <div style={ui.card}>
               <div style={{ fontWeight: 700, marginBottom: "8px" }}>
-                Comments
+                Comentarii
               </div>
 
               {albumCommentsQuery.isLoading ? (
@@ -1732,7 +1873,7 @@ export default function AlbumPage({ slug }) {
           {activeTab === "discography" ? (
             <div style={ui.card}>
               <div style={{ fontWeight: 700, marginBottom: "8px" }}>
-                Discography
+                Discografie
               </div>
               {Array.isArray(album.other_albums_by_artist) &&
               album.other_albums_by_artist.length ? (
@@ -1772,8 +1913,23 @@ export default function AlbumPage({ slug }) {
 
         <div style={{ display: "grid", gap: "16px" }}>
           <div style={ui.card}>
-            <div style={{ fontWeight: 700, marginBottom: "8px" }}>
-              Tracklist (Rate tracks)
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "10px",
+                marginBottom: "10px",
+              }}
+            >
+              <div>
+                <div style={{ fontWeight: 800 }}>Lista pieselor</div>
+                <div style={{ opacity: 0.76, marginTop: "2px" }}>
+                  {songsSorted.length
+                    ? `${songsSorted.length} piese`
+                    : "Nu există piese"}
+                </div>
+              </div>
             </div>
             {pickFavoriteSongSlot ? (
               <div style={{ marginBottom: "10px", opacity: 0.85 }}>
@@ -1789,59 +1945,67 @@ export default function AlbumPage({ slug }) {
               </div>
             ) : null}
             {songsSorted.length ? (
-              <div style={{ display: "grid", gap: "10px" }}>
+              <div style={{ display: "grid", gap: "8px" }}>
                 {songsSorted.map((song) => (
                   <div
                     key={song.id}
                     style={{
                       border: `1px solid ${ui.colors.border}`,
                       borderRadius: "8px",
-                      padding: "10px",
+                      padding: "10px 12px",
                       display: "grid",
-                      gap: "6px",
+                      gridTemplateColumns: "36px minmax(0, 1fr)",
+                      gap: "10px",
+                      alignItems: "start",
+                      background: "rgba(15, 23, 42, 0.22)",
                     }}
                   >
-                    <div
+                    <span
                       style={{
-                        display: "flex",
-                        gap: "8px",
-                        alignItems: "baseline",
+                        opacity: 0.82,
+                        fontWeight: 800,
+                        fontVariantNumeric: "tabular-nums",
+                        textAlign: "right",
                       }}
                     >
-                      <span style={{ opacity: 0.85 }}>
-                        {song.track_number
-                          ? String(song.track_number).padStart(2, "0")
-                          : "–"}
-                      </span>
-                      <div style={{ flex: 1 }}>
-                        <strong>
-                          {song.slug ? (
-                            <Link to={`/songs/${song.slug}`}>{song.title}</Link>
-                          ) : (
-                            song.title
-                          )}
-                        </strong>
-                        {song.duration_seconds ? (
-                          <span style={{ opacity: 0.85 }}>
-                            {" "}
-                            — {formatDuration(song.duration_seconds)}
-                          </span>
-                        ) : null}
-                      </div>
-                    </div>
+                      {song.track_number
+                        ? String(song.track_number).padStart(2, "0")
+                        : "–"}
+                    </span>
 
                     <div
                       style={{
                         display: "flex",
                         justifyContent: "space-between",
-                        gap: "10px",
+                        gap: "12px",
+                        alignItems: "center",
+                        flexWrap: "wrap",
                       }}
                     >
-                      <div style={{ opacity: 0.9, fontSize: "0.9em" }}>
-                        {song.average_rating !== null &&
-                        song.average_rating !== undefined
-                          ? `⭐ ${formatAverageRating(song.average_rating)}${song.ratings_count ? ` (${song.ratings_count})` : ""}`
-                          : "⭐ -"}
+                      <div style={{ minWidth: 0 }}>
+                        <div
+                          style={{
+                            fontWeight: 800,
+                            overflowWrap: "anywhere",
+                            lineHeight: 1.3,
+                          }}
+                        >
+                          {song.slug ? (
+                            <Link to={`/songs/${song.slug}`}>{song.title}</Link>
+                          ) : (
+                            song.title
+                          )}
+                        </div>
+                        <div style={{ opacity: 0.78, marginTop: "3px" }}>
+                          {song.duration_seconds
+                            ? formatDuration(song.duration_seconds)
+                            : "Durată necunoscută"}
+                          {" · "}
+                          {song.average_rating !== null &&
+                          song.average_rating !== undefined
+                            ? `${formatAverageRating(song.average_rating)}/5${song.ratings_count ? ` (${song.ratings_count})` : ""}`
+                            : "fără rating"}
+                        </div>
                       </div>
                       <CompactSongRating
                         songId={song.id}
@@ -1850,7 +2014,7 @@ export default function AlbumPage({ slug }) {
                     </div>
 
                     {pickFavoriteSongSlot ? (
-                      <div>
+                      <div style={{ gridColumn: "2 / -1" }}>
                         <button
                           type="button"
                           style={ui.buttonSmall}
@@ -1877,7 +2041,7 @@ export default function AlbumPage({ slug }) {
 
           <div style={ui.card}>
             <div style={{ fontWeight: 700, marginBottom: "8px" }}>
-              You may also like
+              Recomandări similare
             </div>
             {recommendationsQuery.isLoading ? (
               <div style={{ opacity: 0.85 }}>Se încarcă recomandările...</div>

@@ -18,7 +18,7 @@ const KIND_LABELS = {
 const STATUS_LABELS = {
   pending: "În așteptare",
   approved: "Aprobată",
-  rejected: "Respingă",
+  rejected: "Respinsă",
 };
 
 const STATUS_COLORS = {
@@ -122,16 +122,17 @@ function SuggestionCard({ suggestion }) {
   const [expanded, setExpanded] = useState(false);
 
   const targetName =
+    suggestion.target_name ||
     suggestion.artist?.name ||
-    suggestion.album?.name ||
-    suggestion.song?.name ||
+    suggestion.album?.title ||
+    suggestion.song?.title ||
     "Material necunoscut";
 
   const targetType = suggestion.artist
     ? "Artist"
     : suggestion.album
       ? "Album"
-      : "Cântec";
+    : "Piesă";
 
   return (
     <div className="suggestion-card">
@@ -208,11 +209,12 @@ function SuggestionCard({ suggestion }) {
                 </span>
               </div>
 
-              {suggestion.reviewed_by && (
+              {(suggestion.reviewed_by || suggestion.reviewed_by_username) && (
                 <div className="content-row">
                   <span className="label">Revizuit de:</span>
                   <span className="value">
-                    {suggestion.reviewed_by.username}
+                    {suggestion.reviewed_by?.username ||
+                      suggestion.reviewed_by_username}
                   </span>
                 </div>
               )}
@@ -224,6 +226,15 @@ function SuggestionCard({ suggestion }) {
               <span className="label">Feedback:</span>
               <span className="value decision-note">
                 {suggestion.decision_note}
+              </span>
+            </div>
+          )}
+
+          {!suggestion.decision_note && suggestion.status === "rejected" && (
+            <div className="content-row">
+              <span className="label">Feedback:</span>
+              <span className="value decision-note">
+                Sugestia a fost respinsă.
               </span>
             </div>
           )}
