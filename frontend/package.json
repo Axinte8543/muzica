@@ -11,9 +11,10 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test:unit": "vitest",
+    "test:unit": "vitest run",
     "test:unit:watch": "vitest --watch",
     "test:e2e": "playwright test",
+    "test:browsers": "playwright install chromium",
     "test:e2e:full": "playwright test tests/e2e/auth-message-recommendations.spec.ts",
     "test:e2e:axe": "playwright test tests/e2e/axe.spec.ts",
     "test": "npm run test:unit"

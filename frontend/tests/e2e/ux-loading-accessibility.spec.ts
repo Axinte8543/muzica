@@ -6,6 +6,16 @@ declare const process: any;
 
 const API_BASE = process.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 
+test.beforeEach(async ({ page }) => {
+  // Background requests must use the same fake session as the mocked messages API.
+  await page.route("**/api/chat/typing/**", (route) => route.fulfill({
+    json: { is_typing: false },
+  }));
+  await page.route("**/api/analytics/events/**", (route) => route.fulfill({
+    status: 201, json: { id: 1 },
+  }));
+});
+
 test.describe("UX loading & accessibility", () => {
   test("shows skeleton loader while messages load and is responsive", async ({
     page,

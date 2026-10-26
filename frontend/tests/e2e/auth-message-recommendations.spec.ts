@@ -12,7 +12,7 @@ test("auth, messaging and recommendations work end-to-end", async ({
 
   await page.getByLabel(/username/i).fill(E2E_USERNAME);
   await page.getByLabel(/password/i).fill(E2E_PASSWORD);
-  await page.getByRole("button", { name: /login/i }).click();
+  await page.getByRole("button", { name: "Login", exact: true }).click();
 
   await expect(page).toHaveURL(/\/$/);
   await page.goto("/messages");

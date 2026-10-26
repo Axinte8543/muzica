@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 
 export default function ConversationsList({
-  conversations,
-  friends,
+  conversations = [],
+  friends = [],
   selectedUserId,
   onSelectUser,
   isLoading,
@@ -41,9 +41,9 @@ export default function ConversationsList({
   }, [friends, normalizedSearch]);
 
   const renderConversationItem = (conv, subtitle, badge) => (
-    <div
+    <button type="button"
       key={conv.user_id}
-      className={`conversation-item ${selectedUserId === conv.user_id ? "active" : ""}`}
+      className={`conversation-item ${String(selectedUserId) === String(conv.user_id) ? "active" : ""}`}
       onClick={() => onSelectUser(conv.user_id)}
     >
       <div className="conversation-info">
@@ -51,7 +51,7 @@ export default function ConversationsList({
         <div className="conversation-info-message">{subtitle}</div>
       </div>
       {badge}
-    </div>
+    </button>
   );
 
   if (isLoading) {
@@ -61,6 +61,7 @@ export default function ConversationsList({
           <div className="conversations-list-title">Conversații</div>
           <input
             type="search"
+            aria-label="Caută prieteni"
             className="conversations-search-input"
             placeholder="Caută prieteni..."
             value={friendSearchValue}
@@ -81,6 +82,7 @@ export default function ConversationsList({
           <div className="conversations-list-title">Conversații</div>
           <input
             type="search"
+            aria-label="Caută prieteni"
             className="conversations-search-input"
             placeholder="Caută prieteni..."
             value={friendSearchValue}
@@ -117,14 +119,14 @@ export default function ConversationsList({
             })
           ) : (
             <div className="conversations-empty">
-              Nu ai prieteni. Mergi la{" "}
+              {normalizedSearch ? "Niciun prieten găsit." : <>Nu ai prieteni. Mergi la{" "}
               <a
                 href="/profile/friends"
                 style={{ color: "inherit", textDecoration: "underline" }}
               >
                 secțiunea prieteni
               </a>{" "}
-              pentru a adăuga.
+              pentru a adăuga.</>}
             </div>
           )}
         </div>
@@ -138,6 +140,7 @@ export default function ConversationsList({
         <div className="conversations-list-title">Conversații</div>
         <input
           type="search"
+          aria-label="Caută prieteni"
           className="conversations-search-input"
           placeholder="Caută prieteni..."
           value={friendSearchValue}
@@ -180,10 +183,10 @@ export default function ConversationsList({
           )
         ) : (
           conversations.map((conv) => (
-            <div
+            <button type="button"
               key={conv.user_id}
               className={`conversation-item ${
-                selectedUserId === conv.user_id ? "active" : ""
+                String(selectedUserId) === String(conv.user_id) ? "active" : ""
               }`}
               onClick={() => onSelectUser(conv.user_id)}
             >
@@ -201,7 +204,7 @@ export default function ConversationsList({
                   {conv.unread_count}
                 </div>
               )}
-            </div>
+            </button>
           ))
         )}
       </div>

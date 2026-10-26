@@ -1,3 +1,4 @@
+from config.test_helpers import verify_fixture_emails
 from datetime import date
 
 from django.contrib.auth import get_user_model
@@ -17,6 +18,8 @@ User = get_user_model()
 
 class TestRecommendations(TestCase):
 	def setUp(self):
+		cache.clear()
+		self.addCleanup(cache.clear)
 		self.client = APIClient()
 		self.password = "StrongPass123!"
 		self.user = User.objects.create_user(username="alice", password=self.password)
@@ -68,6 +71,7 @@ class TestRecommendations(TestCase):
 		self.artist_only.genres.add(self.jazz)
 
 	def _login(self):
+		verify_fixture_emails()
 		res = self.client.post("/api/auth/login/", {"username": "alice", "password": self.password}, format="json")
 		self.assertEqual(res.status_code, 200, res.data)
 		access = res.data.get("access")
@@ -255,6 +259,8 @@ class TestAlbumGenreFilters(TestCase):
 		)
 		self.genre = Genre.objects.create(name="Latin Rock", slug="latin-rock")
 		self.artist.genres.add(self.genre)
+		for index in range(2):
+			Song.objects.create(album=self.album, artist=self.artist, title=f'Track {index}', slug=f'genre-track-{index}', track_number=index+1)
 
 	def test_album_filters_include_artist_genres(self):
 		res = self.client.get("/api/albums/filters/")
@@ -300,6 +306,7 @@ class TestAlbumExtrasEndpoints(TestCase):
 		)
 
 	def _login(self):
+		verify_fixture_emails()
 		res = self.client.post(
 		 "/api/auth/login/",
 		 {"username": "alice", "password": self.password},
@@ -762,6 +769,7 @@ class TestHome(TestCase):
 		AlbumRating.objects.create(user=self.bob, album=self.album, rating=5)
 
 	def _login(self, username: str):
+		verify_fixture_emails()
 		res = self.client.post(
 		 "/api/auth/login/",
 		 {"username": username, "password": self.password},

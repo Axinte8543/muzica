@@ -135,13 +135,15 @@ export default function AlbumsPage() {
     return ["albums", "singles", "all"].includes(raw) ? raw : "albums";
   }, [searchParams]);
 
-  const [searchInput, setSearchInput] = useState("");
-  const [appliedSearch, setAppliedSearch] = useState("");
+  const queryFromUrl = searchParams.get("q") || "";
+  const decadeFromUrl = /^\d{4}$/.test(searchParams.get("decade") || "") ? searchParams.get("decade") : "";
+  const [searchInput, setSearchInput] = useState(queryFromUrl);
+  const [appliedSearch, setAppliedSearch] = useState(queryFromUrl);
 
   const [selectedGenre, setSelectedGenre] = useState(genreFromUrl);
   const [selectedYear, setSelectedYear] = useState(yearFromUrl);
   const [selectedMonth, setSelectedMonth] = useState(monthFromUrl);
-  const [selectedDecade, setSelectedDecade] = useState("");
+  const [selectedDecade, setSelectedDecade] = useState(decadeFromUrl);
   const [selectedSort, setSelectedSort] = useState(sortFromUrl);
   const [selectedReleaseType, setSelectedReleaseType] =
     useState(releaseTypeFromUrl);
@@ -205,17 +207,22 @@ export default function AlbumsPage() {
   }, [filtersQuery.data]);
 
   useEffect(() => {
-    setIsLoading(true);
     setPage(1);
     setSelectedGenre(genreFromUrl);
     setSelectedYear(yearFromUrl);
     setSelectedMonth(monthFromUrl);
     setSelectedSort(sortFromUrl);
     setSelectedReleaseType(releaseTypeFromUrl);
-  }, [genreFromUrl, yearFromUrl, monthFromUrl, sortFromUrl, releaseTypeFromUrl]);
+    setSelectedDecade(decadeFromUrl);
+    setSearchInput(queryFromUrl);
+    setAppliedSearch(queryFromUrl);
+  }, [genreFromUrl, yearFromUrl, monthFromUrl, sortFromUrl, releaseTypeFromUrl, decadeFromUrl, queryFromUrl]);
 
   useEffect(() => {
     let isCancelled = false;
+    // Loading follows the external request lifecycle, including URL-driven navigation.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsLoading(true);
 
     const params = {};
     if (appliedSearch) params.q = appliedSearch;
@@ -279,15 +286,20 @@ export default function AlbumsPage() {
     accessToken,
   ]);
 
+  function changeFilter(name, value) {
+    const params = new URLSearchParams(searchParams);
+    if (value) params.set(name, value);
+    else params.delete(name);
+    setSearchParams(params);
+  }
+
   function handleSearchSubmit(e) {
     e.preventDefault();
-    setIsLoading(true);
     setPage(1);
-    setAppliedSearch(searchInput.trim());
+    changeFilter("q", searchInput.trim());
   }
 
   function handleClearAll() {
-    setIsLoading(true);
     setPage(1);
     setSearchInput("");
     setAppliedSearch("");
@@ -392,9 +404,8 @@ export default function AlbumsPage() {
               <select
                 value={selectedReleaseType}
                 onChange={(e) => {
-                  setIsLoading(true);
                   setPage(1);
-                  setSelectedReleaseType(e.target.value);
+                  changeFilter("release_type", e.target.value);
                 }}
                 style={{
                   padding: "8px 10px",
@@ -413,9 +424,8 @@ export default function AlbumsPage() {
               <select
                 value={selectedGenre}
                 onChange={(e) => {
-                  setIsLoading(true);
                   setPage(1);
-                  setSelectedGenre(e.target.value);
+                  changeFilter("genre", e.target.value);
                 }}
                 style={{
                   padding: "8px 10px",
@@ -437,9 +447,8 @@ export default function AlbumsPage() {
               <select
                 value={selectedYear}
                 onChange={(e) => {
-                  setIsLoading(true);
                   setPage(1);
-                  setSelectedYear(e.target.value);
+                  changeFilter("year", e.target.value);
                 }}
                 style={{
                   padding: "8px 10px",
@@ -461,9 +470,8 @@ export default function AlbumsPage() {
               <select
                 value={selectedMonth}
                 onChange={(e) => {
-                  setIsLoading(true);
                   setPage(1);
-                  setSelectedMonth(e.target.value);
+                  changeFilter("month", e.target.value);
                 }}
                 style={{
                   padding: "8px 10px",
@@ -485,9 +493,8 @@ export default function AlbumsPage() {
               <select
                 value={selectedDecade}
                 onChange={(e) => {
-                  setIsLoading(true);
                   setPage(1);
-                  setSelectedDecade(e.target.value);
+                  changeFilter("decade", e.target.value);
                 }}
                 style={{
                   padding: "8px 10px",
@@ -506,7 +513,7 @@ export default function AlbumsPage() {
           </div>
         </aside>
 
-        <main style={{ flex: 1 }}>
+        <section style={{ flex: 1 }}>
           <div style={{ marginBottom: "12px" }}>
             <label
               style={{ display: "flex", alignItems: "center", gap: "10px" }}
@@ -515,9 +522,8 @@ export default function AlbumsPage() {
               <select
                 value={selectedSort}
                 onChange={(e) => {
-                  setIsLoading(true);
                   setPage(1);
-                  setSelectedSort(e.target.value);
+                  changeFilter("sort", e.target.value);
                 }}
                 style={{
                   padding: "8px 10px",
@@ -684,7 +690,7 @@ export default function AlbumsPage() {
               </div>
             </>
           ) : null}
-        </main>
+        </section>
       </div>
     </div>
   );

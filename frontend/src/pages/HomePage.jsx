@@ -709,7 +709,7 @@ export default function HomePage() {
           </div>
         </aside>
 
-        <main style={{ flex: 1 }}>
+        <section style={{ flex: 1 }}>
           <section style={{ marginTop: "0px" }}>
             <div
               style={{
@@ -1238,7 +1238,7 @@ export default function HomePage() {
               <AlbumGrid albums={recentAlbums} />
             ) : null}
           </section>
-        </main>
+        </section>
       </div>
 
       <div style={{ marginTop: "18px" }}>

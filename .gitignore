@@ -59,3 +59,12 @@ node_modules/
 # OS
 .DS_Store
 Thumbs.db
+
+# Test artifacts
+frontend/.playwright-browsers/
+frontend/playwright-report/
+frontend/test-results/
+frontend/coverage/
+
+# Keep the verification evidence referenced by docs/DEFECTS.md.
+!docs/evidence/*.log

@@ -284,11 +284,10 @@ export default function Navbar() {
         >
           <Link
             to="/"
-            aria-label="roMusic - prima pagină"
             title="roMusic - prima pagină"
             style={brandLinkStyle}
           >
-            <span style={brandMarkStyle}>rM</span>
+            <span aria-hidden="true" style={brandMarkStyle}>rM</span>
             <span style={brandTextStyle}>
               <span style={brandNameStyle}>roMusic</span>
             </span>
@@ -308,25 +307,11 @@ export default function Navbar() {
             {isAuthenticated ? <Link to="/activity">Activitate</Link> : null}
             {isAuthenticated ? <Link to="/suggest">Propune</Link> : null}
           </div>
-          {/* Mobile vertical menu (shows full nav on small screens) */}
-          <div className={`navbar-mobile-menu ${mobileOpen ? "open" : ""}`}>
-            <Link to="/albums">Albume</Link>
-            {isAuthenticated ? <Link to="/dashboard">Dashboard</Link> : null}
-            {isAuthenticated ? (
-              <Link to="/recommendations">Recomandări</Link>
-            ) : null}
-            {isAuthenticated ? (
-              <Link to="/notifications">Notificări</Link>
-            ) : null}
-            {isAuthenticated ? <Link to="/messages">Mesaje</Link> : null}
-            <Link to="/lists">Liste</Link>
-            <Link to="/following">Urmăriți</Link>
-            {isAuthenticated ? <Link to="/activity">Activitate</Link> : null}
-            {isAuthenticated ? <Link to="/suggest">Propune</Link> : null}
-          </div>
           <button
             className="navbar-mobile-button"
             aria-label="Meniu"
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-navigation"
             onClick={() => setMobileOpen((v) => !v)}
             type="button"
           >
@@ -352,6 +337,7 @@ export default function Navbar() {
             <div style={{ display: "flex", gap: "8px", width: "100%" }}>
               <input
                 type="search"
+                aria-label="Caută muzică"
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
                 onFocus={() => setIsSearchFocused(true)}
@@ -519,7 +505,7 @@ export default function Navbar() {
         </form>
 
         {mobileOpen ? (
-          <nav className="navbar-mobile-menu" aria-label="Meniu mobil">
+          <nav id="mobile-navigation" className="navbar-mobile-menu open" aria-label="Meniu mobil">
             <div>
               <Link to="/albums" onClick={() => setMobileOpen(false)}>
                 Albume

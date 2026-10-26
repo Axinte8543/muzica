@@ -4,7 +4,10 @@ import unittest
 
 import boto3
 from botocore.exceptions import ClientError
-from celery.contrib.testing.worker import start_worker
+try:
+    from celery.contrib.testing.worker import start_worker
+except ImportError:
+    start_worker = None
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import TransactionTestCase, override_settings

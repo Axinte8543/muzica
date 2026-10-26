@@ -1,0 +1,54 @@
+Found 130 test(s).
+System check identified no issues (0 silenced).
+Creating test database for alias 'default'...
+
+........................WARNING:django.request:Unauthorized: /api/chat/messages/
+...WARNING:django.request:Bad Request: /api/friends/request
+..WARNING:django.request:Not Found: /api/friends/accept
+...WARNING:django.request:Unauthorized: /api/songs/1/comments/
+WARNING:django.request:Bad Request: /api/songs/3/comments/
+WARNING:django.request:Bad Request: /api/reviews/2/comments/
+WARNING:django.request:Forbidden: /api/review-comments/1/
+WARNING:django.request:Forbidden: /api/review-comments/1/
+WARNING:django.request:Forbidden: /api/reviews/1/
+.WARNING:django.request:Unauthorized: /api/lists
+......WARNING:django.request:Unauthorized: /api/albums/1/like
+..WARNING:django.request:Unauthorized: /api/profile/liked-albums
+...WARNING:django.request:Unauthorized: /api/profile/listens
+..WARNING:django.request:Unauthorized: /api/profile/listens/stats
+..WARNING:django.request:Bad Request: /api/profile/favorite-albums
+WARNING:django.request:Bad Request: /api/profile/favorite-albums
+.WARNING:django.request:Bad Request: /api/profile/favorite-songs
+WARNING:django.request:Bad Request: /api/profile/favorite-songs
+....WARNING:django.request:Unauthorized: /api/songs/1/like
+...WARNING:django.request:Unauthorized: /api/albums/1/want-to-listen
+.....................WARNING:django.request:Unauthorized: /api/recommendations/friends/
+.............WARNING:django.request:Unauthorized: /api/recommendations/
+.........WARNING:django.request:Unauthorized: /api/auth/login/
+WARNING:django.request:Unauthorized: /api/auth/login/
+WARNING:django.request:Unauthorized: /api/auth/login/
+WARNING:django.request:Unauthorized: /api/auth/login/
+WARNING:django.request:Unauthorized: /api/auth/login/
+WARNING:django.request:Unauthorized: /api/auth/login/
+.WARNING:django.request:Forbidden: /api/auth/login/
+.WARNING:django.request:Bad Request: /api/auth/register/
+WARNING:django.request:Bad Request: /api/auth/register/
+WARNING:django.request:Bad Request: /api/auth/register/
+.WARNING:django.request:Bad Request: /api/auth/register/
+.WARNING:django.request:Bad Request: /api/auth/register/
+.WARNING:django.request:Bad Request: /api/auth/register/
+.WARNING:django.request:Bad Request: /api/auth/register/
+.WARNING:django.request:Bad Request: /api/auth/register/
+.WARNING:users.serializers:Verification email could not be sent for user new-user-email-failure: smtp down
+...WARNING:django.request:Unauthorized: /api/auth/webauthn/register/options/
+.WARNING:django.request:Unauthorized: /api/auth/avatar/status/
+..WARNING:django.request:Bad Request: /api/auth/password-reset/confirm/
+....WARNING:django.request:Unauthorized: /api/auth/me/
+.WARNING:django.request:Unauthorized: /api/auth/me/
+........WARNING:django.request:Unauthorized: /api/users/search
+...s
+----------------------------------------------------------------------
+Ran 130 tests in 3.138s
+
+OK (skipped=1)
+Destroying test database for alias 'default'...

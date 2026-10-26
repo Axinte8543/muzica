@@ -491,3 +491,15 @@
   color: var(--text-muted);
   font-size: 0.95rem;
 }
+button.conversation-item {
+  width: 100%;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  background: transparent;
+  border: 0;
+}
+button.conversation-item:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: -2px;
+}

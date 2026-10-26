@@ -149,9 +149,13 @@ export async function changePassword({
 export function persistTokens({ access, refresh }) {
   if (access) {
     localStorage.setItem(AUTH_STORAGE_KEYS.accessToken, access);
+  } else {
+    localStorage.removeItem(AUTH_STORAGE_KEYS.accessToken);
   }
   if (refresh) {
     localStorage.setItem(AUTH_STORAGE_KEYS.refreshToken, refresh);
+  } else {
+    localStorage.removeItem(AUTH_STORAGE_KEYS.refreshToken);
   }
 }
 

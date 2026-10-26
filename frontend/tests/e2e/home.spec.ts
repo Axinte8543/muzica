@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-test("home page loads and shows loading fallback", async ({ page }) => {
+test("home page loads discovery content", async ({ page }) => {
   await page.goto("/");
-  await expect(page.locator("text=Se încarcă")).toBeVisible();
+  await expect(page.locator("main")).toContainText("Găsește rapid albume");
 });

@@ -1,8 +1,10 @@
+from config.test_helpers import verify_fixture_emails
 import json
 from datetime import date
 from datetime import timedelta
 from unittest.mock import patch
 
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
@@ -35,6 +37,8 @@ from interactions.models import (
 
 from music.models import Genre
 
+User = get_user_model()
+
 
 class TestFullMainFlows(TestCase):
 	def setUp(self):
@@ -62,6 +66,7 @@ class TestFullMainFlows(TestCase):
 		 is_approved=True,
 		)
 
+		Song.objects.create(album=self.album, artist=self.artist, title="Outro", slug="test-outro", track_number=2, is_approved=True)
 		self.username = "alice"
 		self.password = "StrongPass123!"
 		self.email = "alice@example.com"
@@ -75,6 +80,7 @@ class TestFullMainFlows(TestCase):
 		self.assertEqual(register_res.status_code, 201, register_res.data)
 		self.assertTrue(register_res.data.get("id"))
 
+		verify_fixture_emails()
 		login_res = self.client.post(
 		 "/api/auth/login/",
 		 {"username": self.username, "password": self.password},
@@ -313,6 +319,7 @@ class TestFullMainFlows(TestCase):
 		 format="json",
 		)
 		self.assertEqual(bob_register.status_code, 201, bob_register.data)
+		verify_fixture_emails()
 		bob_login = self.client.post(
 		 "/api/auth/login/",
 		 {"username": bob_username, "password": bob_password},
@@ -387,8 +394,8 @@ class TestFullMainFlows(TestCase):
                                                
 		top_res = self.client.get("/api/top-albums/")
 		self.assertEqual(top_res.status_code, 200)
-		self.assertTrue(isinstance(top_res.data, list))
-		self.assertTrue(any(a.get("slug") == self.album.slug for a in top_res.data))
+		self.assertIsInstance(top_res.data, dict)
+		self.assertTrue(any(a.get("slug") == self.album.slug for a in top_res.data['results']))
 
                                  
 		my_reviews = self.client.get("/api/profile/reviews")
@@ -432,6 +439,10 @@ class TestFullMainFlows(TestCase):
 			AlbumRating.objects.create(user=user, album=album, rating=5)
 			SongRating.objects.create(user=user, song=song, rating=4)
 
+		# Equal timestamps must not cause entries to move across pagination boundaries.
+		fixed_time = timezone.now()
+		AlbumRating.objects.filter(user=user).update(created_at=fixed_time)
+		SongRating.objects.filter(user=user).update(created_at=fixed_time)
 		page1 = self.client.get("/api/profile/ratings")
 		self.assertEqual(page1.status_code, 200, page1.data)
 		self.assertEqual(page1.data.get("albums", {}).get("count"), 11)
@@ -574,6 +585,7 @@ class TestGamificationEndpoints(TestCase):
 		self.assertEqual(register_res.status_code, 201, register_res.data)
 		self.user = User.objects.get(username=self.username)
 
+		verify_fixture_emails()
 		login_res = self.client.post(
 		 "/api/auth/login/",
 		 {"username": self.username, "password": self.password},
@@ -652,6 +664,7 @@ class TestChatMessagesEndpoint(TestCase):
 		)
 		self.assertEqual(register_res.status_code, 201, register_res.data)
 
+		verify_fixture_emails()
 		login_res = self.client.post(
 		 "/api/auth/login/",
 		 {"username": self.username, "password": self.password},
@@ -701,6 +714,7 @@ class TestCorrectionsEndpoint(TestCase):
 		)
 		self.assertEqual(register_res.status_code, 201, register_res.data)
 
+		verify_fixture_emails()
 		login_res = self.client.post(
 		 "/api/auth/login/",
 		 {"username": self.username, "password": self.password},
@@ -765,6 +779,7 @@ class TestProfileStats(TestCase):
 		return User.objects.create_user(username=username, password=self.password)
 
 	def _login(self, username: str):
+		verify_fixture_emails()
 		res = self.client.post("/api/auth/login/", {"username": username, "password": self.password}, format="json")
 		self.assertEqual(res.status_code, 200, res.data)
 		access = res.data.get("access")
@@ -979,6 +994,7 @@ class TestFriends(TestCase):
 		self.carla = User.objects.create_user(username='carla', password=self.password)
 
 	def _login(self, username: str):
+		verify_fixture_emails()
 		res = self.client.post(
 		 "/api/auth/login/",
 		 {"username": username, "password": self.password},
@@ -1119,6 +1135,7 @@ class TestProfileListens(TestCase):
 		self.artist = artist
 
 	def _login(self):
+		verify_fixture_emails()
 		res = self.client.post(
 		 "/api/auth/login/",
 		 {"username": "alice", "password": self.password},
@@ -1226,6 +1243,7 @@ class TestProfileListensStats(TestCase):
 		self.album2 = Album.objects.create(artist=artist, title="A2", slug="a2", release_date=date(2020, 1, 2), is_approved=True)
 
 	def _login(self):
+		verify_fixture_emails()
 		res = self.client.post(
 		 "/api/auth/login/",
 		 {"username": "alice", "password": self.password},
@@ -1277,6 +1295,7 @@ class TestWantToListen(TestCase):
 		)
 
 	def _login(self):
+		verify_fixture_emails()
 		res = self.client.post(
 		 "/api/auth/login/",
 		 {"username": "alice", "password": self.password},
@@ -1389,6 +1408,7 @@ class TestListsRemoveAlbum(TestCase):
 		)
 
 	def _login(self):
+		verify_fixture_emails()
 		res = self.client.post(
 		 "/api/auth/login/",
 		 {"username": "alice", "password": self.password},
@@ -1443,6 +1463,7 @@ class TestProfileTopStats(TestCase):
 		self.song2 = s2
 
 	def _login(self):
+		verify_fixture_emails()
 		res = self.client.post(
 		 "/api/auth/login/",
 		 {"username": "alice", "password": self.password},
@@ -1542,6 +1563,7 @@ class TestProfileLikedAlbums(TestCase):
 		)
 
 	def _login(self):
+		verify_fixture_emails()
 		res = self.client.post(
 		 "/api/auth/login/",
 		 {"username": "alice", "password": self.password},
@@ -1651,6 +1673,7 @@ class TestSongLikeEndpoints(TestCase):
 		)
 
 	def _login(self):
+		verify_fixture_emails()
 		res = self.client.post(
 		 "/api/auth/login/",
 		 {"username": "alice", "password": self.password},
@@ -1718,6 +1741,7 @@ class TestActivityFeed(TestCase):
 		)
 
 	def _login(self, username: str):
+		verify_fixture_emails()
 		res = self.client.post(
 		 "/api/auth/login/",
 		 {"username": username, "password": self.password},
@@ -2216,6 +2240,7 @@ class TestLiveStreamEndpoint(TestCase):
 		)
 
 	def _login(self):
+		verify_fixture_emails()
 		login_res = self.client.post(
 		 "/api/auth/login/",
 		 {"username": self.user.username, "password": self.password},
@@ -2252,6 +2277,7 @@ class TestLevel3ProfileEdges(TestCase):
 		self.user = User.objects.create_user(username='newbie', password=self.password)
 
 	def _login(self):
+		verify_fixture_emails()
 		res = self.client.post(
 		 '/api/auth/login/',
 		 {'username': 'newbie', 'password': self.password},

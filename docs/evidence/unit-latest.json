@@ -1,0 +1,223 @@
+{
+  "capturedAt": "2026-10-26T15:36:20.085Z",
+  "total": 43,
+  "passed": 43,
+  "failed": 0,
+  "cases": [
+    {
+      "name": " renders app shell and fallback",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " empty storage returns null tokens",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " persists both tokens",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " clears both tokens",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " normalizes literal null and undefined",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " removes expired access but preserves refresh",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " accepts unexpired access",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " expires tokens within thirty second clock skew",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " replacing session removes stale refresh",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " replacing session removes stale access",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " clearing auth preserves unrelated storage",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " decodes a WebAuthn challenge",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " decodes credential identifiers",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " decodes registration user identifiers",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " does not mutate server options",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " serializes assertion binary fields and nullable handle",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " serializes attestation transports",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " Pagination hides a single page",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " Pagination hides empty results",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " Pagination disables previous on first page",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " Pagination disables next on last page",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " Pagination invokes previous",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " Pagination invokes next",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " Pagination shows total count",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " Conversations handles missing lists",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " Conversations sorts friends by name",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " Conversations filters friends ignoring case and whitespace",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " Conversations distinguishes no search matches from no friends",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " Conversations selects a friend",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " Conversations conversation items support keyboard via native buttons",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " Conversations normalizes selected identifiers",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " Conversations search has an accessible name",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " Conversations announces friend loading errors",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " Conversations shows unread counts",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " Reactions starts closed",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " Reactions opens all available reactions",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " Reactions selects emoji and closes",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " Reactions picker buttons do not submit parent forms",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " Reactions disables picker while saving",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " Reactions hides empty reaction list",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " Reactions reaction buttons do not submit parent forms",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " Reactions exposes selected state to assistive technology",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "name": " Reactions returns clicked reaction",
+      "status": "passed",
+      "errors": []
+    }
+  ]
+}

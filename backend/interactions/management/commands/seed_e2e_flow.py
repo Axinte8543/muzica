@@ -10,6 +10,8 @@ from django.utils.text import slugify
 
 from interactions.models import AlbumRating, ChatMessage, FriendRequest
 from music.models import Album, Artist, Genre, Song
+from users.models import UserPrivacySettings
+from interactions.models import UserOnboarding
 
 
 ALICE_USERNAME = "e2e_alice"
@@ -103,6 +105,11 @@ class Command(BaseCommand):
                     },
                 )
 
+                Song.objects.update_or_create(
+                    slug=f"{seed.slug}-song-2",
+                    defaults={"album": album, "artist": artist, "title": f"{seed.track_title} Outro", "track_number": 2, "duration_seconds": 120, "is_approved": True},
+                )
+
             alice, _ = User.objects.update_or_create(
                 username=ALICE_USERNAME,
                 defaults={"email": "e2e_alice@example.com"},
@@ -113,6 +120,9 @@ class Command(BaseCommand):
             )
             _set_password(alice, PASSWORD)
             _set_password(bob, PASSWORD)
+            for account in (alice, bob):
+                UserPrivacySettings.objects.update_or_create(user=account, defaults={"email_verified": True})
+                UserOnboarding.objects.update_or_create(user=account, defaults={"is_completed": True})
 
                                                                                         
             ChatMessage.objects.filter(sender__in=[alice, bob], recipient__in=[alice, bob]).delete()

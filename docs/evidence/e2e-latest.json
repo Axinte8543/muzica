@@ -1,0 +1,385 @@
+{
+  "capturedAt": "2026-10-26T15:36:20.083Z",
+  "sourceStart": "2026-10-26T15:34:28.302Z",
+  "stats": {
+    "startTime": "2026-10-26T15:34:28.302Z",
+    "duration": 96895.09,
+    "expected": 53,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "cases": [
+    {
+      "title": "E21 valid login creates browser session",
+      "file": "accounts.spec.ts",
+      "line": 4,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E22 logout removes stored credentials",
+      "file": "accounts.spec.ts",
+      "line": 8,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E23 verified session survives reload",
+      "file": "accounts.spec.ts",
+      "line": 14,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E24 empty login is blocked by browser validation",
+      "file": "accounts.spec.ts",
+      "line": 20,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E25 incorrect password displays server error",
+      "file": "accounts.spec.ts",
+      "line": 26,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E26 weak registration password disables submission",
+      "file": "accounts.spec.ts",
+      "line": 34,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E27 registration requires email confirmation",
+      "file": "accounts.spec.ts",
+      "line": 40,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E28 unverified account cannot log in",
+      "file": "accounts.spec.ts",
+      "line": 45,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E29 invalid email verification token displays error",
+      "file": "accounts.spec.ts",
+      "line": 53,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E30 registration rejects duplicate username",
+      "file": "accounts.spec.ts",
+      "line": 57,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E31 guest is informed that /messages requires login",
+      "file": "accounts.spec.ts",
+      "line": 73,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E32 guest is informed that /recommendations requires login",
+      "file": "accounts.spec.ts",
+      "line": 73,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E33 guest is informed that /profile/friends requires login",
+      "file": "accounts.spec.ts",
+      "line": 73,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E34 guest is informed that /my-lists requires login",
+      "file": "accounts.spec.ts",
+      "line": 73,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E35 guest is informed that /profile/privacy requires login",
+      "file": "accounts.spec.ts",
+      "line": 73,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "auth, messaging and recommendations work end-to-end",
+      "file": "auth-message-recommendations.spec.ts",
+      "line": 8,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "home page has no detectable accessibility violations",
+      "file": "axe.spec.ts",
+      "line": 5,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "messages page has no detectable accessibility violations",
+      "file": "axe.spec.ts",
+      "line": 79,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E01 guest home renders real discovery data",
+      "file": "catalog.spec.ts",
+      "line": 4,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E02 catalog lists all four seeded albums",
+      "file": "catalog.spec.ts",
+      "line": 8,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E03 catalog searches by title",
+      "file": "catalog.spec.ts",
+      "line": 12,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E04 genre selection filters and persists in URL",
+      "file": "catalog.spec.ts",
+      "line": 19,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E05 release year filter survives reload",
+      "file": "catalog.spec.ts",
+      "line": 25,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E06 month filter excludes other release months",
+      "file": "catalog.spec.ts",
+      "line": 33,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E07 singles filter excludes multi-track albums",
+      "file": "catalog.spec.ts",
+      "line": 39,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E08 default catalog ordering is newest first",
+      "file": "catalog.spec.ts",
+      "line": 45,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E09 missing album displays recoverable error",
+      "file": "catalog.spec.ts",
+      "line": 49,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E10 album details expose ordered tracks",
+      "file": "catalog.spec.ts",
+      "line": 54,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E11 album artist link opens artist details",
+      "file": "catalog.spec.ts",
+      "line": 60,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E12 track link opens song details",
+      "file": "catalog.spec.ts",
+      "line": 66,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E13 global search finds an artist",
+      "file": "catalog.spec.ts",
+      "line": 72,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E14 global search handles no results",
+      "file": "catalog.spec.ts",
+      "line": 79,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E15 selected theme survives reload",
+      "file": "catalog.spec.ts",
+      "line": 83,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E16 unknown route displays Not Found",
+      "file": "catalog.spec.ts",
+      "line": 90,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E17 mobile menu navigates to catalog",
+      "file": "catalog.spec.ts",
+      "line": 94,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E18 public profile exposes username",
+      "file": "catalog.spec.ts",
+      "line": 102,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E19 genre directory includes seeded genre",
+      "file": "catalog.spec.ts",
+      "line": 106,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E20 top albums displays rated seeded data",
+      "file": "catalog.spec.ts",
+      "line": 110,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "home page loads discovery content",
+      "file": "home.spec.ts",
+      "line": 3,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E36 sent message persists after reload",
+      "file": "member-flows.spec.ts",
+      "line": 4,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E37 whitespace-only messages cannot be sent",
+      "file": "member-flows.spec.ts",
+      "line": 14,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E38 friend search excludes nonmatching conversations",
+      "file": "member-flows.spec.ts",
+      "line": 19,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E39 keyboard opens conversation",
+      "file": "member-flows.spec.ts",
+      "line": 25,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E40 album rating persists after reload",
+      "file": "member-flows.spec.ts",
+      "line": 31,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E41 artist rating persists after reload",
+      "file": "member-flows.spec.ts",
+      "line": 38,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E42 song rating persists after reload",
+      "file": "member-flows.spec.ts",
+      "line": 44,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E43 album like can be added and removed",
+      "file": "member-flows.spec.ts",
+      "line": 51,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E44 want-to-listen entry persists and can be removed",
+      "file": "member-flows.spec.ts",
+      "line": 58,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E45 marking album listened disables duplicate daily listen",
+      "file": "member-flows.spec.ts",
+      "line": 65,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E46 following artist persists and can be removed",
+      "file": "member-flows.spec.ts",
+      "line": 71,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "E47 recommendations exclude own rated albums",
+      "file": "member-flows.spec.ts",
+      "line": 78,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "shows skeleton loader while messages load and is responsive",
+      "file": "ux-loading-accessibility.spec.ts",
+      "line": 20,
+      "status": "passed",
+      "expectedStatus": "passed"
+    },
+    {
+      "title": "displays accessible error (role=alert) when friends API fails",
+      "file": "ux-loading-accessibility.spec.ts",
+      "line": 97,
+      "status": "passed",
+      "expectedStatus": "passed"
+    }
+  ]
+}

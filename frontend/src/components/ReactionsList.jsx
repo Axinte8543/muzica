@@ -13,6 +13,8 @@ export default function ReactionsList({
     <div className="reactions-list">
       {reactions.map((reaction) => (
         <button
+          type="button"
+          aria-pressed={Boolean(reaction.user_reacted)}
           key={reaction.emoji}
           className={`reaction-item ${reaction.user_reacted ? "active" : ""}`}
           onClick={() => onReactionClick(reaction.emoji)}

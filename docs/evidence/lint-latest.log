@@ -1,0 +1,186 @@
+
+C:\Users\ASUS\Desktop\Licenta\licenta-muzica\frontend\src\components\RecommendedAlbums.jsx
+  161:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  159 |
+  160 |   useEffect(() => {
+> 161 |     setPage(1);
+      |     ^^^^^^^ Avoid calling setState() directly within an effect
+  162 |   }, [items.length, pageSize]);
+  163 |
+  164 |   if (!isAuthenticated) {  react-hooks/set-state-in-effect
+
+C:\Users\ASUS\Desktop\Licenta\licenta-muzica\frontend\src\pages\ActivityPage.jsx
+  179:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  177 |
+  178 |   useEffect(() => {
+> 179 |     setPage(1);
+      |     ^^^^^^^ Avoid calling setState() directly within an effect
+  180 |   }, [filter]);
+  181 |
+  182 |   useEffect(() => {                                                         react-hooks/set-state-in-effect
+  184:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  182 |   useEffect(() => {
+  183 |     if (page <= totalPages) return;
+> 184 |     setPage(totalPages);
+      |     ^^^^^^^ Avoid calling setState() directly within an effect
+  185 |   }, [page, totalPages]);
+  186 |
+  187 |   useEffect(() => {  react-hooks/set-state-in-effect
+
+C:\Users\ASUS\Desktop\Licenta\licenta-muzica\frontend\src\pages\AlbumPage.jsx
+  164:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  162 |       ["overview", "reviews", "lists", "comments", "discography"].includes(tab)
+  163 |     ) {
+> 164 |       setActiveTab(tab);
+      |       ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  165 |     }
+  166 |   }, [searchParams]);
+  167 |  react-hooks/set-state-in-effect
+
+C:\Users\ASUS\Desktop\Licenta\licenta-muzica\frontend\src\pages\AlbumsPage.jsx
+  210:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  208 |
+  209 |   useEffect(() => {
+> 210 |     setPage(1);
+      |     ^^^^^^^ Avoid calling setState() directly within an effect
+  211 |     setSelectedGenre(genreFromUrl);
+  212 |     setSelectedYear(yearFromUrl);
+  213 |     setSelectedMonth(monthFromUrl);  react-hooks/set-state-in-effect
+
+C:\Users\ASUS\Desktop\Licenta\licenta-muzica\frontend\src\pages\ListsPage.jsx
+  114:38  error  Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `selectedList`, but the source dependencies were [selectedList?.albums]. Inferred less specific property than source.
+
+  112 |   }, [lists, selectedListId]);
+  113 |
+> 114 |   const selectedListAlbums = useMemo(() => {
+      |                                      ^^^^^^^
+> 115 |     return Array.isArray(selectedList?.albums) ? selectedList.albums : [];
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 116 |   }, [selectedList?.albums]);
+      | ^^^^ Could not preserve existing manual memoization
+  117 |
+  118 |   const listContentTotalPages = useMemo(() => {
+  119 |     return Math.max(                      react-hooks/preserve-manual-memoization
+  170:5   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  168 |   useEffect(() => {
+  169 |     if (listContentPage <= listContentTotalPages) return;
+> 170 |     setListContentPage(listContentTotalPages);
+      |     ^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  171 |   }, [listContentPage, listContentTotalPages]);
+  172 |
+  173 |   useEffect(() => {  react-hooks/set-state-in-effect
+  175:5   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  173 |   useEffect(() => {
+  174 |     if (isAuthenticated) return;
+> 175 |     setActiveSection("public");
+      |     ^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  176 |   }, [isAuthenticated]);
+  177 |
+  178 |   useEffect(() => {                                                                   react-hooks/set-state-in-effect
+
+C:\Users\ASUS\Desktop\Licenta\licenta-muzica\frontend\src\pages\SearchResultsPage.jsx
+  225:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  223 |
+  224 |   useEffect(() => {
+> 225 |     setAlbumsPage(1);
+      |     ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  226 |     setSinglesPage(1);
+  227 |     setSongsPage(1);
+  228 |   }, [debouncedQ, genre, year, minRating, reviewedOnly, followedOnly]);  react-hooks/set-state-in-effect
+
+C:\Users\ASUS\Desktop\Licenta\licenta-muzica\frontend\src\pages\SuggestPage.jsx
+   72:7   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  70 |     const query = String(artistQuery || "").trim();
+  71 |     if (query.length < 2) {
+> 72 |       setArtistOptions([]);
+     |       ^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  73 |       return undefined;
+  74 |     }
+  75 |      react-hooks/set-state-in-effect
+   84:16  error  'err' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              no-unused-vars
+   98:7   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+   96 |     const query = String(albumQuery || "").trim();
+   97 |     if (query.length < 2) {
+>  98 |       setAlbumOptions([]);
+      |       ^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+   99 |       return undefined;
+  100 |     }
+  101 |  react-hooks/set-state-in-effect
+  110:16  error  'err' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              no-unused-vars
+
+C:\Users\ASUS\Desktop\Licenta\licenta-muzica\frontend\vite.config.js
+  5:29  error  'process' is not defined  no-undef
+
+✖ 14 problems (14 errors, 0 warnings)

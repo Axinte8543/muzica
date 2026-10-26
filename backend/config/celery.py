@@ -18,6 +18,9 @@ class _LocalTask:
             return self._func(None, *args, **kwargs)
         return self._func(*args, **kwargs)
 
+    def run(self, *args, **kwargs):
+        return self.__call__(*args, **kwargs)
+
     def delay(self, *args, **kwargs):
         return self.__call__(*args, **kwargs)
 

@@ -1,10 +1,11 @@
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.contrib.auth import get_user_model
 from unittest.mock import patch, MagicMock
 from users.tasks import scan_avatar_object
 from users.models import UserPrivacySettings, AvatarScanStatus
 
 
+@override_settings(CLAMAV_HOST='localhost', AVATAR_SCAN_REQUIRED=True)
 class ScanAvatarTaskTests(TestCase):
     def setUp(self):
         User = get_user_model()
@@ -26,7 +27,7 @@ class ScanAvatarTaskTests(TestCase):
         mock_ctx.__enter__.return_value = sock
         mock_socket.return_value = mock_ctx
 
-        ok, msg = scan_avatar_object(None, 'bucket', 'key', self.user.id)
+        ok, msg = scan_avatar_object.run('bucket', 'key', self.user.id)
         self.profile.refresh_from_db()
         self.assertTrue(ok)
         self.assertEqual(self.profile.avatar_scan_status, AvatarScanStatus.CLEAN)
@@ -44,7 +45,7 @@ class ScanAvatarTaskTests(TestCase):
         mock_ctx.__enter__.return_value = sock
         mock_socket.return_value = mock_ctx
 
-        ok, msg = scan_avatar_object(None, 'bucket', 'key', self.user.id)
+        ok, msg = scan_avatar_object.run('bucket', 'key', self.user.id)
         self.profile.refresh_from_db()
         self.assertFalse(ok)
         self.assertEqual(self.profile.avatar_scan_status, AvatarScanStatus.REJECTED)

@@ -14,6 +14,7 @@ export default function ReactionPicker({ onSelectEmoji, isLoading }) {
   return (
     <div className="reaction-picker">
       <button
+        type="button"
         className="reaction-picker-btn"
         onClick={() => setIsOpen(!isOpen)}
         disabled={isLoading}
@@ -26,6 +27,7 @@ export default function ReactionPicker({ onSelectEmoji, isLoading }) {
         <div className="reaction-picker-menu">
           {EMOJI_OPTIONS.map((emoji) => (
             <button
+              type="button"
               key={emoji}
               className="emoji-btn"
               onClick={() => handleEmojiClick(emoji)}

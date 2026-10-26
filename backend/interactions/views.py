@@ -3026,7 +3026,7 @@ class MyRatingsView(APIView):
 		  album__is_approved=True,
 		  album__artist__is_approved=True,
 		 )
-		 .order_by('-created_at')
+		 .order_by('-created_at', '-id')
 		)
 
 		song_ratings = (
@@ -3040,7 +3040,7 @@ class MyRatingsView(APIView):
 		  Q(song__album__isnull=True)
 		  | Q(song__album__is_approved=True, song__album__artist__is_approved=True)
 		 )
-		 .order_by('-created_at')
+		 .order_by('-created_at', '-id')
 		)
 
 		album_paginator = AlbumRatingsPagination()
